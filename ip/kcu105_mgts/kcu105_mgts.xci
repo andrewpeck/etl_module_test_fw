@@ -61,7 +61,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_PLL_TYPE">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_RECCLK_OUTPUT">0x000000000000000000000000000000000000000000000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_REFCLK_FREQUENCY">320</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_SLIDE_MODE">0</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_SLIDE_MODE">2</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_USER_CLOCKING_CONTENTS">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_USER_CLOCKING_INSTANCE_CTRL">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_RX_USER_CLOCKING_RATIO_FSRC_FUSRCLK">1</spirit:configurableElementValue>
@@ -89,7 +89,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_MASTER_CHANNEL_IDX">9</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_OUTCLK_BUFG_GT_DIV">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_OUTCLK_FREQUENCY">320.0000000</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_OUTCLK_SOURCE">1</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_OUTCLK_SOURCE">2</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_PLL_TYPE">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_REFCLK_FREQUENCY">320</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TX_USER_CLOCKING_CONTENTS">0</spirit:configurableElementValue>
@@ -105,8 +105,8 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.Component_Name">kcu105_mgts</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.DISABLE_LOC_XDC">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ENABLE_COMMON_USRCLK">0</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ENABLE_OPTIONAL_PORTS">drpaddr_common_in drpaddr_in drpclk_common_in drpclk_in drpdi_common_in drpdi_in drpen_common_in drpen_in drpwe_common_in drpwe_in rxslide_in drpdo_common_out drpdo_out drprdy_common_out drprdy_out</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.FREERUN_FREQUENCY">40</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ENABLE_OPTIONAL_PORTS">drpaddr_common_in drpaddr_in drpclk_common_in drpclk_in drpdi_common_in drpdi_in drpen_common_in drpen_in drpwe_common_in drpwe_in drpdo_common_out drpdo_out drprdy_common_out drprdy_out</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.FREERUN_FREQUENCY">250</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.GT_DIRECTION">BOTH</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.GT_REV">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.GT_TYPE">GTH</spirit:configurableElementValue>
@@ -495,7 +495,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXRECCLKOUT_OUT">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXRESETDONE_OUT">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIDERDY_OUT">0</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIDE_IN">0</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIDE_IN">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIPDONE_OUT">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIPOUTCLKRDY_OUT">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_RXSLIPOUTCLK_IN">0</spirit:configurableElementValue>
@@ -651,7 +651,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_UBMDMTDO_OUT">-1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_UBRSVDOUT_OUT">-1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLED_UBTXUART_OUT">-1</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLEMENT_UPDATED">12</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_ENABLEMENT_UPDATED">15</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PORT_USAGE_UPDATED">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_PRESET">None</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.INTERNAL_RX_COMMA_PRESET_UPDATE">2</spirit:configurableElementValue>
@@ -764,7 +764,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_CC_VAL_1_1">00000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_CC_VAL_1_2">00000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_CC_VAL_1_3">00000000</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_ALIGN_WORD">1</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_ALIGN_WORD">4</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_DOUBLE_ENABLE">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_MASK">0000000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_M_ENABLE">false</spirit:configurableElementValue>
@@ -772,7 +772,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_PRESET">NONE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_P_ENABLE">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_P_VAL">0101111100</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_SHOW_REALIGN_ENABLE">true</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_SHOW_REALIGN_ENABLE">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COMMA_VALID_ONLY">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_COUPLING">AC</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_DATA_DECODING">RAW</spirit:configurableElementValue>
@@ -790,7 +790,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_RECCLK_OUTPUT"/>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_REFCLK_FREQUENCY">320</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_REFCLK_SOURCE">X0Y19 clk0-1 X0Y18 clk0-1 X0Y17 clk0-1 X0Y16 clk0-1 X0Y10 clk0+1 X0Y9 clk0+1</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_SLIDE_MODE">OFF</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_SLIDE_MODE">PMA</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_SSC_PPM">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_TERMINATION">PROGRAMMABLE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.RX_TERMINATION_PROG_VALUE">800</spirit:configurableElementValue>
@@ -812,7 +812,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_INT_DATA_WIDTH">32</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_LINE_RATE">10.24</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_MASTER_CHANNEL">X0Y9</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_OUTCLK_SOURCE">TXOUTCLKPMA</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_OUTCLK_SOURCE">TXPLLREFCLK_DIV1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_PLL_TYPE">QPLL0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_QPLL_FRACN_NUMERATOR">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.TX_REFCLK_FREQUENCY">320</spirit:configurableElementValue>
@@ -1384,14 +1384,20 @@
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.LOCATE_RX_USER_CLOCKING" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.LOCATE_TX_USER_CLOCKING" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_CB_MAX_LEVEL" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_COMMA_ALIGN_WORD" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_COMMA_SHOW_REALIGN_ENABLE" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_JTOL_FC" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_LINE_RATE" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_MASTER_CHANNEL" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_REFCLK_FREQUENCY" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_REFCLK_SOURCE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.RX_SLIDE_MODE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SECONDARY_QPLL_ENABLE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SECONDARY_QPLL_REFCLK_FREQUENCY" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TXPROGDIV_FREQ_VAL" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TX_LINE_RATE" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TX_MASTER_CHANNEL" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TX_OUTCLK_SOURCE" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TX_REFCLK_FREQUENCY" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.TX_REFCLK_SOURCE" xilinx:valueSource="user"/>
           </xilinx:configElementInfos>
