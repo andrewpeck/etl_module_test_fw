@@ -9,7 +9,7 @@
 set lpgbt_path "rbgen[*].readout_board_inst/lpgbt_link_wrapper"
 
 set_property -quiet KEEP true \
-    [get_cells -quiet -hierarchical -filter {NAME =~ top_hal/lpgbt_link_wrapper_inst/*/gearboxSyncReset*}]
+    [get_cells -quiet -hierarchical -filter {NAME =~ rbgen[*]*/lpgbt_link_wrapper/*/gearboxSyncReset*}]
 
 set link_wrapper_cell [get_cells -quiet ${lpgbt_path}]
 if {[string is space $link_wrapper_cell] == 0} {

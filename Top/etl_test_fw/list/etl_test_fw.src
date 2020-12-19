@@ -1,15 +1,20 @@
 # -*- mode: TCL;-*-
-src/readout_board/*.vhd
+src/readout_board/*.vhd  top=etl_test_fw
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
 src/wrappers/sc_wrapper.vhd
-src/wrappers/mgt_wrapper.vhd
 src/utils/cylon.v
-#src/wrappers/interconnect_wrapper.vhd
-#src/utils/wbm2axisp.v
-#src/utils/skidbuffer.v
-#src/utils/*.vhd
-ip/kcu105_mgts/kcu105_mgts.xci
+
+# ips
 ip/system_clocks/system_clocks.xci
-ip/ila_ipb/ipb_ila.xci
-ip/ila_lpgbt/ipb_lpgbt.xci
+
+# mgt
+src/mgt/xlx_ku_mgt_10g24.vhd
+src/mgt/xlx_ku_mgt_ip_reset_synchronizer.vhd
+ip/xlx_ku_mgt_ip_10g24/xlx_ku_mgt_ip_10g24.xci
+
+# ilas
+ip/ila_ipb/ila_ipb.xci
+ip/ila_lpgbt/ila_lpgbt.xci
+ip/vio_lpgbt/vio_lpgbt.xci
+ip/vio_mgt/vio_mgt.xci

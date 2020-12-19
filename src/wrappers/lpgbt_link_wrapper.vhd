@@ -103,10 +103,6 @@ architecture Behavioral of lpgbt_link_wrapper is
   -- counters
   signal fec_err_cnt     : counter_array_t(g_NUM_UPLINKS-1 downto 0);
 
-  -- up/downlink ready flag
-  signal downlink_ready : std_logic_vector (g_NUM_DOWNLINKS-1 downto 0);  --
-  signal uplink_ready   : std_logic_vector (g_NUM_UPLINKS downto 0);
-
 begin
 
   --------------------------------------------------------------------------------
@@ -115,16 +111,16 @@ begin
 
   downlink_gen : for I in 0 to g_NUM_DOWNLINKS-1 generate
 
-    signal downlink_data  : lpgbt_downlink_data_rt;
-    signal mgt_data       : std_logic_vector(31 downto 0);
-    signal downlink_reset : std_logic := '1';
+    signal downlink_data    : lpgbt_downlink_data_rt;
+    signal mgt_data         : std_logic_vector(31 downto 0);
+    signal downlink_reset_n : std_logic := '1';
 
   begin
 
     downlink_reset_fanout : process (downlink_clk) is
     begin  -- process reset_fanout
       if rising_edge(downlink_clk) then  -- rising clock edge
-        downlink_reset <= not (reset or downlink_reset_i(I));
+        downlink_reset_n <= not (reset or downlink_reset_i(I));
       end if;
     end process;
 
@@ -137,7 +133,7 @@ begin
         )
       port map (
         clk_i               => downlink_clk,
-        rst_n_i             => downlink_reset,
+        rst_n_i             => downlink_reset_n,
         clken_i             => downlink_data.valid,
         userdata_i          => downlink_data.data,
         ecdata_i            => downlink_data.ec,
@@ -146,7 +142,7 @@ begin
         interleaverbypass_i => g_LPGBT_BYPASS_INTERLEAVER,
         encoderbypass_i     => g_LPGBT_BYPASS_FEC,
         scramblerbypass_i   => g_LPGBT_BYPASS_SCRAMBLER,
-        rdy_o               => downlink_ready(I)
+        rdy_o               => downlink_ready_o(I)
         );
 
     --------------------------------------------------------------------------------
@@ -186,14 +182,14 @@ begin
     signal iccorrected   : std_logic_vector (1 downto 0);
     signal eccorrected   : std_logic_vector (1 downto 0);
 
-    signal uplink_reset : std_logic := '1';
+    signal uplink_reset_n : std_logic := '1';
 
   begin
 
     uplink_reset_fanout : process (uplink_clk) is
     begin  -- process reset_fanout
-      if rising_edge(uplink_clk) then                      -- rising clock edge
-        uplink_reset <= not (reset or uplink_reset_i(I));  -- active LOW
+      if rising_edge(uplink_clk) then                        -- rising clock edge
+        uplink_reset_n <= not (reset or uplink_reset_i(I));  -- active LOW
       end if;
     end process;
 
@@ -214,7 +210,7 @@ begin
 
       port map (
         uplinkclk_i                => uplink_clk,
-        uplinkrst_n_i              => uplink_reset,
+        uplinkrst_n_i              => uplink_reset_n,
         mgt_word_i                 => mgt_data,
         bypassinterleaver_i        => g_LPGBT_BYPASS_INTERLEAVER,
         bypassfecencoder_i         => g_LPGBT_BYPASS_FEC,
@@ -228,7 +224,7 @@ begin
         datacorrected_o            => datacorrected,
         iccorrected_o              => iccorrected,
         eccorrected_o              => eccorrected,
-        rdy_o                      => uplink_ready(I)
+        rdy_o                      => uplink_ready_o(I)
         );
 
     --------------------------------------------------------------------------------
