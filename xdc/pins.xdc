@@ -8,31 +8,31 @@
 #set_property CFGBVS GND [current_design]
 
 # PCIe connections
-#set_property PACKAGE_PIN AB6 [get_ports pcie_sys_clk_p];
-#create_clock -period 10.000 -name pcie_sys_clk [get_ports pcie_sys_clk_p]
-#
+set_property PACKAGE_PIN AB6 [get_ports pcie_sys_clk_p];
+create_clock -period 10.000 -name pcie_sys_clk [get_ports pcie_sys_clk_p]
+
 #set_property PULLUP true [get_ports pcie_sys_rst_n]
 set_property PACKAGE_PIN K22 [get_ports pcie_sys_rst];
 set_property IOSTANDARD LVCMOS18 [get_ports pcie_sys_rst]
-#set_false_path -from [get_ports pcie_sys_rst]
+set_false_path -from [get_ports pcie_sys_rst]
 
-#set_property PACKAGE_PIN AB2 [get_ports {pcie_rx_p[0]}] ;
-#set_property PACKAGE_PIN AD2 [get_ports {pcie_rx_p[1]}] ;
-#set_property PACKAGE_PIN AF2 [get_ports {pcie_rx_p[2]}] ;
-#set_property PACKAGE_PIN AH2 [get_ports {pcie_rx_p[3]}] ;
-#set_property PACKAGE_PIN AJ3 [get_ports {pcie_rx_p[4]}] ;
-#set_property PACKAGE_PIN AK2 [get_ports {pcie_rx_p[5]}] ;
-#set_property PACKAGE_PIN AM2 [get_ports {pcie_rx_p[6]}] ;
-#set_property PACKAGE_PIN AP2 [get_ports {pcie_rx_p[7]}] ;
-#
-#set_property PACKAGE_PIN AC4 [get_ports {pcie_tx_p[0]}] ;
-#set_property PACKAGE_PIN AE4 [get_ports {pcie_tx_p[1]}] ;
-#set_property PACKAGE_PIN AG4 [get_ports {pcie_tx_p[2]}] ;
-#set_property PACKAGE_PIN AH6 [get_ports {pcie_tx_p[3]}] ;
-#set_property PACKAGE_PIN AJ4 [get_ports {pcie_tx_p[4]}] ;
-#set_property PACKAGE_PIN AL4 [get_ports {pcie_tx_p[5]}] ;
-#set_property PACKAGE_PIN AM6 [get_ports {pcie_tx_p[6]}] ;
-#set_property PACKAGE_PIN AN4 [get_ports {pcie_tx_p[7]}] ;
+set_property PACKAGE_PIN AB2 [get_ports {pcie_rx_p[0]}] ;
+set_property PACKAGE_PIN AD2 [get_ports {pcie_rx_p[1]}] ;
+set_property PACKAGE_PIN AF2 [get_ports {pcie_rx_p[2]}] ;
+set_property PACKAGE_PIN AH2 [get_ports {pcie_rx_p[3]}] ;
+set_property PACKAGE_PIN AJ3 [get_ports {pcie_rx_p[4]}] ;
+set_property PACKAGE_PIN AK2 [get_ports {pcie_rx_p[5]}] ;
+set_property PACKAGE_PIN AM2 [get_ports {pcie_rx_p[6]}] ;
+set_property PACKAGE_PIN AP2 [get_ports {pcie_rx_p[7]}] ;
+
+set_property PACKAGE_PIN AC4 [get_ports {pcie_tx_p[0]}] ;
+set_property PACKAGE_PIN AE4 [get_ports {pcie_tx_p[1]}] ;
+set_property PACKAGE_PIN AG4 [get_ports {pcie_tx_p[2]}] ;
+set_property PACKAGE_PIN AH6 [get_ports {pcie_tx_p[3]}] ;
+set_property PACKAGE_PIN AJ4 [get_ports {pcie_tx_p[4]}] ;
+set_property PACKAGE_PIN AL4 [get_ports {pcie_tx_p[5]}] ;
+set_property PACKAGE_PIN AM6 [get_ports {pcie_tx_p[6]}] ;
+set_property PACKAGE_PIN AN4 [get_ports {pcie_tx_p[7]}] ;
 
 # EXTERNAL OSCILLATOR:
 
@@ -110,3 +110,11 @@ set_property PACKAGE_PIN M22 [get_ports {leds[5]}];
 set_property PACKAGE_PIN R23 [get_ports {leds[6]}];
 set_property PACKAGE_PIN P23 [get_ports {leds[7]}];
 set_property IOSTANDARD LVCMOS18 [get_ports {leds*}]
+
+set_property IOSTANDARD LVDS [get_ports {sgmii_*}]
+set_property PACKAGE_PIN P26 [get_ports sgmii_clk_p ]
+set_property PACKAGE_PIN N26 [get_ports sgmii_clk_n ]
+set_property PACKAGE_PIN N24 [get_ports sgmii_txp   ]
+set_property PACKAGE_PIN M24 [get_ports sgmii_txn   ]
+set_property PACKAGE_PIN P24 [get_ports sgmii_rxp   ]
+set_property PACKAGE_PIN P25 [get_ports sgmii_rxn   ]

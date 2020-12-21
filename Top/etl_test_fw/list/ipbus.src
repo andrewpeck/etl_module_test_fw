@@ -2,6 +2,8 @@
 registers/ipbus_decode_etl_test_fw.vhd
 
 src/pcie_infra.vhd
+src/eth_sgmii.vhd
+src/eth_infra.vhd
 
 #ipbus-firmware/boards/k800/synth/firmware/hdl/k800_infra.vhd
 #ipbus-firmware/boards/k800/synth/firmware/hdl/top_k800.vhd
@@ -34,3 +36,33 @@ ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_ram_i
 ipbus-firmware/components/ipbus_util/firmware/hdl/clocks/clocks_us_serdes.vhd
 ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_clock_div.vhd
 ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_decode_ipbus_example.vhd
+
+ip/temac_gbe_v9_0/temac_gbe_v9_0.xci
+ip/gig_eth_pcs_pma_gmii_to_sgmii_bridge/gig_eth_pcs_pma_gmii_to_sgmii_bridge.xci
+ipbus-firmware/components/ipbus_util/firmware/hdl/masters/ipbus_ctrl.vhd
+
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_ipaddr_block.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_payload.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_dualportram_rx.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_txtransactor_if_simple.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_status.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_status_buffer.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_rarp_block.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_arp.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_ping.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_dualportram.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_do_rx_reset.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_byte_sum.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_tx_mux.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_rxtransactor_if_simple.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_rxram_shim.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_packet_parser.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_dualportram_tx.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_rxram_mux.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_buffer_selector.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_clock_crossing_if.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_if_flat.vhd
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_resend.vhd
+
+ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_if_flat.vhd
+ipbus-firmware/components/ipbus_core/firmware/hdl/trans_arb.vhd

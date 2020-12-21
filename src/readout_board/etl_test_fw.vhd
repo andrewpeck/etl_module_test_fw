@@ -21,6 +21,12 @@ use ipbus.ipbus_decode_etl_test_fw.all;
 entity etl_test_fw is
   generic(
 
+    MAC_ADDR : std_logic_vector (47 downto 0) := x"01_23_45_67_89_AB";
+    IP_ADDR  : ip_addr_t                      := (192, 168, 0, 10);
+
+    USE_PCIE : boolean := false;
+    USE_ETH  : boolean := true;
+
     NUM_GTS : integer := 10;
 
     NUM_RBS : integer := 5;
@@ -49,15 +55,15 @@ entity etl_test_fw is
   port(
 
     -- PCIe clock and reset
-    --pcie_sys_clk_p : in std_logic;
-    --pcie_sys_clk_n : in std_logic;
-    pcie_sys_rst : in std_logic;
+    pcie_sys_clk_p : in std_logic;
+    pcie_sys_clk_n : in std_logic;
+    pcie_sys_rst   : in std_logic;
 
     -- PCIe lanes
-    --pcie_rx_p : in  std_logic_vector(0 downto 0);
-    --pcie_rx_n : in  std_logic_vector(0 downto 0);
-    --pcie_tx_p : out std_logic_vector(0 downto 0);
-    --pcie_tx_n : out std_logic_vector(0 downto 0);
+    pcie_rx_p : in  std_logic_vector(0 downto 0);
+    pcie_rx_n : in  std_logic_vector(0 downto 0);
+    pcie_tx_p : out std_logic_vector(0 downto 0);
+    pcie_tx_n : out std_logic_vector(0 downto 0);
 
     -- external oscillator, 125MHz
     osc_clk125_p : in std_logic;
@@ -82,6 +88,13 @@ entity etl_test_fw is
     sfp0_tx_disable  : out std_logic := '0';
     sfp1_tx_disable  : out std_logic := '0';
     si570_clk_sel_ls : out std_logic := '0';
+
+    sgmii_clk_p : in  std_logic;
+    sgmii_clk_n : in  std_logic;
+    sgmii_txp   : out std_logic;
+    sgmii_txn   : out std_logic;
+    sgmii_rxp   : in  std_logic;
+    sgmii_rxn   : in  std_logic;
 
     -- status LEDs
     leds : out std_logic_vector(7 downto 0)
@@ -162,6 +175,18 @@ architecture behavioral of etl_test_fw is
   attribute MARK_DEBUG           : string;
   attribute MARK_DEBUG of locked : signal is "TRUE";
 
+  --------------------------------------------------------------------------------
+  -- Ethernet
+  --------------------------------------------------------------------------------
+  signal rst_in : std_logic_vector(4 downto 0);
+
+  signal phy_on     : std_logic;        -- TODO
+  signal phy_resetb : std_logic;        -- TODO
+  signal phy_mdio   : std_logic;        -- TODO
+  signal phy_mdc    : std_logic;        -- TODO
+  signal clk_aux_o  : std_logic;        -- TODO
+  signal rst_aux_o  : std_logic;        -- TODO
+
 begin
 
   cylon1_inst : cylon1
@@ -190,25 +215,59 @@ begin
       );
 
   -- Infrastructure
+  eth : if (USE_ETH) generate
+    eth_infra_inst : entity ipbus.eth_infra
+      port map (
+        osc_clk_300 => clk_osc300,
+        osc_clk_125 => clk_osc125,
+        rst_in      => (others => '0'),
+        dip_sw      => (others => '0'),
+        leds        => open,
+        debug_leds  => open,
+        sgmii_clk_p => sgmii_clk_p,
+        sgmii_clk_n => sgmii_clk_n,
+        sgmii_txp   => sgmii_txp,
+        sgmii_txn   => sgmii_txn,
+        sgmii_rxp   => sgmii_rxp,
+        sgmii_rxn   => sgmii_rxn,
+        phy_on      => phy_on,
+        phy_resetb  => phy_resetb,
+        phy_mdio    => phy_mdio,
+        phy_mdc     => phy_mdc,
+        clk_ipb_o   => ipb_clk,
+        rst_ipb_o   => ipb_rst,
+        clk_aux_o   => clk_aux_o,
+        rst_aux_o   => rst_aux_o,
+        nuke        => nuke,
+        soft_rst    => soft_rst,
+        mac_addr    => MAC_ADDR,
+        ip_addr     => to_slv(IP_ADDR),
+        ipb_in      => ipb_r,
+        ipb_out     => ipb_w
+        );
+  end generate;
 
---  infra : entity ipbus.pcie_infra
---    port map(
---      pcie_sys_clk_p => pcie_sys_clk_p,
---      pcie_sys_clk_n => pcie_sys_clk_n,
---      pcie_sys_rst_n => pcie_sys_rst_n,
---      pcie_rx_p      => pcie_rx_p,
---      pcie_rx_n      => pcie_rx_n,
---      pcie_tx_p      => pcie_tx_p,
---      pcie_tx_n      => pcie_tx_n,
---      clk_osc        => clk_osc125,
---      ipb_clk        => ipb_clk,
---      ipb_rst        => ipb_rst,
---      nuke           => nuke,
---      soft_rst       => soft_rst,
---      leds           => leds(1 downto 0),
---      ipb_in         => ipb_r,
---      ipb_out        => ipb_w
---      );
+  pcie : if (USE_PCIE) generate
+    pcie_infra : entity ipbus.pcie_infra
+      port map(
+        pcie_sys_clk_p => pcie_sys_clk_p,
+        pcie_sys_clk_n => pcie_sys_clk_n,
+        pcie_sys_rst_n => pcie_sys_rst_n,
+        pcie_rx_p      => pcie_rx_p,
+        pcie_rx_n      => pcie_rx_n,
+        pcie_tx_p      => pcie_tx_p,
+        pcie_tx_n      => pcie_tx_n,
+        clk_osc        => clk_osc125,
+        ipb_clk        => ipb_clk,
+        ipb_rst        => ipb_rst,
+        nuke           => nuke,
+        soft_rst       => soft_rst,
+        leds           => leds(1 downto 0),
+        ipb_in         => ipb_r,
+        ipb_out        => ipb_w
+        );
+
+  end generate;
 
 
   rbgen : for I in 0 to NUM_RBS-1 generate
@@ -288,7 +347,7 @@ begin
       CEMASK  => '0'
       );
 
-  -- FIXME: map this correctly
+  -- TODO: check this mapping
   rbdata : for I in 0 to NUM_RBS-1 generate
   begin
     -- rxslide
