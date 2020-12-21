@@ -159,29 +159,29 @@ begin
     end if;
   end process;
 
-  -- ila_daq_lpgbt_inst : ila_lpgbt
-  --   port map (
-  --     clk        => clk320,
-  --     probe0     => downlink_mgt_word_array(0),
-  --     probe1     => downlink_data(0).data,
-  --     probe2(0)  => downlink_data(0).valid,
-  --     probe3(0)  => downlink_ready(0),
-  --     probe4(0)  => downlink_reset(0),
-  --     probe5     => daq_uplink_mgt_word_array(0),
-  --     probe6     => daq_uplink_data(0).data,
-  --     probe7(0)  => daq_uplink_data(0).valid,
-  --     probe8(0)  => daq_uplink_ready(0),
-  --     probe9(0)  => daq_uplink_reset(0),
-  --     probe10(0) => daq_uplink_fec_err(0),
-  --     probe11    => ic_data_i,
-  --     probe12    => ic_data_o,
-  --     probe13    => sca0_data_i,
-  --     probe14    => sca0_data_o,
-  --     probe15(0) => txclk,
-  --     probe16(0) => not txclk,
-  --     probe17(0) => rxclk,
-  --     probe18(0) => not rxclk
-  --     );
+  ila_daq_lpgbt_inst : ila_lpgbt
+    port map (
+      clk        => clk320,
+      probe0     => downlink_mgt_word_array(0),
+      probe1     => downlink_data(0).data,
+      probe2(0)  => downlink_data(0).valid,
+      probe3(0)  => downlink_ready(0),
+      probe4(0)  => downlink_reset(0),
+      probe5     => daq_uplink_mgt_word_array(0),
+      probe6     => daq_uplink_data(0).data,
+      probe7(0)  => daq_uplink_data(0).valid,
+      probe8(0)  => daq_uplink_ready(0),
+      probe9(0)  => daq_uplink_reset(0),
+      probe10(0) => daq_uplink_fec_err(0),
+      probe11    => ic_data_i,
+      probe12    => ic_data_o,
+      probe13    => sca0_data_i,
+      probe14    => sca0_data_o,
+      probe15(0) => txclk,
+      probe16(0) => not txclk,
+      probe17(0) => rxclk,
+      probe18(0) => not rxclk
+      );
 
   -- ila_trg_lpgbt_inst : ila_lpgbt
   --   port map (
