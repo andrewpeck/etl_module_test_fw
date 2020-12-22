@@ -217,7 +217,7 @@ begin
       );
 
   -- Infrastructure
-  eth : if (USE_ETH) generate
+  eth : if (USE_ETH=1) generate
     eth_infra_inst : entity ipbus.eth_infra
       port map (
         osc_clk_300 => clk_osc300,
@@ -249,7 +249,7 @@ begin
         );
   end generate;
 
-  pcie : if (USE_PCIE) generate
+  pcie : if (USE_PCIE=1) generate
     pcie_infra : entity ipbus.pcie_infra
       port map(
         pcie_sys_clk_p => pcie_sys_clk_p,
