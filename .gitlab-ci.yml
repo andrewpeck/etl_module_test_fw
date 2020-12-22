@@ -1,0 +1,4 @@
+include:
+    - project: 'hog/Hog'
+      file: '/hog.yml'
+    - local: '/Top/etl_test_fw/gitlab-ci.yml'
