@@ -24,8 +24,10 @@ entity etl_test_fw is
     MAC_ADDR : std_logic_vector (47 downto 0) := x"01_23_45_67_89_AB";
     IP_ADDR  : ip_addr_t                      := (192, 168, 0, 10);
 
-    USE_PCIE : boolean := false;
-    USE_ETH  : boolean := true;
+    USE_PCIE : integer range 0 to 1 := 0;
+    USE_ETH  : integer range 0 to 1 := 1;
+
+    PCIE_LANES  : integer range 1 to 8 := 1;
 
     NUM_GTS : integer := 10;
 
@@ -60,10 +62,10 @@ entity etl_test_fw is
     pcie_sys_rst   : in std_logic;
 
     -- PCIe lanes
-    pcie_rx_p : in  std_logic_vector(0 downto 0);
-    pcie_rx_n : in  std_logic_vector(0 downto 0);
-    pcie_tx_p : out std_logic_vector(0 downto 0);
-    pcie_tx_n : out std_logic_vector(0 downto 0);
+    pcie_rx_p : in  std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
+    pcie_rx_n : in  std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
+    pcie_tx_p : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
+    pcie_tx_n : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
 
     -- external oscillator, 125MHz
     osc_clk125_p : in std_logic;
@@ -306,21 +308,21 @@ begin
       locked    => locked
       );
 
---  control_inst : entity work.control
---    generic map (
---      NUM_RBS => NUM_RBS
---      )
---    port map (
---      reset              => ipb_rst,
---      clock              => ipb_clk,
---      fw_info_mon        => fw_info_mon,
---      readout_board_mon  => readout_board_mon,
---      readout_board_ctrl => readout_board_ctrl,
---      mgt_mon            => mgt_mon,
---      mgt_ctrl           => mgt_ctrl,
---      ipb_w              => ipb_w,
---      ipb_r              => ipb_r
---      );
+  control_inst : entity work.control
+    generic map (
+      NUM_RBS => NUM_RBS
+      )
+    port map (
+      reset              => ipb_rst,
+      clock              => ipb_clk,
+      fw_info_mon        => fw_info_mon,
+      readout_board_mon  => readout_board_mon,
+      readout_board_ctrl => readout_board_ctrl,
+      mgt_mon            => mgt_mon,
+      mgt_ctrl           => mgt_ctrl,
+      ipb_w              => ipb_w,
+      ipb_r              => ipb_r
+      );
 
   refclk_ibufds : ibufds_gte3
     generic map(
@@ -362,41 +364,6 @@ begin
     --trig_uplink_mgt_word_array(I) <= mgt_data_out(I*2+1);
     daq_uplink_mgt_word_array(I) <= mgt_data_out(I*2);
   end generate;
-
-  -- userdata_tx/rx_in:
-  --
-  -- By core convention, its least significant bits correspond to the least significant bits of the
-  -- transceiver channel in the lowest enabled XY grid position
-
---  mgt_wrapper_inst : entity work.mgt_wrapper
---    generic map (NUM_GTS => NUM_GTS)
---    port map (
---
---      drp_clk => clk40,
---
---      rxp_in => rx_p,
---      rxn_in => rx_n,
---
---      txp_out => tx_p,
---      txn_out => tx_n,
---
---      data_in  => mgt_data_in,
---      data_out => mgt_data_out,
---
---      refclk => refclk(0),
---
---      userclk_rx_usrclk_out  => userclk_rx_usrclk_out,
---      userclk_rx_usrclk2_out => userclk_rx_usrclk2_out,
---
---      userclk_tx_usrclk_out  => userclk_tx_usrclk_out,
---      userclk_tx_usrclk2_out => userclk_tx_usrclk2_out,
---
---      rxslide_in => rxslide,
---
---      mon  => mgt_mon,
---      ctrl => mgt_ctrl
---
---      );
 
   datagen : for I in 0 to NUM_GTS-1 generate
   begin
