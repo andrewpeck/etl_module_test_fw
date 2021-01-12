@@ -203,12 +203,11 @@ architecture rtl of eth_sgmii_lvds is
       gmii_isolate         : out std_logic;
 
       configuration_vector : in  std_logic_vector(4 downto 0);
-      configuration_valid : in  std_logic;
 
 
       an_interrupt         : out std_logic;
       an_adv_config_vector : in  std_logic_vector(15 downto 0);
-            an_adv_config_val : in  std_logic;
+      -- an_adv_config_val    : in  std_logic;
 
       an_restart_config    : in  std_logic;
 
@@ -219,15 +218,16 @@ architecture rtl of eth_sgmii_lvds is
 
       reset                : in  std_logic;
 
-      mdc                  : in  std_logic;
-      mdio_i               : in  std_logic;
-      mdio_o               : out std_logic;
-      mdio_t               : out std_logic;
-      ext_mdc              : out std_logic;
-      ext_mdio_i           : in  std_logic;
-      ext_mdio_o           : out std_logic;
-      ext_mdio_t           : out std_logic;
-      phyaddr              : in  std_logic_vector(4 downto 0);
+      -- mdc                  : in  std_logic;
+      -- mdio_i               : in  std_logic;
+      -- mdio_o               : out std_logic;
+      -- mdio_t               : out std_logic;
+      -- ext_mdc              : out std_logic;
+      -- ext_mdio_i           : in  std_logic;
+      -- ext_mdio_o           : out std_logic;
+      -- ext_mdio_t           : out std_logic;
+      -- phyaddr              : in  std_logic_vector(4 downto 0);
+      -- configuration_valid : in  std_logic;
 
       signal_detect        : in  std_logic;
       idelay_rdy_out       : out std_logic
@@ -402,6 +402,8 @@ begin
     -- Reset to temac clients (outgoing)
     rst_o       <= tx_reset_out or rx_reset_out;
 
+    clk125_eth <= clk125_sgmii;
+
     mac : temac_gbe_v9_0
         port map(
             gtx_clk                 => clk125_sgmii,
@@ -411,7 +413,7 @@ begin
             tx_axi_rstn             => not rst125_sgmii,
             rx_statistics_vector    => open,
             rx_statistics_valid     => open,
-            rx_mac_aclk             => clk125_eth,
+            rx_mac_aclk             => open,
             rx_reset                => rx_reset_out,
             rx_axis_mac_tdata       => rx_data,
             rx_axis_mac_tvalid      => rx_valid,
@@ -501,15 +503,16 @@ begin
         gmii_rx_er           => gmii_rx_er,
         gmii_isolate         => open,
 
-        mdc                  => clk2mhz,
-        mdio_i               => '1',
-        mdio_o               => open,
-        mdio_t               => open,
-        ext_mdc              => phy_mdc,
-        ext_mdio_i           => mdio_i,
-        ext_mdio_o           => mdio_o,
-        ext_mdio_t           => mdio_t,
-        phyaddr              => "00111",
+      -- mdc                  => clk2mhz,
+      -- mdio_i               => '1',
+      -- mdio_o               => open,
+      -- mdio_t               => open,
+      -- ext_mdc              => phy_mdc,
+      -- ext_mdio_i           => mdio_i,
+      -- ext_mdio_o           => mdio_o,
+      -- ext_mdio_t           => mdio_t,
+      -- phyaddr              => "00111",
+      -- configuration_valid  => '1',
 
         -- Configuration
         configuration_vector => (
@@ -519,12 +522,12 @@ begin
                                  3 => phy_cfg_not_done, -- isolate
                                  4 => '1', -- auto negotiation enabled
                                  others => '0'),
-        configuration_valid  => '1',
 
         -- Auto Negotiation
         an_interrupt         => an_interrupt,
         an_adv_config_vector => an_config_vector,
-        an_adv_config_val    => an_config_val,  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
+      --an_adv_config_val    => an_config_val,  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
+
         an_restart_config    => an_restart, -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
 
         speed_is_10_100      => speedis10100, -- 0 for 1 Gb/s
