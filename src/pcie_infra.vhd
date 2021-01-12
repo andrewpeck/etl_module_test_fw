@@ -97,11 +97,11 @@ begin
   --  DCM clock generation for internal bus, ethernet
   clocks : entity work.clocks_us_serdes
     generic map (
-      CLK_FR_FREQ  => 300.0,
-      CLK_VCO_FREQ => 960.0
+      CLK_FR_FREQ  => 125.0,
+      CLK_VCO_FREQ => 1000.0
       )
     port map (
-      clki_fr       => clk_osc,
+      clki_fr       => axi_ms.aclk,
       clki_125      => axi_ms.aclk,
       clko_ipb      => clk_ipb_i,
       eth_locked    => pcie_user_lnk_up,
@@ -146,6 +146,9 @@ begin
 
 
   ipbus_transport_axi : entity work.ipbus_transport_axi_if
+    generic map (
+      ADDRWIDTH => 13
+    )
     port map (
       ipb_clk => clk_ipb,
       rst_ipb => rst_ipb_ctrl,

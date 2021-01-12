@@ -112,9 +112,16 @@ set_property PACKAGE_PIN P23 [get_ports {leds[7]}];
 set_property IOSTANDARD LVCMOS18 [get_ports {leds*}]
 
 set_property IOSTANDARD SUB_LVDS [get_ports {sgmii_*}]
+create_clock -period 1.6 -name ethclk [get_ports sgmii_clk_p]
 set_property PACKAGE_PIN P26 [get_ports sgmii_clk_p ]
 set_property PACKAGE_PIN N26 [get_ports sgmii_clk_n ]
 set_property PACKAGE_PIN N24 [get_ports sgmii_txp   ]
 set_property PACKAGE_PIN M24 [get_ports sgmii_txn   ]
 set_property PACKAGE_PIN P24 [get_ports sgmii_rxp   ]
 set_property PACKAGE_PIN P25 [get_ports sgmii_rxn   ]
+
+set_property IOSTANDARD LVCMOS18 [get_ports {phy_*}]
+set_property PACKAGE_PIN H26 [get_ports phy_mdio]
+set_property PACKAGE_PIN L25 [get_ports phy_mdc]
+set_property PACKAGE_PIN J23 [get_ports phy_resetb]
+set_property PACKAGE_PIN K25 [get_ports phy_interrupt]

@@ -57,10 +57,10 @@ entity eth_infra is
     sgmii_txn   : out   std_logic;
     sgmii_rxp   : in    std_logic;
     sgmii_rxn   : in    std_logic;
-    phy_on      : out   std_logic;
     phy_resetb  : out   std_logic;
     phy_mdio    : inout std_logic;
     phy_mdc     : out   std_logic;
+    phy_interrupt : out std_logic;
     -- IPbus clock and reset
     clk_ipb_o   : out   std_logic;
     rst_ipb_o   : out   std_logic;
@@ -81,19 +81,71 @@ end eth_infra;
 
 architecture rtl of eth_infra is
 
-  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux                                                            : std_logic;
-  signal locked, clk_locked, eth_locked, rst125, rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
+  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux, clk_200                                                            : std_logic;
+  signal locked, clk_locked, eth_locked, rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
 
   -- ipbus to ethernet
-  signal tx_data, rx_data                                                   : std_logic_vector(7 downto 0);
-  signal tx_valid, tx_last, tx_error, tx_ready, rx_valid, rx_last, rx_error : std_logic;
+  signal tx_data, rx_data : std_logic_vector(7 downto 0);
 
+  signal tx_valid, tx_last, tx_error, tx_ready, rx_valid, rx_last, rx_error : std_logic;
 
   signal pkt       : std_logic;
   signal trans_in  : ipbus_trans_in;
   signal trans_out : ipbus_trans_out;
 
+  component ila_ipb
+    port (
+      clk    : in std_logic;
+      probe0 : in std_logic_vector(31 downto 0);
+      probe1 : in std_logic_vector(31 downto 0);
+      probe2 : in std_logic_vector(0 downto 0);
+      probe3 : in std_logic_vector(0 downto 0);
+      probe4 : in std_logic_vector(31 downto 0);
+      probe5 : in std_logic_vector(0 downto 0);
+      probe6 : in std_logic_vector(0 downto 0)
+      );
+  end component;
+
+  component ila_eth_infra
+    port (
+      clk     : in std_logic;
+      probe0  : in std_logic_vector(7 downto 0);
+      probe1  : in std_logic_vector(7 downto 0);
+      probe2  : in std_logic_vector(0 downto 0);
+      probe3  : in std_logic_vector(0 downto 0);
+      probe4  : in std_logic_vector(0 downto 0);
+      probe5  : in std_logic_vector(0 downto 0);
+      probe6  : in std_logic_vector(0 downto 0);
+      probe7  : in std_logic_vector(0 downto 0);
+      probe8  : in std_logic_vector(0 downto 0);
+      probe9  : in std_logic_vector(0 downto 0);
+      probe10 : in std_logic_vector(0 downto 0);
+      probe11 : in std_logic_vector(0 downto 0);
+      probe12 : in std_logic_vector(0 downto 0);
+      probe13 : in std_logic_vector(0 downto 0)
+      );
+  end component;
+
 begin
+
+  ila_eth_infra_inst : ila_eth_infra
+    port map (
+      clk        => clk_eth,
+      probe0     => tx_data,
+      probe1     => rx_data,
+      probe2(0)  => tx_valid,
+      probe3(0)  => tx_last,
+      probe4(0)  => tx_error,
+      probe5(0)  => tx_ready,
+      probe6(0)  => rx_valid,
+      probe7(0)  => rx_last,
+      probe8(0)  => rx_error,
+      probe9(0)  => clk_eth,
+      probe10(0) => eth_locked,
+      probe11(0) => locked,
+      probe12(0) => rst_phy,
+      probe13(0) => rst_eth
+      );
 
   --  DCM clock generation for internal bus, ethernet
   clocks : entity work.clocks_us_serdes
@@ -105,11 +157,12 @@ begin
       clki_125      => clk_eth,
       clko_ipb      => clk_ipb_i,
       clko_aux      => clk_aux,
+      clko_200      => clk_200,
       eth_locked    => eth_locked,
       locked        => clk_locked,
       nuke          => nuke,
       soft_rst      => soft_rst,
-      rsto_125      => rst125,
+      rsto_125      => open,
       rsto_ipb      => rst_ipb,
       rsto_aux      => rst_aux,
       rsto_eth      => rst_phy,
@@ -155,12 +208,11 @@ begin
       sgmii_txn              => sgmii_txn,
       sgmii_rxp              => sgmii_rxp,
       sgmii_rxn              => sgmii_rxn,
-      phy_on                 => phy_on,
       phy_resetb             => phy_resetb,
       phy_mdio               => phy_mdio,
+      phy_interrupt          => phy_interrupt,
       phy_mdc                => phy_mdc
       );
-
 
   ipbus : entity work.ipbus_ctrl
     port map(
@@ -184,10 +236,18 @@ begin
       pkt          => pkt
       );
 
-  -- TODO: Add equivalent of 'stretched' "pkt" signal from ku105 design
+    ila_ipb_master_inst : ila_ipb
+      port map (
+        clk       => clk_ipb_i,
+        probe0    => ipb_out.ipb_addr,
+        probe1    => ipb_out.ipb_wdata,
+        probe2(0) => ipb_out.ipb_strobe,
+        probe3(0) => ipb_out.ipb_write,
+        probe4    => ipb_in.ipb_rdata,
+        probe5(0) => ipb_in.ipb_ack,
+        probe6(0) => ipb_in.ipb_err
+        );
+
   leds <= '0' & (locked and onehz);
-
-
-
 
 end rtl;

@@ -17,7 +17,9 @@ use work.types.all;
 
 entity control is
   generic(
-    NUM_RBS : integer := 8
+    NUM_RBS   : integer              := 8;
+    EN_LPGBTS : integer range 0 to 1 := 0;
+    DEBUG     : boolean              := false
     );
   port(
 
@@ -81,18 +83,6 @@ begin
   -- ipbus fabric selector
   --------------------------------------------------------------------------------
 
-  ila_ipb_master_inst : ila_ipb
-    port map (
-      clk       => clock,
-      probe0    => ipb_w.ipb_addr,
-      probe1    => ipb_w.ipb_wdata,
-      probe2(0) => ipb_w.ipb_strobe,
-      probe3(0) => ipb_w.ipb_write,
-      probe4    => ipb_r.ipb_rdata,
-      probe5(0) => ipb_r.ipb_ack,
-      probe6(0) => ipb_r.ipb_err
-      );
-
   fabric : entity ipbus.ipbus_fabric_sel
     generic map(
       NSLV      => N_SLAVES,
@@ -109,48 +99,24 @@ begin
   -- MGT Interface
   --------------------------------------------------------------------------------
 
-  ila_mgt_inst : ila_ipb
-    port map (
-      clk       => clock,
-      probe0    => ipb_w_array(N_SLV_FW_INFO).ipb_addr,
-      probe1    => ipb_w_array(N_SLV_FW_INFO).ipb_wdata,
-      probe2(0) => ipb_w_array(N_SLV_FW_INFO).ipb_strobe,
-      probe3(0) => ipb_w_array(N_SLV_FW_INFO).ipb_write,
-      probe4    => ipb_r_array(N_SLV_FW_INFO).ipb_rdata,
-      probe5(0) => ipb_r_array(N_SLV_FW_INFO).ipb_ack,
-      probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
-      );
-
-  MGT_wb_interface : entity ctrl_lib.MGT_wb_interface
-    port map (
-      clk       => clock,
-      reset     => reset,
-      wb_addr   => ipb_w_array(N_SLV_MGT).ipb_addr,
-      wb_wdata  => ipb_w_array(N_SLV_MGT).ipb_wdata,
-      wb_strobe => ipb_w_array(N_SLV_MGT).ipb_strobe,
-      wb_write  => ipb_w_array(N_SLV_MGT).ipb_write,
-      wb_rdata  => ipb_r_array(N_SLV_MGT).ipb_rdata,
-      wb_ack    => ipb_r_array(N_SLV_MGT).ipb_ack,
-      wb_err    => ipb_r_array(N_SLV_MGT).ipb_err,
-      mon       => mgt_mon,
-      ctrl      => mgt_ctrl
-      );
+  -- MGT_wb_interface : entity ctrl_lib.MGT_wb_interface
+  --   port map (
+  --     clk       => clock,
+  --     reset     => reset,
+  --     wb_addr   => ipb_w_array(N_SLV_MGT).ipb_addr,
+  --     wb_wdata  => ipb_w_array(N_SLV_MGT).ipb_wdata,
+  --     wb_strobe => ipb_w_array(N_SLV_MGT).ipb_strobe,
+  --     wb_write  => ipb_w_array(N_SLV_MGT).ipb_write,
+  --     wb_rdata  => ipb_r_array(N_SLV_MGT).ipb_rdata,
+  --     wb_ack    => ipb_r_array(N_SLV_MGT).ipb_ack,
+  --     wb_err    => ipb_r_array(N_SLV_MGT).ipb_err,
+  --     mon       => mgt_mon,
+  --     ctrl      => mgt_ctrl
+  --     );
 
   --------------------------------------------------------------------------------
   -- FW Info
   --------------------------------------------------------------------------------
-
-  ila_ipb_fwinfo_inst : ila_ipb
-    port map (
-      clk       => clock,
-      probe0    => ipb_w_array(N_SLV_FW_INFO).ipb_addr,
-      probe1    => ipb_w_array(N_SLV_FW_INFO).ipb_wdata,
-      probe2(0) => ipb_w_array(N_SLV_FW_INFO).ipb_strobe,
-      probe3(0) => ipb_w_array(N_SLV_FW_INFO).ipb_write,
-      probe4    => ipb_r_array(N_SLV_FW_INFO).ipb_rdata,
-      probe5(0) => ipb_r_array(N_SLV_FW_INFO).ipb_ack,
-      probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
-      );
 
   FW_INFO_wb_interface : entity ctrl_lib.FW_INFO_wb_interface
     port map (
@@ -173,32 +139,78 @@ begin
   rbgen : for I in 0 to NUM_RBS-1 generate
     constant RB_BASE : integer := N_SLV_READOUT_BOARD_0;
   begin
-    READOUT_BOARD_wb_interface_inst : entity ctrl_lib.READOUT_BOARD_wb_interface
+    rb_en : if (EN_LPGBTS = 1) generate
+
+      READOUT_BOARD_wb_interface_inst : entity ctrl_lib.READOUT_BOARD_wb_interface
+        port map (
+          clk       => clock,
+          reset     => reset,
+          wb_addr   => ipb_w_array(RB_BASE+I).ipb_addr,
+          wb_wdata  => ipb_w_array(RB_BASE+I).ipb_wdata,
+          wb_strobe => ipb_w_array(RB_BASE+I).ipb_strobe,
+          wb_write  => ipb_w_array(RB_BASE+I).ipb_write,
+          wb_rdata  => ipb_r_array(RB_BASE+I).ipb_rdata,
+          wb_ack    => ipb_r_array(RB_BASE+I).ipb_ack,
+          wb_err    => ipb_r_array(RB_BASE+I).ipb_err,
+          mon       => readout_board_mon(I),
+          ctrl      => readout_board_ctrl(I)
+          );
+
+      rb_debug_ilas : if (DEBUG) generate
+        ila_ipb_rb_inst : ila_ipb
+          port map (
+            clk       => clock,
+            probe0    => ipb_w_array(RB_BASE+I).ipb_addr,
+            probe1    => ipb_w_array(RB_BASE+I).ipb_wdata,
+            probe2(0) => ipb_w_array(RB_BASE+I).ipb_strobe,
+            probe3(0) => ipb_w_array(RB_BASE+I).ipb_write,
+            probe4    => ipb_r_array(RB_BASE+I).ipb_rdata,
+            probe5(0) => ipb_r_array(RB_BASE+I).ipb_ack,
+            probe6(0) => ipb_r_array(RB_BASE+I).ipb_err
+            );
+
+      end generate;
+    end generate;
+  end generate;
+
+  debug_ilas : if (DEBUG) generate
+
+    ila_ipb_master_inst : ila_ipb
       port map (
         clk       => clock,
-        reset     => reset,
-        wb_addr   => ipb_w_array(RB_BASE+I).ipb_addr,
-        wb_wdata  => ipb_w_array(RB_BASE+I).ipb_wdata,
-        wb_strobe => ipb_w_array(RB_BASE+I).ipb_strobe,
-        wb_write  => ipb_w_array(RB_BASE+I).ipb_write,
-        wb_rdata  => ipb_r_array(RB_BASE+I).ipb_rdata,
-        wb_ack    => ipb_r_array(RB_BASE+I).ipb_ack,
-        wb_err    => ipb_r_array(RB_BASE+I).ipb_err,
-        mon       => readout_board_mon(I),
-        ctrl      => readout_board_ctrl(I)
+        probe0    => ipb_w.ipb_addr,
+        probe1    => ipb_w.ipb_wdata,
+        probe2(0) => ipb_w.ipb_strobe,
+        probe3(0) => ipb_w.ipb_write,
+        probe4    => ipb_r.ipb_rdata,
+        probe5(0) => ipb_r.ipb_ack,
+        probe6(0) => ipb_r.ipb_err
         );
 
-    ila_ipb_rb_inst : ila_ipb
+
+    ila_ipb_fwinfo_inst : ila_ipb
       port map (
         clk       => clock,
-        probe0    => ipb_w_array(RB_BASE+I).ipb_addr,
-        probe1    => ipb_w_array(RB_BASE+I).ipb_wdata,
-        probe2(0) => ipb_w_array(RB_BASE+I).ipb_strobe,
-        probe3(0) => ipb_w_array(RB_BASE+I).ipb_write,
-        probe4    => ipb_r_array(RB_BASE+I).ipb_rdata,
-        probe5(0) => ipb_r_array(RB_BASE+I).ipb_ack,
-        probe6(0) => ipb_r_array(RB_BASE+I).ipb_err
+        probe0    => ipb_w_array(N_SLV_FW_INFO).ipb_addr,
+        probe1    => ipb_w_array(N_SLV_FW_INFO).ipb_wdata,
+        probe2(0) => ipb_w_array(N_SLV_FW_INFO).ipb_strobe,
+        probe3(0) => ipb_w_array(N_SLV_FW_INFO).ipb_write,
+        probe4    => ipb_r_array(N_SLV_FW_INFO).ipb_rdata,
+        probe5(0) => ipb_r_array(N_SLV_FW_INFO).ipb_ack,
+        probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
         );
+    ila_mgt_inst : ila_ipb
+      port map (
+        clk       => clock,
+        probe0    => ipb_w_array(N_SLV_FW_INFO).ipb_addr,
+        probe1    => ipb_w_array(N_SLV_FW_INFO).ipb_wdata,
+        probe2(0) => ipb_w_array(N_SLV_FW_INFO).ipb_strobe,
+        probe3(0) => ipb_w_array(N_SLV_FW_INFO).ipb_write,
+        probe4    => ipb_r_array(N_SLV_FW_INFO).ipb_rdata,
+        probe5(0) => ipb_r_array(N_SLV_FW_INFO).ipb_ack,
+        probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
+        );
+
   end generate;
 
 end behavioral;

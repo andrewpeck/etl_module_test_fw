@@ -66,3 +66,5 @@ ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_build_resend.vhd
 
 ipbus-firmware/components/ipbus_transport_udp/firmware/hdl/udp_if_flat.vhd
 ipbus-firmware/components/ipbus_core/firmware/hdl/trans_arb.vhd
+
+ip/ila_eth_infra/ila_eth_infra.xci
