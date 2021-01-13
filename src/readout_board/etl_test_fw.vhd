@@ -43,18 +43,18 @@ entity etl_test_fw is
     NUM_REFCLK : integer := 2;
 
     -- these generics get set by hog at synthesis
-    GLOBAL_FWDATE       : std_logic_vector (31 downto 0) := x"00000000";
-    GLOBAL_FWTIME       : std_logic_vector (31 downto 0) := x"00000000";
-    OFFICIAL            : std_logic_vector (31 downto 0) := x"00000000";
-    GLOBAL_FWHASH       : std_logic_vector (31 downto 0) := x"00000000";
-    TOP_FWHASH          : std_logic_vector (31 downto 0) := x"00000000";
-    XML_HASH            : std_logic_vector (31 downto 0) := x"00000000";
-    GLOBAL_FWVERSION    : std_logic_vector (31 downto 0) := x"00000000";
-    TOP_FWVERSION       : std_logic_vector (31 downto 0) := x"00000000";
-    XML_VERSION         : std_logic_vector (31 downto 0) := x"00000000";
-    HOG_FWHASH          : std_logic_vector (31 downto 0) := x"00000000";
-    FRAMEWORK_FWVERSION : std_logic_vector (31 downto 0) := x"00000000";
-    FRAMEWORK_FWHASH    : std_logic_vector (31 downto 0) := x"00000000"
+    GLOBAL_FWDATE       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_FWTIME       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    OFFICIAL            : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_FWHASH       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    TOP_FWHASH          : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    XML_HASH            : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_FWVERSION    : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    TOP_FWVERSION       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    XML_VERSION         : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    HOG_FWHASH          : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    FRAMEWORK_FWVERSION : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    FRAMEWORK_FWHASH    : std_logic_vector (31 downto 0) := x"DEFFFFFF"
     );
   port(
 
