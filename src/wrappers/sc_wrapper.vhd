@@ -18,6 +18,8 @@ entity gbt_controller_wrapper is
     -- reset
     reset_i : in std_logic;
 
+    ctrl_clk : in std_logic;
+
     mon  : out READOUT_BOARD_SC_MON_t;
     ctrl : in  READOUT_BOARD_SC_CTRL_t;
 
@@ -128,14 +130,13 @@ begin
       tx_register_addr_i => ctrl.master.tx_register_addr,
       tx_nb_to_be_read_i => ctrl.master.tx_num_bytes_to_read,
 
-      wr_clk_i          => clk,
+      wr_clk_i          => ctrl_clk,
       tx_wr_i           => ctrl.master.tx_wr,
       tx_data_to_gbtx_i => ctrl.master.tx_data_to_gbtx,
 
-      rd_clk_i            => clk,
+      rd_clk_i            => ctrl_clk,
       rx_rd_i             => ctrl.master.rx_rd,
       rx_data_from_gbtx_o => mon.master.rx_data_from_gbtx,
-
 
       -- SCA Command
       rx_address_o(0)  => mon.master.rx.rx(0).rx_address,

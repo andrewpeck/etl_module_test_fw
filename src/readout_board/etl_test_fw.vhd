@@ -283,6 +283,7 @@ begin
       reset              => ipb_rst,
       clock              => ipb_clk,
       fw_info_mon        => fw_info_mon,
+      ctrl_clk           => ipb_clk,
       readout_board_mon  => readout_board_mon,
       readout_board_ctrl => readout_board_ctrl,
       mgt_mon            => mgt_mon,
@@ -370,7 +371,7 @@ begin
       xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
         port map (
           mgt_refclk_i      => refclk,
-          mgt_freedrpclk_i  => clk40,
+          mgt_freedrpclk_i  => ipb_clk,
           mgt_rxusrclk_o    => userclk_rx_usrclk_out(I),
           mgt_txusrclk_o    => userclk_tx_usrclk_out(I),
           mgt_txreset_i     => not locked,

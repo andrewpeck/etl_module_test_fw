@@ -30,8 +30,9 @@ entity readout_board is
 
     reset : in std_logic;
 
-    mon  : out READOUT_BOARD_MON_t;
-    ctrl : in  READOUT_BOARD_CTRL_t;
+    ctrl_clk : in  std_logic;
+    mon      : out READOUT_BOARD_MON_t;
+    ctrl     : in  READOUT_BOARD_CTRL_t;
 
     trig_uplink_bitslip : out std_logic_vector (NUM_LPGBTS_TRIG-1 downto 0);
     daq_uplink_bitslip  : out std_logic_vector (NUM_LPGBTS_DAQ-1 downto 0);
@@ -200,12 +201,13 @@ begin
       g_SCAS_PER_LPGBT => NUM_SCAS
       )
     port map (
-      reset_i => reset,
-      mon     => mon.sc,
-      ctrl    => ctrl.sc,
-      clk320  => clk320,
-      clk40   => clk40,
-      valid_i => '1',
+      reset_i  => reset,
+      ctrl_clk => ctrl_clk,
+      mon      => mon.sc,
+      ctrl     => ctrl.sc,
+      clk320   => clk320,
+      clk40    => clk40,
+      valid_i  => '1',
 
       -- FIXME: parameterize these outputs in an array to avoid hardcoded sizes
       ic_data_i => daq_uplink_data(0).ic,
