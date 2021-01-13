@@ -100,10 +100,10 @@ entity etl_test_fw is
     sgmii_rxp   : in  std_logic;
     sgmii_rxn   : in  std_logic;
 
-    phy_resetb : out   std_logic;        -- reset signal
-    phy_mdio   : inout std_logic;        -- control line to program the PHY chip
-    phy_mdc    : out   std_logic;        -- clock line (must be < 2.5 MHz)
-    phy_interrupt    : out   std_logic;        --
+    phy_resetb    : out   std_logic;    -- reset signal
+    phy_mdio      : inout std_logic;    -- control line to program the PHY chip
+    phy_mdc       : out   std_logic;    -- clock line (must be < 2.5 MHz)
+    phy_interrupt : out   std_logic;    --
 
     -- status LEDs
     leds : out std_logic_vector(7 downto 0)
@@ -215,32 +215,32 @@ begin
   eth : if (USE_ETH = 1) generate
     eth_infra_inst : entity ipbus.eth_infra
       port map (
-        osc_clk_300 => clk_osc300,
-        osc_clk_125 => clk_osc125,
-        rst_in      => (others => '0'),
-        dip_sw      => (others => '0'),
-        leds        => open,
-        debug_leds  => open,
-        sgmii_clk_p => sgmii_clk_p,
-        sgmii_clk_n => sgmii_clk_n,
-        sgmii_txp   => sgmii_txp,
-        sgmii_txn   => sgmii_txn,
-        sgmii_rxp   => sgmii_rxp,
-        sgmii_rxn   => sgmii_rxn,
-        phy_resetb  => phy_resetb,
-        phy_mdio    => phy_mdio,
-      phy_interrupt               => phy_interrupt,
-        phy_mdc     => phy_mdc,
-        clk_ipb_o   => ipb_clk,
-        rst_ipb_o   => ipb_rst,
-        clk_aux_o   => open,
-        rst_aux_o   => open,
-        nuke        => nuke,
-        soft_rst    => soft_rst,
-        mac_addr    => MAC_ADDR,
-        ip_addr     => to_slv(IP_ADDR),
-        ipb_in      => ipb_r,
-        ipb_out     => ipb_w
+        osc_clk_300   => clk_osc300,
+        osc_clk_125   => clk_osc125,
+        rst_in        => (others => '0'),
+        dip_sw        => (others => '0'),
+        leds          => open,
+        debug_leds    => open,
+        sgmii_clk_p   => sgmii_clk_p,
+        sgmii_clk_n   => sgmii_clk_n,
+        sgmii_txp     => sgmii_txp,
+        sgmii_txn     => sgmii_txn,
+        sgmii_rxp     => sgmii_rxp,
+        sgmii_rxn     => sgmii_rxn,
+        phy_resetb    => phy_resetb,
+        phy_mdio      => phy_mdio,
+        phy_interrupt => phy_interrupt,
+        phy_mdc       => phy_mdc,
+        clk_ipb_o     => ipb_clk,
+        rst_ipb_o     => ipb_rst,
+        clk_aux_o     => open,
+        rst_aux_o     => open,
+        nuke          => nuke,
+        soft_rst      => soft_rst,
+        mac_addr      => MAC_ADDR,
+        ip_addr       => to_slv(IP_ADDR),
+        ipb_in        => ipb_r,
+        ipb_out       => ipb_w
         );
   end generate;
 
