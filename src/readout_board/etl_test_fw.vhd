@@ -283,7 +283,6 @@ begin
       reset              => ipb_rst,
       clock              => ipb_clk,
       fw_info_mon        => fw_info_mon,
-      ctrl_clk           => ipb_clk,
       readout_board_mon  => readout_board_mon,
       readout_board_ctrl => readout_board_ctrl,
       mgt_mon            => mgt_mon,
@@ -336,8 +335,13 @@ begin
           txclk                      => userclk_tx_usrclk_out(I),
           rxclk                      => userclk_rx_usrclk_out(I),
           reset                      => not locked,
+
+          -- slow control
+          ctrl_clk                   => ipb_clk,
           mon                        => readout_board_mon(I),
           ctrl                       => readout_board_ctrl(I),
+
+          -- data
           trig_uplink_bitslip        => trig_uplink_bitslip(NT*(I+1)-1 downto NT*I),
           daq_uplink_bitslip         => daq_uplink_bitslip(ND*(I+1)-1 downto ND*I),
           trig_uplink_mgt_word_array => trig_uplink_mgt_word_array(NT*(I+1)-1 downto NT*I),
