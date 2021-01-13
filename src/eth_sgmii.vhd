@@ -44,6 +44,9 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity eth_sgmii_lvds is
+    generic(
+      C_DEBUG : boolean := false
+      );
     port(
         -- clock and data i/o (connected to external device)
         sgmii_clk_p : in    std_logic;  --> 625 MHz clock
@@ -82,54 +85,6 @@ entity eth_sgmii_lvds is
 end eth_sgmii_lvds;
 
 architecture rtl of eth_sgmii_lvds is
-
-  component vio_sgmii
-    port (
-      clk        : in  std_logic;
-      probe_out0 : out std_logic_vector(0 downto 0);
-      probe_out1 : out std_logic_vector(0 downto 0);
-      probe_out2 : out std_logic_vector(0 downto 0);
-      probe_out3 : out std_logic_vector(0 downto 0);
-      probe_out4 : out std_logic_vector(0 downto 0);
-      probe_out5 : out std_logic_vector(0 downto 0)
-      );
-  end component;
-
-  component ila_sgmii
-    port (
-      clk : in std_logic;
-      probe0  : in std_logic_vector(0 downto 0);
-      probe1  : in std_logic_vector(0 downto 0);
-      probe2  : in std_logic_vector(0 downto 0);
-      probe3  : in std_logic_vector(7 downto 0);
-      probe4  : in std_logic_vector(7 downto 0);
-      probe5  : in std_logic_vector(0 downto 0);
-      probe6  : in std_logic_vector(0 downto 0);
-      probe7  : in std_logic_vector(0 downto 0);
-      probe8  : in std_logic_vector(0 downto 0);
-      probe9  : in std_logic_vector(0 downto 0);
-      probe10 : in std_logic_vector(0 downto 0);
-      probe11 : in std_logic_vector(15 downto 0);
-      probe12 : in std_logic_vector(0 downto 0);
-      probe13 : in std_logic_vector(0 downto 0);
-      probe14 : in std_logic_vector(0 downto 0);
-      probe15 : in std_logic_vector(0 downto 0);
-      probe16 : in std_logic_vector(0 downto 0);
-      probe17 : in std_logic_vector(0 downto 0);
-      probe18 : in std_logic_vector(0 downto 0);
-      probe19 : in std_logic_vector(0 downto 0);
-      probe20 : in std_logic_vector(0 downto 0);
-      probe21 : in std_logic_vector(0 downto 0);
-      probe22 : in std_logic_vector(0 downto 0);
-      probe23 : in std_logic_vector(0 downto 0);
-      probe24 : in std_logic_vector(0 downto 0);
-      probe25 : in std_logic_vector(0 downto 0);
-      probe26 : in std_logic_vector(0 downto 0);
-      probe27 : in std_logic_vector(0 downto 0);
-      probe28 : in std_logic_vector(7 downto 0);
-      probe29 : in std_logic_vector(7 downto 0)
-      );
-  end component;
 
 
     --- this is the MAC ---
@@ -207,7 +162,6 @@ architecture rtl of eth_sgmii_lvds is
 
       an_interrupt         : out std_logic;
       an_adv_config_vector : in  std_logic_vector(15 downto 0);
-      -- an_adv_config_val    : in  std_logic;
 
       an_restart_config    : in  std_logic;
 
@@ -218,17 +172,6 @@ architecture rtl of eth_sgmii_lvds is
 
       reset                : in  std_logic;
 
-      -- mdc                  : in  std_logic;
-      -- mdio_i               : in  std_logic;
-      -- mdio_o               : out std_logic;
-      -- mdio_t               : out std_logic;
-      -- ext_mdc              : out std_logic;
-      -- ext_mdio_i           : in  std_logic;
-      -- ext_mdio_o           : out std_logic;
-      -- ext_mdio_t           : out std_logic;
-      -- phyaddr              : in  std_logic_vector(4 downto 0);
-      -- configuration_valid : in  std_logic;
-
       signal_detect        : in  std_logic;
       idelay_rdy_out       : out std_logic
       );
@@ -238,9 +181,13 @@ architecture rtl of eth_sgmii_lvds is
     signal speedis100              : std_logic;
     signal speedis10100            : std_logic;
 
-    signal phy_reset_vio            : std_logic;
+    -- vio signals
+    signal rst_vio                : std_logic := '0';
+    signal phy_reset_vio          : std_logic := '0';
+    signal sgmii_reset, mac_reset : std_logic := '0';
+    signal phy_cfg_not_done       : std_logic := '0';
     
-        signal clk_en : std_logic;
+    signal clk_en : std_logic;
 
 
     signal mdio_i, mdio_o, mdio_t : std_logic;
@@ -252,7 +199,6 @@ architecture rtl of eth_sgmii_lvds is
     --- resets
     signal rst_delay_slr              : std_logic_vector(5 downto 0) := (others => '1');  -- reset delay shift-register
     signal rst125_sgmii              : std_logic;  -- out from SGMII
-    signal rst_vio : std_logic;  -- out from SGMII
     signal tx_reset_out, rx_reset_out : std_logic;  -- out from MAC
 
     --- locked
@@ -265,69 +211,18 @@ architecture rtl of eth_sgmii_lvds is
     -- sgmii controls and status
     signal force_an      : std_logic := '0';
     signal force_val     : std_logic := '0';
-    signal an_restart    : std_logic := '0';
-    signal an_config_val : std_logic := '0';
     signal an_interrupt  : std_logic;
 
     signal an_config_vector : std_logic_vector (15 downto 0) := (others => '0');
 
     signal sgmii_status_vector : std_logic_vector(15 downto 0);
 
-    -- mdio controls and status
-    signal sgmii_reset, mac_reset : std_logic := '1';
-    signal phy_cfg_not_done       : std_logic := '1';
 
 begin
 
   link_up <= sgmii_status_vector(1);
 
   phy_interrupt <= not an_interrupt;
-
-  vio_sgmii_1 : vio_sgmii
-    port map (
-      clk           => clk125_fr,
-      probe_out0(0) => force_an,
-      probe_out1(0) => force_val,
-      probe_out2(0) => phy_reset_vio,
-      probe_out3(0) => sgmii_reset,
-      probe_out4(0) => mac_reset,
-      probe_out5(0) => rst_vio
-      );
-
-  ila_sgmii_inst : ila_sgmii
-    port map (
-      clk        => clk125_fr,
-      probe0(0)  => mmcm_locked,
-      probe1(0)  => an_config_val,
-      probe2(0)  => clk_en,
-      probe3     => gmii_txd(7 downto 0),
-      probe4     => gmii_rxd(7 downto 0),
-      probe5(0)  => gmii_tx_en,
-      probe6(0)  => gmii_tx_er,
-      probe7(0)  => gmii_rx_dv,
-      probe8(0)  => gmii_rx_er,
-      probe9(0)  => an_restart,
-      probe10(0) => rst125_sgmii,
-      probe11    => sgmii_status_vector (15 downto 0),
-      probe12(0) => phy_cfg_not_done,
-      probe13(0) => speedis100,
-      probe14(0) => speedis10100,
-      probe15(0) => '1',
-      probe16(0) => '1',
-      probe17(0) => tx_reset_out,
-      probe18(0) => rx_reset_out,
-      probe19(0) => '1',
-      probe20(0) => '1',
-      probe21(0) => mdio_i,
-      probe22(0) => mdio_o,
-      probe23(0) => mdio_t,
-      probe24(0) => clk125_sgmii,
-      probe25(0) => rst,
-      probe26(0) => onehz,
-      probe27(0) => onehz_re,
-      probe28    => rx_data,
-      probe29    => tx_data
-      );
 
     clkdiv : entity work.ipbus_clock_div
         port map(
@@ -356,42 +251,6 @@ begin
                 rst_delay_slr <= "0" & rst_delay_slr(rst_delay_slr'length-1 downto 1);
             end if;
         end if;
-    end process;
-
-    -- Auto negotiator.
-    -- 2 clock-cycle (?) high on the rising edge of
-
-    process(clk125_fr)
-      variable link_up_r      : std_logic                     := '0';
-      variable reconfigure_sr : std_logic_vector (3 downto 0) := (others => '1');
-    begin
-      if rising_edge(clk125_fr) then
-
-        if rst_vio = '1' or rst = '1' or (rst_delay_slr(0) = '1') or (link_up = '0') then
-          reconfigure_sr := (others => '1');
-        else
-          reconfigure_sr := "0" & reconfigure_sr(reconfigure_sr'length-1 downto 1);
-        end if;
-
-        if (force_an = '1' or (reconfigure_sr(3) = '0' and reconfigure_sr(2) = '1')) then
-          an_restart <= '1';
-        else
-          an_restart <= '0';
-        end if;
-
-        if (force_val = '1' or (reconfigure_sr(2) = '0' and reconfigure_sr(1) = '1')) then
-          an_config_val <= '1';
-        else
-          an_config_val <= '0';
-        end if;
-
-        -- if (reconfigure_sr(0) = '0') then
-        --   phy_cfg_not_done <= '0';
-        -- else
-        --   phy_cfg_not_done <= '1';
-        -- end if;
-
-      end if;
     end process;
 
     phy_cfg_not_done <= rst_delay_slr(0);
@@ -456,21 +315,20 @@ begin
         T  => mdio_t
         );
 
-  -- TODO: uncomment this when the vio is removed
-  an_config_vector <= (0      => '1',      -- [0] 1 = SGMII
-                                           -- [4:1] Reserved
-                                           -- [5] Reserved
-                                           -- [6] Reserved
-                                           -- [8:7] Reserved
-                                           -- [9] Reserved
-                       10     => '0',      --
-                       11     => '1',      -- [11:10]="10" ==> 1000 Mb/s
-                       12     => '1',      -- 1 = full duplex, 0 = half-duplex
-                       13     => '0',      -- reserved
-                       14     => '1',      -- acknowledge
-                       15     => '1',  -- 1 = link up, 0 = link down
-                       others => '0'
-                          );
+    an_config_vector <= (0      => '1',      -- [0] 1 = SGMII
+                                            -- [4:1] Reserved
+                                            -- [5] Reserved
+                                            -- [6] Reserved
+                                            -- [8:7] Reserved
+                                            -- [9] Reserved
+                        10     => '0',      --
+                        11     => '1',      -- [11:10]="10" ==> 1000 Mb/s
+                        12     => '1',      -- 1 = full duplex, 0 = half-duplex
+                        13     => '0',      -- reserved
+                        14     => '1',      -- acknowledge
+                        15     => '1',  -- 1 = link up, 0 = link down
+                        others => '0'
+                            );
 
     -- https://www.xilinx.com/support/documentation/ip_documentation/gig_ethernet_pcs_pma/v16_0/pg047-gig-eth-pcs-pma.pdf
     -- Figure 3-58
@@ -503,17 +361,6 @@ begin
         gmii_rx_er           => gmii_rx_er,
         gmii_isolate         => open,
 
-      -- mdc                  => clk2mhz,
-      -- mdio_i               => '1',
-      -- mdio_o               => open,
-      -- mdio_t               => open,
-      -- ext_mdc              => phy_mdc,
-      -- ext_mdio_i           => mdio_i,
-      -- ext_mdio_o           => mdio_o,
-      -- ext_mdio_t           => mdio_t,
-      -- phyaddr              => "00111",
-      -- configuration_valid  => '1',
-
         -- Configuration
         configuration_vector => (
                                  -- 0 = unidirectional enable, set to 0
@@ -526,9 +373,8 @@ begin
         -- Auto Negotiation
         an_interrupt         => an_interrupt,
         an_adv_config_vector => an_config_vector,
-      --an_adv_config_val    => an_config_val,  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
 
-        an_restart_config    => an_restart, -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
+        an_restart_config    => '1',
 
         speed_is_10_100      => speedis10100, -- 0 for 1 Gb/s
         speed_is_100         => speedis100, -- 0 for 1 Gb/s
@@ -542,5 +388,102 @@ begin
         );
 
     locked  <= mmcm_locked;
+
+    debugilas : if (C_DEBUG) generate
+    component vio_sgmii
+      port (
+        clk        : in  std_logic;
+        probe_out0 : out std_logic_vector(0 downto 0);
+        probe_out1 : out std_logic_vector(0 downto 0);
+        probe_out2 : out std_logic_vector(0 downto 0);
+        probe_out3 : out std_logic_vector(0 downto 0);
+        probe_out4 : out std_logic_vector(0 downto 0);
+        probe_out5 : out std_logic_vector(0 downto 0)
+        );
+    end component;
+
+    component ila_sgmii
+      port (
+        clk : in std_logic;
+        probe0  : in std_logic_vector(0 downto 0);
+        probe1  : in std_logic_vector(0 downto 0);
+        probe2  : in std_logic_vector(0 downto 0);
+        probe3  : in std_logic_vector(7 downto 0);
+        probe4  : in std_logic_vector(7 downto 0);
+        probe5  : in std_logic_vector(0 downto 0);
+        probe6  : in std_logic_vector(0 downto 0);
+        probe7  : in std_logic_vector(0 downto 0);
+        probe8  : in std_logic_vector(0 downto 0);
+        probe9  : in std_logic_vector(0 downto 0);
+        probe10 : in std_logic_vector(0 downto 0);
+        probe11 : in std_logic_vector(15 downto 0);
+        probe12 : in std_logic_vector(0 downto 0);
+        probe13 : in std_logic_vector(0 downto 0);
+        probe14 : in std_logic_vector(0 downto 0);
+        probe15 : in std_logic_vector(0 downto 0);
+        probe16 : in std_logic_vector(0 downto 0);
+        probe17 : in std_logic_vector(0 downto 0);
+        probe18 : in std_logic_vector(0 downto 0);
+        probe19 : in std_logic_vector(0 downto 0);
+        probe20 : in std_logic_vector(0 downto 0);
+        probe21 : in std_logic_vector(0 downto 0);
+        probe22 : in std_logic_vector(0 downto 0);
+        probe23 : in std_logic_vector(0 downto 0);
+        probe24 : in std_logic_vector(0 downto 0);
+        probe25 : in std_logic_vector(0 downto 0);
+        probe26 : in std_logic_vector(0 downto 0);
+        probe27 : in std_logic_vector(0 downto 0);
+        probe28 : in std_logic_vector(7 downto 0);
+        probe29 : in std_logic_vector(7 downto 0)
+        );
+    end component;
+
+      begin
+      vio_sgmii_1 : vio_sgmii
+        port map (
+          clk           => clk125_fr,
+          probe_out0(0) => force_an,
+          probe_out1(0) => force_val,
+          probe_out2(0) => phy_reset_vio,
+          probe_out3(0) => sgmii_reset,
+          probe_out4(0) => mac_reset,
+          probe_out5(0) => rst_vio
+          );
+
+      ila_sgmii_inst : ila_sgmii
+        port map (
+          clk        => clk125_fr,
+          probe0(0)  => mmcm_locked,
+          probe1(0)  => '1',
+          probe2(0)  => clk_en,
+          probe3     => gmii_txd(7 downto 0),
+          probe4     => gmii_rxd(7 downto 0),
+          probe5(0)  => gmii_tx_en,
+          probe6(0)  => gmii_tx_er,
+          probe7(0)  => gmii_rx_dv,
+          probe8(0)  => gmii_rx_er,
+          probe9(0)  => '1',
+          probe10(0) => rst125_sgmii,
+          probe11    => sgmii_status_vector (15 downto 0),
+          probe12(0) => phy_cfg_not_done,
+          probe13(0) => speedis100,
+          probe14(0) => speedis10100,
+          probe15(0) => '1',
+          probe16(0) => '1',
+          probe17(0) => tx_reset_out,
+          probe18(0) => rx_reset_out,
+          probe19(0) => '1',
+          probe20(0) => '1',
+          probe21(0) => mdio_i,
+          probe22(0) => mdio_o,
+          probe23(0) => mdio_t,
+          probe24(0) => clk125_sgmii,
+          probe25(0) => rst,
+          probe26(0) => onehz,
+          probe27(0) => onehz_re,
+          probe28    => rx_data,
+          probe29    => tx_data
+          );
+    end generate;
 
 end rtl;
