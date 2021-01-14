@@ -4,29 +4,38 @@ digraph {
   edge [fontname = "helvetica"];
   node [width=0.5 shape=rectangle];
 
-  "PCIE" -> "K800 Infra"
   {rank=same; "SFP/Firefly", "PCIE"}
   {rank=same; "Control" , "MGT\nWrapper"}
-  //"etl_test_fw"
-  //"etl_test_fw" -> "K800 Infra"
-  //"etl_test_fw" -> "Control"
-  //"etl_test_fw" -> "MGT\nWrapper"
-  //"etl_test_fw" -> "Readout\nBoards"
-  //{rank=same; "K800 Infra", "Control", "MGT\nWrapper", "Readout\nBoards"}
+
+  "RJ45" -> "Eth Infra"
+  "Eth Infra" -> "PCS/PMA"
+  "Eth Infra" -> "MAC"
+  "Eth Infra" -> "UDP"
+  "Eth Infra" -> "Ethernet\nIPBus\nTransactor"
+  subgraph cluster_eth {
+    graph[style=dotted];
+    label=<<FONT POINT-SIZE="20">Ethernet Infrastructure</FONT>>
+    labelloc="bot"
+    "PCS/PMA" -> "MAC"
+    MAC -> UDP
+    UDP -> "Ethernet\nIPBus\nTransactor"
+    {rank=same; "PCS/PMA" , "MAC" , "UDP", "Ethernet\nIPBus\nTransactor"}
+  }
 
   "Control" -> "MGT\nWrapper"
   "Control" -> "Readout\nBoard"
 
-  subgraph cluster_k800 {
+  "PCIE" -> "PCIE Infra"
+  subgraph cluster_PCIE {
     graph[style=dotted];
     label=<<FONT POINT-SIZE="20">IPBus Infrastructure</FONT>>
     labelloc="bot"
-    "K800 Infra" -> "Clock\nGeneration"
-    "K800 Infra" -> "XDMA"
-    "K800 Infra" -> "AXI IPBus\nTransport"
-    "K800 Infra" -> "IPBus\nTransactor"
+    "PCIE Infra" -> "AXI\nIPBus\nTransactor"
+    "PCIE Infra" -> "Clock\nGeneration"
+    "PCIE Infra" -> "XDMA"
+    "PCIE Infra" -> "AXI IPBus\nTransport"
     //"XDMA" -> "AXI IPBus\nTransport" -> "IPBus\nTransactor"
-    {rank=same; "XDMA" , "AXI IPBus\nTransport" , "IPBus\nTransactor"}
+    //{rank=same; "XDMA" , "AXI IPBus\nTransport" , "IPBus\nTransactor"}
   }
   //"Control" -> "Readout\nBoards"
 
@@ -58,7 +67,8 @@ digraph {
     }
   }
 
-  "IPBus\nTransactor" -> "Control"
+  "AXI\nIPBus\nTransactor" -> "Control"
+  "Ethernet\nIPBus\nTransactor" -> "Control"
 
 
 }
