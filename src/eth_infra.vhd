@@ -43,32 +43,32 @@ use UNISIM.VComponents.all;
 entity eth_infra is
   port (
     -- External oscillators
-    osc_clk_300 : in    std_logic;
-    osc_clk_125 : in    std_logic;
+    osc_clk_300   : in    std_logic;
+    osc_clk_125   : in    std_logic;
     -- status LEDs
-    rst_in      : in    std_logic_vector(4 downto 0);  -- external reset button
-    dip_sw      : in    std_logic_vector(3 downto 0);
-    leds        : out   std_logic_vector(1 downto 0);
-    debug_leds  : out   std_logic_vector(7 downto 0);  -- should be 1 on stable running
+    rst_in        : in    std_logic_vector(4 downto 0);  -- external reset button
+    dip_sw        : in    std_logic_vector(3 downto 0);
+    leds          : out   std_logic_vector(1 downto 0);
+    debug_leds    : out   std_logic_vector(7 downto 0);  -- should be 1 on stable running
     -- SGMII clk and data
-    sgmii_clk_p : in    std_logic;
-    sgmii_clk_n : in    std_logic;
-    sgmii_txp   : out   std_logic;
-    sgmii_txn   : out   std_logic;
-    sgmii_rxp   : in    std_logic;
-    sgmii_rxn   : in    std_logic;
-    phy_resetb  : out   std_logic;
-    phy_mdio    : inout std_logic;
-    phy_mdc     : out   std_logic;
-    phy_interrupt : out std_logic;
+    sgmii_clk_p   : in    std_logic;
+    sgmii_clk_n   : in    std_logic;
+    sgmii_txp     : out   std_logic;
+    sgmii_txn     : out   std_logic;
+    sgmii_rxp     : in    std_logic;
+    sgmii_rxn     : in    std_logic;
+    phy_resetb    : out   std_logic;
+    phy_mdio      : inout std_logic;
+    phy_mdc       : out   std_logic;
+    phy_interrupt : out   std_logic;
     -- IPbus clock and reset
-    clk_ipb_o   : out   std_logic;
-    rst_ipb_o   : out   std_logic;
-    clk_aux_o   : out   std_logic;                     -- 40MHz generated clock
-    rst_aux_o   : out   std_logic;
+    clk_ipb_o     : out   std_logic;
+    rst_ipb_o     : out   std_logic;
+    clk_aux_o     : out   std_logic;                     -- 40MHz generated clock
+    rst_aux_o     : out   std_logic;
     -- The signals of doom and lesser doom
-    nuke        : in    std_logic;
-    soft_rst    : in    std_logic;
+    nuke          : in    std_logic;
+    soft_rst      : in    std_logic;
 
     mac_addr : in  std_logic_vector(47 downto 0);  -- MAC address
     ip_addr  : in  std_logic_vector(31 downto 0);  -- IP address
@@ -81,7 +81,7 @@ end eth_infra;
 
 architecture rtl of eth_infra is
 
-  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux, clk_200                                                            : std_logic;
+  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux, clk_200                                           : std_logic;
   signal locked, clk_locked, eth_locked, rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
 
   -- ipbus to ethernet
@@ -236,17 +236,17 @@ begin
       pkt          => pkt
       );
 
-    -- ila_ipb_master_inst : ila_ipb
-    --   port map (
-    --     clk       => clk_ipb_i,
-    --     probe0    => ipb_out.ipb_addr,
-    --     probe1    => ipb_out.ipb_wdata,
-    --     probe2(0) => ipb_out.ipb_strobe,
-    --     probe3(0) => ipb_out.ipb_write,
-    --     probe4    => ipb_in.ipb_rdata,
-    --     probe5(0) => ipb_in.ipb_ack,
-    --     probe6(0) => ipb_in.ipb_err
-    --     );
+  -- ila_ipb_master_inst : ila_ipb
+  --   port map (
+  --     clk       => clk_ipb_i,
+  --     probe0    => ipb_out.ipb_addr,
+  --     probe1    => ipb_out.ipb_wdata,
+  --     probe2(0) => ipb_out.ipb_strobe,
+  --     probe3(0) => ipb_out.ipb_write,
+  --     probe4    => ipb_in.ipb_rdata,
+  --     probe5(0) => ipb_in.ipb_ack,
+  --     probe6(0) => ipb_in.ipb_err
+  --     );
 
   leds <= '0' & (locked and onehz);
 
