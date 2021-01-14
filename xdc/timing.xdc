@@ -1,15 +1,15 @@
 
-set_max_delay -datapath_only -from [get_clocks clk125_i] -to [get_pins -hierarchical -filter { NAME =~  "*U0/PROBE_PIPE*/D" }] 4
+################################################################################
+# UDP Clock crossing
+################################################################################
 
 set_max_delay -datapath_only \
-    -to [get_pins -hierarchical -filter {NAME =~ "*clock_crossing_if/rx_read_buf_buf_reg*/D"}] 4
+    -from [get_clocks I]  \
+    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*tx*/D}] 4
 
-set_max_delay -datapath_only \
-    -to [get_pins -hierarchical -filter {NAME =~ "*clock_crossing_if/tx_write_buf_buf_reg*/D"}] 4
-
-set_max_delay -datapath_only \
-    -from [get_pins -hierarchical -filter {NAME =~ "*req_send_tff*/Q"}]  \
-    -to   [get_pins -hierarchical -filter {NAME =~ "*req_send_buf*/D"}] 4
+set_max_delay \
+    -from [get_clocks clk125_i] \
+    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*rx*/D}] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i]  \
@@ -20,12 +20,45 @@ set_max_delay -datapath_only \
     -to   [get_pins -hierarchical -filter {NAME =~ "*ipbus_tx_ram/ram_reg_*/*DINPADINP[*]"}] 4
 
 set_max_delay -datapath_only \
-    -from [get_clocks -of_objects [get_pins eth.eth_infra_inst/clocks/mmcm/CLKOUT1]]  \
-    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*/D}] 4
+    -from [get_pins -hierarchical -filter {NAME =~ "*req_send_tff*/Q"}]  \
+    -to   [get_pins -hierarchical -filter {NAME =~ "*req_send_buf*/D"}] 4
 
+
+################################################################################
+## Ipb Clock crossing
+################################################################################
+
+# ipb to clk40
 set_max_delay \
-    -from [get_clocks -of_objects [get_pins eth.eth_infra_inst/eth/sgmii/U0/core_clocking_i/mmcme3_adv_inst/CLKOUT0]] \
-    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*/D}] 4
+         -from [get_clocks I] \
+         -to [get_clocks clk_40_system_clocks] 12.0
+
+# ipb to clk320
+set_max_delay -datapath_only \
+         -from [get_clocks I] \
+         -to [get_clocks clk_320_system_clocks] 3.1
+
+# clk40 to ipb
+set_max_delay -datapath_only \
+         -from [get_clocks clk_40_system_clocks] \
+         -to [get_clocks I] 12.0
+
+# clk320 to ipb
+set_max_delay -datapath_only \
+         -from [get_clocks clk_320_system_clocks] \
+         -to [get_clocks I] 3.1
+
+################################################################################
+# ilas
+################################################################################
+
+set_max_delay -datapath_only \
+    -from [get_clocks clk125_i] \
+    -to [get_pins -hierarchical -filter { NAME =~  "*U0/PROBE_PIPE*/D" }] 4
+
+################################################################################
+# Resets
+################################################################################
 
 set_false_path \
     -from [get_pins eth.eth_infra_inst/clocks/rst_reg/C] \
