@@ -128,24 +128,24 @@ architecture rtl of eth_infra is
 
 begin
 
-  ila_eth_infra_inst : ila_eth_infra
-    port map (
-      clk        => clk_eth,
-      probe0     => tx_data,
-      probe1     => rx_data,
-      probe2(0)  => tx_valid,
-      probe3(0)  => tx_last,
-      probe4(0)  => tx_error,
-      probe5(0)  => tx_ready,
-      probe6(0)  => rx_valid,
-      probe7(0)  => rx_last,
-      probe8(0)  => rx_error,
-      probe9(0)  => clk_eth,
-      probe10(0) => eth_locked,
-      probe11(0) => locked,
-      probe12(0) => rst_phy,
-      probe13(0) => rst_eth
-      );
+  -- ila_eth_infra_inst : ila_eth_infra
+  --   port map (
+  --     clk        => clk_eth,
+  --     probe0     => tx_data,
+  --     probe1     => rx_data,
+  --     probe2(0)  => tx_valid,
+  --     probe3(0)  => tx_last,
+  --     probe4(0)  => tx_error,
+  --     probe5(0)  => tx_ready,
+  --     probe6(0)  => rx_valid,
+  --     probe7(0)  => rx_last,
+  --     probe8(0)  => rx_error,
+  --     probe9(0)  => clk_eth,
+  --     probe10(0) => eth_locked,
+  --     probe11(0) => locked,
+  --     probe12(0) => rst_phy,
+  --     probe13(0) => rst_eth
+  --     );
 
   --  DCM clock generation for internal bus, ethernet
   clocks : entity work.clocks_us_serdes
@@ -236,17 +236,17 @@ begin
       pkt          => pkt
       );
 
-    ila_ipb_master_inst : ila_ipb
-      port map (
-        clk       => clk_ipb_i,
-        probe0    => ipb_out.ipb_addr,
-        probe1    => ipb_out.ipb_wdata,
-        probe2(0) => ipb_out.ipb_strobe,
-        probe3(0) => ipb_out.ipb_write,
-        probe4    => ipb_in.ipb_rdata,
-        probe5(0) => ipb_in.ipb_ack,
-        probe6(0) => ipb_in.ipb_err
-        );
+    -- ila_ipb_master_inst : ila_ipb
+    --   port map (
+    --     clk       => clk_ipb_i,
+    --     probe0    => ipb_out.ipb_addr,
+    --     probe1    => ipb_out.ipb_wdata,
+    --     probe2(0) => ipb_out.ipb_strobe,
+    --     probe3(0) => ipb_out.ipb_write,
+    --     probe4    => ipb_in.ipb_rdata,
+    --     probe5(0) => ipb_in.ipb_ack,
+    --     probe6(0) => ipb_in.ipb_err
+    --     );
 
   leds <= '0' & (locked and onehz);
 
