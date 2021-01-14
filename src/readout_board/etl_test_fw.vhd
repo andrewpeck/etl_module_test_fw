@@ -43,18 +43,10 @@ entity etl_test_fw is
     NUM_REFCLK : integer := 2;
 
     -- these generics get set by hog at synthesis
-    GLOBAL_FWDATE       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    GLOBAL_FWTIME       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    OFFICIAL            : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    GLOBAL_FWHASH       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    TOP_FWHASH          : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    XML_HASH            : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    GLOBAL_FWVERSION    : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    TOP_FWVERSION       : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    XML_VERSION         : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    HOG_FWHASH          : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    FRAMEWORK_FWVERSION : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    FRAMEWORK_FWHASH    : std_logic_vector (31 downto 0) := x"DEFFFFFF"
+    GLOBAL_DATE : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_TIME : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_VER  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_SHA  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     );
   port(
 
@@ -398,17 +390,9 @@ begin
 
   end generate;
 
-  fw_info_mon.HOG_INFO.GLOBAL_FWDATE       <= GLOBAL_FWDATE;
-  fw_info_mon.HOG_INFO.GLOBAL_FWTIME       <= GLOBAL_FWTIME;
-  fw_info_mon.HOG_INFO.OFFICIAL            <= OFFICIAL;
-  fw_info_mon.HOG_INFO.GLOBAL_FWHASH       <= GLOBAL_FWHASH;
-  fw_info_mon.HOG_INFO.TOP_FWHASH          <= TOP_FWHASH;
-  fw_info_mon.HOG_INFO.XML_HASH            <= XML_HASH;
-  fw_info_mon.HOG_INFO.GLOBAL_FWVERSION    <= GLOBAL_FWVERSION;
-  fw_info_mon.HOG_INFO.TOP_FWVERSION       <= TOP_FWVERSION;
-  fw_info_mon.HOG_INFO.XML_VERSION         <= XML_VERSION;
-  fw_info_mon.HOG_INFO.HOG_FWHASH          <= HOG_FWHASH;
-  fw_info_mon.HOG_INFO.FRAMEWORK_FWVERSION <= FRAMEWORK_FWVERSION;
-  fw_info_mon.HOG_INFO.FRAMEWORK_FWHASH    <= FRAMEWORK_FWHASH;
+  fw_info_mon.HOG_INFO.GLOBAL_DATE <= GLOBAL_FWDATE;
+  fw_info_mon.HOG_INFO.GLOBAL_TIME <= GLOBAL_FWTIME;
+  fw_info_mon.HOG_INFO.GLOBAL_VER  <= GLOBAL_FWVER;
+  fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_FWSHA;
 
 end behavioral;

@@ -63,6 +63,7 @@ architecture behavioral of control is
 begin
 
 
+  -- Special Loopback register at Adr 0...
   process (clock) is
   begin
     if (rising_edge(clock)) then
@@ -168,8 +169,8 @@ begin
             probe5(0) => ipb_r_array(RB_BASE+I).ipb_ack,
             probe6(0) => ipb_r_array(RB_BASE+I).ipb_err
             );
-
       end generate;
+
     end generate;
   end generate;
 
@@ -199,6 +200,7 @@ begin
         probe5(0) => ipb_r_array(N_SLV_FW_INFO).ipb_ack,
         probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
         );
+
     ila_mgt_inst : ila_ipb
       port map (
         clk       => clock,

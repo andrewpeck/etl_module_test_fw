@@ -47,6 +47,7 @@ begin  -- architecture behavioral
   begin  -- process reads
     if rising_edge(clk) then  -- rising clock edge
       localRdData <= x"00000000";
+      wb_err <= '0';
       if wb_strobe='1' then
         case to_integer(unsigned(wb_addr(5 downto 0))) is
           when 0 => --0x0
@@ -140,7 +141,8 @@ begin  -- architecture behavioral
           localRdData(31 downto 16)  <=  reg_data(50)(31 downto 16);              --DRP Write Data
 
         when others =>
-          localRdData <= x"00000000";
+          localRdData <= x"DEADDEAD";
+          wb_err <= '1';
         end case;
       end if;
     end if;

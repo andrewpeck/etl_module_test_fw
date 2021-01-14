@@ -22,8 +22,8 @@ architecture behavioral of FW_INFO_wb_interface is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 49);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 49) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 3);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 3) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -46,35 +46,21 @@ begin  -- architecture behavioral
   begin  -- process reads
     if rising_edge(clk) then  -- rising clock edge
       localRdData <= x"00000000";
+      wb_err <= '0';
       if wb_strobe='1' then
-        case to_integer(unsigned(wb_addr(5 downto 0))) is
-          when 32 => --0x20
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_FWDATE;            --
-        when 33 => --0x21
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_FWTIME;            --
-        when 34 => --0x22
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.OFFICIAL;                 --
-        when 35 => --0x23
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_FWHASH;            --
-        when 36 => --0x24
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.TOP_FWHASH;               --
-        when 37 => --0x25
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.XML_HASH;                 --
-        when 38 => --0x26
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_FWVERSION;         --
-        when 39 => --0x27
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.TOP_FWVERSION;            --
-        when 40 => --0x28
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.XML_VERSION;              --
-        when 41 => --0x29
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.HOG_FWHASH;               --
-        when 48 => --0x30
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.FRAMEWORK_FWVERSION;      --
-        when 49 => --0x31
-          localRdData(31 downto  0)  <=  Mon.HOG_INFO.FRAMEWORK_FWHASH;         --
+        case to_integer(unsigned(wb_addr(1 downto 0))) is
+          when 0 => --0x0
+          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_DATE;      --
+        when 1 => --0x1
+          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_TIME;      --
+        when 2 => --0x2
+          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_VER;       --
+        when 3 => --0x3
+          localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_SHA;       --
 
         when others =>
-          localRdData <= x"00000000";
+          localRdData <= x"DEADDEAD";
+          wb_err <= '1';
         end case;
       end if;
     end if;
