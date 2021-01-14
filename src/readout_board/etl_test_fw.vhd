@@ -31,8 +31,6 @@ entity etl_test_fw is
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
-    NUM_GTS : integer := 10;
-
     NUM_RBS : integer := 1;
 
     NUM_LPGBTS_DAQ  : integer := 1;     -- Number of DAQ / Rb
@@ -76,10 +74,10 @@ entity etl_test_fw is
     --sma_refclk_p : in std_logic;
     --sma_refclk_n : in std_logic;
 
-    tx_p : out std_logic_vector(EN_LPGBTS*NUM_GTS - 1 downto 0);
-    tx_n : out std_logic_vector(EN_LPGBTS*NUM_GTS - 1 downto 0);
-    rx_p : in  std_logic_vector(EN_LPGBTS*NUM_GTS - 1 downto 0);
-    rx_n : in  std_logic_vector(EN_LPGBTS*NUM_GTS - 1 downto 0);
+    tx_p : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
+    tx_n : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
+    rx_p : in  std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
+    rx_n : in  std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
 
     sfp0_tx_disable  : out std_logic := '0';
     sfp1_tx_disable  : out std_logic := '0';
@@ -105,6 +103,7 @@ end etl_test_fw;
 
 architecture behavioral of etl_test_fw is
 
+  constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ  + NUM_LPGBTS_TRIG);
 
   signal gtwiz_userdata_tx_in  : std_logic_vector(32*NUM_GTS-1 downto 0);
   signal gtwiz_userdata_rx_out : std_logic_vector(32*NUM_GTS-1 downto 0);

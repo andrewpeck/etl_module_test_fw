@@ -24,6 +24,7 @@
 
   <node id="DRP" address="0x3">
     <node id="DRP_0" address="0x00" fwinfo="type=array" module="file://DRP.xml"/>
+    <!--
     <node id="DRP_1" address="0x05" fwinfo="type=array" module="file://DRP.xml"/>
     <node id="DRP_2" address="0x0A" fwinfo="type=array" module="file://DRP.xml"/>
     <node id="DRP_3" address="0x0F" fwinfo="type=array" module="file://DRP.xml"/>
@@ -33,6 +34,7 @@
     <node id="DRP_7" address="0x23" fwinfo="type=array" module="file://DRP.xml"/>
     <node id="DRP_8" address="0x28" fwinfo="type=array" module="file://DRP.xml"/>
     <node id="DRP_9" address="0x2D" fwinfo="type=array" module="file://DRP.xml"/>
+    -->
   </node>
 
 </node>

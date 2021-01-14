@@ -21,7 +21,7 @@ package MGT_CTRL is
     rd_rdy                     :std_logic;     -- DRP Enable
     rd_data                    :std_logic_vector(15 downto 0);  -- DRP Read Data
   end record MGT_DRP_DRP_MON_t;
-  type MGT_DRP_DRP_MON_t_ARRAY is array(0 to 9) of MGT_DRP_DRP_MON_t;
+  type MGT_DRP_DRP_MON_t_ARRAY is array(0 to 0) of MGT_DRP_DRP_MON_t;
 
   type MGT_DRP_DRP_CTRL_t is record
     wr_en                      :std_logic;     -- DRP Write Enable
@@ -29,7 +29,7 @@ package MGT_CTRL is
     en                         :std_logic;                      -- DRP Enable
     wr_data                    :std_logic_vector(15 downto 0);  -- DRP Write Data
   end record MGT_DRP_DRP_CTRL_t;
-  type MGT_DRP_DRP_CTRL_t_ARRAY is array(0 to 9) of MGT_DRP_DRP_CTRL_t;
+  type MGT_DRP_DRP_CTRL_t_ARRAY is array(0 to 0) of MGT_DRP_DRP_CTRL_t;
 
   constant DEFAULT_MGT_DRP_DRP_CTRL_t : MGT_DRP_DRP_CTRL_t := (
                                                                wr_en => '0',

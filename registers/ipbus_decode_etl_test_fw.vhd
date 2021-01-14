@@ -17,7 +17,7 @@ package ipbus_decode_etl_test_fw is
   subtype ipbus_sel_t is std_logic_vector(IPBUS_SEL_WIDTH - 1 downto 0);
   function ipbus_sel_etl_test_fw(addr : in std_logic_vector(31 downto 0)) return ipbus_sel_t;
 
--- START automatically  generated VHDL the Thu Jan 14 16:08:28 2021 
+-- START automatically  generated VHDL the Thu Jan 14 16:49:07 2021 
   constant N_SLV_LOOPBACK: integer := 0;
   constant N_SLV_FW_INFO: integer := 1;
   constant N_SLV_READOUT_BOARD_0: integer := 2;
@@ -34,7 +34,7 @@ package body ipbus_decode_etl_test_fw is
     variable sel: ipbus_sel_t;
   begin
 
--- START automatically  generated VHDL the Thu Jan 14 16:08:28 2021 
+-- START automatically  generated VHDL the Thu Jan 14 16:49:07 2021 
     if    std_match(addr, "----------------0-00------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_LOOPBACK, IPBUS_SEL_WIDTH)); -- LOOPBACK / base 0x00000000 / mask 0x0000b000
     elsif std_match(addr, "----------------0-01------------") then
