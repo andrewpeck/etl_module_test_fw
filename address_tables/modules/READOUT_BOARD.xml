@@ -3,14 +3,18 @@
 
   <!-- LPGBT-FPGA  -->
   <node id="LPGBT" address="0x0">
-    <node id="UPLINK" address="0x00">
-      <node id="UPLINK_0"    address="0x00" fwinfo="type=array" module="file://LPGBT_UPLINK.xml"/>
-      <node id="UPLINK_1"    address="0x05" fwinfo="type=array" module="file://LPGBT_UPLINK.xml"/>
+
+    <node id="DAQ" address="0x00">
+      <node id="UPLINK"    address="0x00" module="file://LPGBT_UPLINK.xml"/>
+      <node id="DOWNLINK"  address="0x10" module="file://LPGBT_DOWNLINK.xml"/>
     </node>
-    <node id="DOWNLINK"   address="0x0B" fwinfo="type=array" module="file://LPGBT_DOWNLINK.xml"/>
+
+    <node id="TRIGGER"  address="0x20">
+      <node id="UPLINK" address="0x00" module="file://LPGBT_UPLINK.xml"/>
+    </node>
   </node>
 
   <!-- LPGBT-FPGA  -->
-  <node id="SC"   address="0x10" module="file://GBT_SC.xml"/>
+  <node id="SC"   address="0x30" module="file://GBT_SC.xml"/>
 
 </node>

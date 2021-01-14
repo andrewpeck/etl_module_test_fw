@@ -39,7 +39,8 @@ end gbt_controller_wrapper;
 
 architecture common_controller of gbt_controller_wrapper is
 
-  signal clk : std_logic;
+  signal txclk, rxclk     : std_logic;
+  signal txvalid, rxvalid : std_logic;
 
   -- EC line
   signal ec_data_down : reg2_arr((g_SCAS_PER_LPGBT-1) downto 0);  --! (TX) Array of bits to be mapped to the TX GBT-Frame
@@ -56,36 +57,39 @@ architecture common_controller of gbt_controller_wrapper is
   signal sca0_data_i_int : std_logic_vector (1 downto 0);
   signal sca0_data_o_int : std_logic_vector (1 downto 0);
 
-  signal tx_reset, rx_reset : std_logic := '0';  -- TODO: connect to AXI
-
-  signal valid : std_logic := '1';
 
 begin
 
-  process (clk) is
+  -- register inputs/outputs
+  process (txclk) is
   begin
-    if (rising_edge(clk)) then
-
-      ic_data_o   <= ic_data_o_int;
-      sca0_data_o <= sca0_data_o_int;
-
+    if (rising_edge(txclk)) then
       ic_data_i_int   <= ic_data_i;
       sca0_data_i_int <= sca0_data_i;
 
     end if;
   end process;
 
+  process (rxclk) is
+  begin
+    if (rising_edge(rxclk)) then
+      ic_data_o   <= ic_data_o_int;
+      sca0_data_o <= sca0_data_o_int;
+    end if;
+  end process;
 
   clk40_gen : if (g_CLK_FREQ = 40) generate
-    clk   <= clk40;
-    valid <= '1';
+    txclk   <= clk40;
+    rxclk   <= clk40;
+    txvalid <= '1';
+    rxvalid <= '1';
   end generate;
 
   clk320_gen : if (g_CLK_FREQ = 320) generate
-    clk   <= clk320;
-    valid <= valid_i;
-  -- alias the valid signal here with a DONT_TOUCH to allow for easy constraint application to logic
-  -- using this as a CE
+    txclk   <= clk320;
+    rxclk   <= clk320;
+    txvalid <= valid_i;
+    rxvalid <= valid_i;
   end generate;
 
   --------------------------------------------------------------------------------
@@ -101,12 +105,12 @@ begin
     port map (
 
       -- tx to lpgbt etc
-      tx_clk_i  => clk,
-      tx_clk_en => valid_i,
+      tx_clk_i  => txclk,
+      tx_clk_en => txvalid,
 
       -- rx from lpgbt etc
-      rx_clk_i  => clk,
-      rx_clk_en => valid_i,
+      rx_clk_i  => rxclk,
+      rx_clk_en => txvalid,
 
       -- IC/EC data from controller
       ic_data_i => ic_data_i_int,
@@ -118,49 +122,49 @@ begin
       ec_data_i(0) => sca0_data_i_int,
 
       -- reset
-      rx_reset_i => rx_reset,
-      tx_reset_i => tx_reset,
+      rx_reset_i => reset_i or ctrl.rx_reset,
+      tx_reset_i => reset_i or ctrl.tx_reset,
 
       -- connect all of the following to AXI slave
 
-      tx_start_write_i => ctrl.master.tx_start_write,
-      tx_start_read_i  => ctrl.master.tx_start_read,
+      tx_start_write_i => ctrl.tx_start_write,
+      tx_start_read_i  => ctrl.tx_start_read,
 
-      tx_gbtx_address_i  => ctrl.master.tx_gbtx_addr,
-      tx_register_addr_i => ctrl.master.tx_register_addr,
-      tx_nb_to_be_read_i => ctrl.master.tx_num_bytes_to_read,
+      tx_gbtx_address_i  => ctrl.tx_gbtx_addr,
+      tx_register_addr_i => ctrl.tx_register_addr,
+      tx_nb_to_be_read_i => ctrl.tx_num_bytes_to_read,
 
       wr_clk_i          => ctrl_clk,
-      tx_wr_i           => ctrl.master.tx_wr,
-      tx_data_to_gbtx_i => ctrl.master.tx_data_to_gbtx,
+      tx_wr_i           => ctrl.tx_wr,
+      tx_data_to_gbtx_i => ctrl.tx_data_to_gbtx,
 
       rd_clk_i            => ctrl_clk,
-      rx_rd_i             => ctrl.master.rx_rd,
-      rx_data_from_gbtx_o => mon.master.rx_data_from_gbtx,
+      rx_rd_i             => ctrl.rx_rd,
+      rx_data_from_gbtx_o => mon.rx_data_from_gbtx,
 
       -- SCA Command
-      rx_address_o(0)  => mon.master.rx.rx(0).rx_address,
-      rx_channel_o(0)  => mon.master.rx.rx(0).rx_channel,
-      rx_control_o(0)  => mon.master.rx.rx(0).rx_control,
-      rx_data_o(0)     => mon.master.rx.rx(0).rx_data,
-      rx_error_o(0)    => mon.master.rx.rx(0).rx_err,
-      rx_len_o(0)      => mon.master.rx.rx(0).rx_len,
-      rx_received_o(0) => mon.master.rx.rx(0).rx_received,
-      rx_transID_o(0)  => mon.master.rx.rx(0).rx_transID,
+      rx_address_o(0)  => mon.rx.rx_address,
+      rx_channel_o(0)  => mon.rx.rx_channel,
+      rx_control_o(0)  => mon.rx.rx_control,
+      rx_data_o(0)     => mon.rx.rx_data,
+      rx_error_o(0)    => mon.rx.rx_err,
+      rx_len_o(0)      => mon.rx.rx_len,
+      rx_received_o(0) => mon.rx.rx_received,
+      rx_transID_o(0)  => mon.rx.rx_transID,
 
       --
-      tx_ready_o          => mon.master.tx_ready,  --! IC core ready for a transaction
-      rx_empty_o          => mon.master.rx_empty,
-      sca_enable_i(0)     => ctrl.master.sca_enable,
-      start_reset_cmd_i   => ctrl.master.start_reset,
-      start_connect_cmd_i => ctrl.master.start_connect,
-      start_command_i     => ctrl.master.start_command,
-      inject_crc_error    => ctrl.master.inj_crc_err,
-      tx_address_i        => ctrl.master.tx_address,
-      tx_transID_i        => ctrl.master.tx_transID,
-      tx_channel_i        => ctrl.master.tx_channel,
-      tx_command_i        => ctrl.master.tx_cmd,
-      tx_data_i           => ctrl.master.tx_data
+      tx_ready_o          => mon.tx_ready,  --! IC core ready for a transaction
+      rx_empty_o          => mon.rx_empty,
+      sca_enable_i(0)     => ctrl.sca_enable,
+      start_reset_cmd_i   => ctrl.start_reset,
+      start_connect_cmd_i => ctrl.start_connect,
+      start_command_i     => ctrl.start_command,
+      inject_crc_error    => ctrl.inj_crc_err,
+      tx_address_i        => ctrl.tx_address,
+      tx_transID_i        => ctrl.tx_transID,
+      tx_channel_i        => ctrl.tx_channel,
+      tx_command_i        => ctrl.tx_cmd,
+      tx_data_i           => ctrl.tx_data
       );
 
 end common_controller;

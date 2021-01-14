@@ -19,7 +19,7 @@ entity control is
   generic(
     NUM_RBS   : integer              := 8;
     EN_LPGBTS : integer range 0 to 1 := 0;
-    DEBUG     : boolean              := false
+    DEBUG     : boolean              := true
     );
   port(
 
@@ -100,20 +100,20 @@ begin
   -- MGT Interface
   --------------------------------------------------------------------------------
 
-  -- MGT_wb_interface : entity ctrl_lib.MGT_wb_interface
-  --   port map (
-  --     clk       => clock,
-  --     reset     => reset,
-  --     wb_addr   => ipb_w_array(N_SLV_MGT).ipb_addr,
-  --     wb_wdata  => ipb_w_array(N_SLV_MGT).ipb_wdata,
-  --     wb_strobe => ipb_w_array(N_SLV_MGT).ipb_strobe,
-  --     wb_write  => ipb_w_array(N_SLV_MGT).ipb_write,
-  --     wb_rdata  => ipb_r_array(N_SLV_MGT).ipb_rdata,
-  --     wb_ack    => ipb_r_array(N_SLV_MGT).ipb_ack,
-  --     wb_err    => ipb_r_array(N_SLV_MGT).ipb_err,
-  --     mon       => mgt_mon,
-  --     ctrl      => mgt_ctrl
-  --     );
+  MGT_wb_interface : entity ctrl_lib.MGT_wb_interface
+    port map (
+      clk       => clock,
+      reset     => reset,
+      wb_addr   => ipb_w_array(N_SLV_MGT).ipb_addr,
+      wb_wdata  => ipb_w_array(N_SLV_MGT).ipb_wdata,
+      wb_strobe => ipb_w_array(N_SLV_MGT).ipb_strobe,
+      wb_write  => ipb_w_array(N_SLV_MGT).ipb_write,
+      wb_rdata  => ipb_r_array(N_SLV_MGT).ipb_rdata,
+      wb_ack    => ipb_r_array(N_SLV_MGT).ipb_ack,
+      wb_err    => ipb_r_array(N_SLV_MGT).ipb_err,
+      mon       => mgt_mon,
+      ctrl      => mgt_ctrl
+      );
 
   --------------------------------------------------------------------------------
   -- FW Info

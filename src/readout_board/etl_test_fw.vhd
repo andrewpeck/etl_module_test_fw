@@ -33,7 +33,7 @@ entity etl_test_fw is
 
     NUM_GTS : integer := 10;
 
-    NUM_RBS : integer := 5;
+    NUM_RBS : integer := 1;
 
     NUM_LPGBTS_DAQ  : integer := 1;     -- Number of DAQ / Rb
     NUM_LPGBTS_TRIG : integer := 0;     -- Number of Trig / Rb
@@ -120,15 +120,9 @@ architecture behavioral of etl_test_fw is
   signal trig_uplink_bitslip : std_logic_vector (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
   signal daq_uplink_bitslip  : std_logic_vector (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
 
-  signal trig_uplink_mgt_word_array : std32_array_t (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
-  signal daq_uplink_mgt_word_array  : std32_array_t (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
-  signal downlink_mgt_word_array    : std32_array_t (NUM_RBS*NUM_DOWNLINKS-1 downto 0);
-
-  signal userclk_rx_usrclk_out  : std_logic_vector (NUM_GTS-1 downto 0);
-  signal userclk_rx_usrclk2_out : std_logic_vector (NUM_GTS-1 downto 0);
-
-  signal userclk_tx_usrclk_out  : std_logic_vector (NUM_GTS-1 downto 0);
-  signal userclk_tx_usrclk2_out : std_logic_vector (NUM_GTS-1 downto 0);
+  signal trig_uplink_mgt_word_array  : std32_array_t (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
+  signal daq_uplink_mgt_word_array   : std32_array_t (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
+  signal daq_downlink_mgt_word_array : std32_array_t (NUM_RBS*NUM_DOWNLINKS-1 downto 0);
 
   signal clk40, clk320 : std_logic := '0';
   signal reset         : std_logic := '0';
@@ -317,34 +311,35 @@ begin
     begin
       readout_board_inst : entity work.readout_board
         generic map (
+          INST            => I,
           NUM_LPGBTS_DAQ  => NUM_LPGBTS_DAQ,
           NUM_LPGBTS_TRIG => NUM_LPGBTS_TRIG,
           NUM_DOWNLINKS   => NUM_DOWNLINKS,
           NUM_SCAS        => NUM_SCAS
           )
         port map (
-          clk40                      => clk40,
-          clk320                     => clk320,
-          txclk                      => userclk_tx_usrclk_out(I),
-          rxclk                      => userclk_rx_usrclk_out(I),
-          reset                      => not locked,
+          reset => not locked,
+
+          clk40  => clk40,
+          clk320 => clk320,
 
           -- slow control
-          ctrl_clk                   => ipb_clk,
-          mon                        => readout_board_mon(I),
-          ctrl                       => readout_board_ctrl(I),
+          ctrl_clk => ipb_clk,
+          mon      => readout_board_mon(I),
+          ctrl     => readout_board_ctrl(I),
 
           -- data
-          trig_uplink_bitslip        => trig_uplink_bitslip(NT*(I+1)-1 downto NT*I),
-          daq_uplink_bitslip         => daq_uplink_bitslip(ND*(I+1)-1 downto ND*I),
-          trig_uplink_mgt_word_array => trig_uplink_mgt_word_array(NT*(I+1)-1 downto NT*I),
-          daq_uplink_mgt_word_array  => daq_uplink_mgt_word_array(ND*(I+1)-1 downto ND*I),
-          downlink_mgt_word_array    => downlink_mgt_word_array(I downto I)
+          trig_uplink_bitslip         => trig_uplink_bitslip(NT*(I+1)-1 downto NT*I),
+          daq_uplink_bitslip          => daq_uplink_bitslip(ND*(I+1)-1 downto ND*I),
+          trig_uplink_mgt_word_array  => trig_uplink_mgt_word_array(NT*(I+1)-1 downto NT*I),
+          daq_uplink_mgt_word_array   => daq_uplink_mgt_word_array(ND*(I+1)-1 downto ND*I),
+          daq_downlink_mgt_word_array => daq_downlink_mgt_word_array(I downto I)
           );
     end generate;
 
 
-    -- TODO: check this mapping
+    -- TODO: check this mapping the correspondence between mgt array and daq/trig array are what
+    -- create the mapping to different sfp/firefly
     rbdata : for I in 0 to NUM_RBS-1 generate
     begin
       -- rxslide
@@ -352,8 +347,8 @@ begin
       --rxslide(I*2+1) <= trig_uplink_bitslip(I);
 
       -- mgt downlink map
-      mgt_data_in(I*2) <= downlink_mgt_word_array(I);
-      --mgt_data_in(I*2+1) <= downlink_mgt_word_array(I);
+      mgt_data_in(I*2) <= daq_downlink_mgt_word_array(I);
+      --mgt_data_in(I*2+1) <= daq_downlink_mgt_word_array(I);
 
       -- mgt uplink map
       --trig_uplink_mgt_word_array(I) <= mgt_data_out(I*2+1);
@@ -361,6 +356,8 @@ begin
     end generate;
 
     datagen : for I in 0 to NUM_GTS-1 generate
+      signal txdata, rxdata : std_logic_vector (31 downto 0);
+      signal txclk, rxclk   : std_logic;
     begin
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
       mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
@@ -369,8 +366,8 @@ begin
         port map (
           mgt_refclk_i      => refclk,
           mgt_freedrpclk_i  => ipb_clk,
-          mgt_rxusrclk_o    => userclk_rx_usrclk_out(I),
-          mgt_txusrclk_o    => userclk_tx_usrclk_out(I),
+          mgt_rxusrclk_o    => rxclk,
+          mgt_txusrclk_o    => txclk,
           mgt_txreset_i     => not locked,
           mgt_rxreset_i     => not locked,
           mgt_rxslide_i     => rxslide(I),
@@ -380,15 +377,55 @@ begin
           mgt_rxready_o     => open,
           mgt_tx_aligned_o  => open,
           mgt_tx_piphase_o  => open,
-          mgt_usrword_i     => mgt_data_in(I),
-          mgt_usrword_o     => mgt_data_out(I),
+          mgt_usrword_i     => txdata,  -- mgt_data_in(I),
+          mgt_usrword_o     => rxdata,  -- mgt_data_out(I),
           rxp_i             => rx_p(I),
           rxn_i             => rx_n(I),
           txp_o             => tx_p(I),
           txn_o             => tx_n(I)
           );
-    end generate;
 
+      mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
+        generic map (
+          DEPTH    => 16,
+          WR_WIDTH => 32,
+          RD_WIDTH => 32)
+        port map (
+          rst     => not locked,        -- TODO: reset if the mgt is inactive
+          wr_clk  => rxclk,
+          rd_clk  => clk320,
+          wr_en   => locked,
+          rd_en   => locked,
+          din     => rxdata,
+          dout    => mgt_data_out(I),
+          valid   => open,
+          full    => open,
+          empty   => open,
+          sbiterr => open,
+          dbiterr => open
+          );
+
+      mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
+        generic map (
+          DEPTH    => 16,
+          WR_WIDTH => 32,
+          RD_WIDTH => 32)
+        port map (
+          rst     => not locked,        -- TODO: reset if the mgt is inactive
+          wr_clk  => clk320,
+          rd_clk  => txclk,
+          wr_en   => locked,
+          rd_en   => locked,
+          din     => mgt_data_in(I),
+          dout    => txdata,
+          valid   => open,
+          full    => open,
+          empty   => open,
+          sbiterr => open,
+          dbiterr => open
+          );
+
+    end generate;
   end generate;
 
   fw_info_mon.HOG_INFO.GLOBAL_DATE <= GLOBAL_DATE;
