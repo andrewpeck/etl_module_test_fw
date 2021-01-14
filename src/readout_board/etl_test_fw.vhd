@@ -46,7 +46,7 @@ entity etl_test_fw is
     GLOBAL_DATE : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     GLOBAL_TIME : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     GLOBAL_VER  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
-    GLOBAL_SHA  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    GLOBAL_SHA  : std_logic_vector (31 downto 0) := x"DEFFFFFF"
     );
   port(
 
