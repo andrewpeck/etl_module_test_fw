@@ -27,7 +27,7 @@ entity etl_test_fw is
     USE_PCIE : integer range 0 to 1 := 0;
     USE_ETH  : integer range 0 to 1 := 1;
 
-    EN_LPGBTS : integer range 0 to 1 := 0;
+    EN_LPGBTS : integer range 0 to 1 := 1;
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
@@ -269,7 +269,8 @@ begin
 
   control_inst : entity work.control
     generic map (
-      NUM_RBS => NUM_RBS
+      EN_LPGBTS => EN_LPGBTS,
+      NUM_RBS   => NUM_RBS
       )
     port map (
       reset              => ipb_rst,
