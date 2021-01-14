@@ -391,9 +391,9 @@ begin
 
   end generate;
 
-  fw_info_mon.HOG_INFO.GLOBAL_DATE <= GLOBAL_FWDATE;
-  fw_info_mon.HOG_INFO.GLOBAL_TIME <= GLOBAL_FWTIME;
-  fw_info_mon.HOG_INFO.GLOBAL_VER  <= GLOBAL_FWVER;
-  fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_FWSHA;
+  fw_info_mon.HOG_INFO.GLOBAL_DATE <= GLOBAL_DATE;
+  fw_info_mon.HOG_INFO.GLOBAL_TIME <= GLOBAL_TIME;
+  fw_info_mon.HOG_INFO.GLOBAL_VER  <= GLOBAL_VER;
+  fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_SHA;
 
 end behavioral;
