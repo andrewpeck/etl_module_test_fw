@@ -81,7 +81,7 @@ end eth_infra;
 
 architecture rtl of eth_infra is
 
-  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux, clk_200                                           : std_logic;
+  signal clk_eth, clk_ipb_i, clk_aux, clk_200                                                    : std_logic;
   signal locked, clk_locked, eth_locked, rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
 
   -- ipbus to ethernet
@@ -170,7 +170,6 @@ begin
       onehz         => onehz
       );
 
-  clk_ipb   <= clk_ipb_i;               -- Best to align delta delays on all clocks for simulation
   clk_ipb_o <= clk_ipb_i;
   rst_ipb_o <= rst_ipb;
   clk_aux_o <= clk_aux;
