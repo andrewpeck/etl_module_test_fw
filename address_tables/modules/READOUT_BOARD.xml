@@ -12,9 +12,12 @@
     <node id="TRIGGER"  address="0x20">
       <node id="UPLINK" address="0x00" module="file://LPGBT_UPLINK.xml"/>
     </node>
+
+    <node id="PATTERN_CHECKER" address="0x30" module="file://PATTERN_CHECKER.xml"/>
+
   </node>
 
   <!-- LPGBT-FPGA  -->
-  <node id="SC"   address="0x30" module="file://GBT_SC.xml"/>
+  <node id="SC"   address="0x200" module="file://GBT_SC.xml"/>
 
 </node>

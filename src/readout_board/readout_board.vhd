@@ -91,8 +91,8 @@ architecture behavioral of readout_board is
 
   signal phase : integer range 0 to 7 := 0;
 
-  signal prbs_reset          : std_logic                                := '0';
-  signal daq_uplink_prbs_err : std_logic_vector (NUM_ELINKS-1 downto 0) := (others => '0');
+  signal prbs_err_counters  : std32_array_t (27 downto 0);
+  signal upcnt_err_counters : std32_array_t (27 downto 0);
 
 begin
 
@@ -121,9 +121,9 @@ begin
     end if;
 
     daq_downlink_data(0).data <= std_logic_vector (to_unsigned(counter, 8)) &
-                                std_logic_vector (to_unsigned(counter, 8)) &
-                                std_logic_vector (to_unsigned(counter, 8)) &
-                                std_logic_vector (to_unsigned(counter, 8));
+                                 std_logic_vector (to_unsigned(counter, 8)) &
+                                 std_logic_vector (to_unsigned(counter, 8)) &
+                                 std_logic_vector (to_unsigned(counter, 8));
   end process;
 
   mon.lpgbt.daq.uplink.ready     <= daq_uplink_ready(0);
@@ -227,25 +227,57 @@ begin
   -- PRBS
   --------------------------------------------------------------------------------
 
+  -- TODO: handle clock crossing here?
+  --
   -- prbs_check : for I in 0 to NUM_ELINKS-1 generate
-  -- signal err : std_logic_vector (7 downto 0);
+  --   signal err : std_logic_vector (7 downto 0);
   -- begin
-  --   prbs_any_chk : entity work.prbs_any
-  --     generic map (
-  --       chk_mode    => true, -- true =>  check mode
-  --       inv_pattern => false,
-  --       poly_lenght => 7,
-  --       poly_tap    => 6,
-  --       nbits       => 8)
-  --     port map (
-  --       rst      => prbs_reset,
-  --       clk      => clk320,
-  --       data_in  => daq_uplink_data(8*(I+1)-1 downto 8*I),
-  --       en       => '1',
-  --       data_out => err
-  --       );
-  --       daq_uplink_prbs_err(I) <= or_reduce (err);
-  -- end generate;
+
+  pat_checker : for I in 0 to 27 generate
+  begin
+    pattern_checker_1 : entity work.pattern_checker
+      generic map (
+        COUNTER_WIDTH => 32,
+        WIDTH         => 8
+        )
+      port map (
+        clock          => clk320,
+        reset          => reset or ctrl.lpgbt.pattern_checker.reset,
+        data           => daq_uplink_data(0).data(8*(I+1)-1 downto 8*I),
+        check_prbs     => ctrl.lpgbt.pattern_checker.check_prbs_en(I),
+        check_upcnt    => ctrl.lpgbt.pattern_checker.check_upcnt_en(I),
+        prbs_errors_o  => prbs_err_counters(I),
+        upcnt_errors_o => upcnt_err_counters(I)
+        );
+  end generate;
+
+  process (ctrl_clk) is
+    variable sel : integer;
+  begin
+    if (rising_edge(ctrl_clk)) then
+      sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
+
+      mon.lpgbt.pattern_checker.prbs_errors <= prbs_err_counters(sel);
+      mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_err_counters(sel);
+    end if;
+  end process;
+
+
+  timer : entity work.counter
+    generic map (
+      roll_over   => false,
+      async_reset => false,
+      width       => 64
+      )
+    port map (
+      clk                 => clk320,
+      reset               => reset or ctrl.lpgbt.pattern_checker.reset,
+      enable              => '1',
+      event               => '1',
+      count(31 downto 0)  => mon.lpgbt.pattern_checker.timer_lsbs,
+      count(63 downto 32) => mon.lpgbt.pattern_checker.timer_msbs,
+      at_max              => open
+      );
 
   --------------------------------------------------------------------------------
   -- DEBUG

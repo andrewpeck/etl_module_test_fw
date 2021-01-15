@@ -75,21 +75,46 @@ package READOUT_BOARD_CTRL is
   constant DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t : READOUT_BOARD_LPGBT_TRIGGER_CTRL_t := (
                                                                                                UPLINK => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t
                                                                                               );
+  type READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t is record
+    TIMER_LSBS                 :std_logic_vector(31 downto 0);  -- Timer of how long the counter has been running
+    TIMER_MSBS                 :std_logic_vector(31 downto 0);  -- Timer of how long the counter has been running
+    UPCNT_ERRORS               :std_logic_vector(31 downto 0);  -- Errors on Upcnt
+    PRBS_ERRORS                :std_logic_vector(31 downto 0);  -- Errors on Prbs
+  end record READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t;
+
+
+  type READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t is record
+    RESET                      :std_logic;     -- 1 to Reset Pattern Checker
+    CHECK_PRBS_EN              :std_logic_vector(31 downto 0);  -- Bitmask 1 to enable checking
+    CHECK_UPCNT_EN             :std_logic_vector(31 downto 0);  -- Bitmask 1 to enable checking
+    SEL                        :std_logic_vector(15 downto 0);  -- Channel to select for error counting
+  end record READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t;
+
+
+  constant DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t : READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t := (
+                                                                                                               RESET => '0',
+                                                                                                               SEL => x"0000",
+                                                                                                               CHECK_PRBS_EN => x"ffffffff",
+                                                                                                               CHECK_UPCNT_EN => x"ffffffff"
+                                                                                                              );
   type READOUT_BOARD_LPGBT_MON_t is record
     DAQ                        :READOUT_BOARD_LPGBT_DAQ_MON_t;
     TRIGGER                    :READOUT_BOARD_LPGBT_TRIGGER_MON_t;
+    PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t;
   end record READOUT_BOARD_LPGBT_MON_t;
 
 
   type READOUT_BOARD_LPGBT_CTRL_t is record
     DAQ                        :READOUT_BOARD_LPGBT_DAQ_CTRL_t;
     TRIGGER                    :READOUT_BOARD_LPGBT_TRIGGER_CTRL_t;
+    PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t;
   end record READOUT_BOARD_LPGBT_CTRL_t;
 
 
   constant DEFAULT_READOUT_BOARD_LPGBT_CTRL_t : READOUT_BOARD_LPGBT_CTRL_t := (
                                                                                DAQ => DEFAULT_READOUT_BOARD_LPGBT_DAQ_CTRL_t,
-                                                                               TRIGGER => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t
+                                                                               TRIGGER => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t,
+                                                                               PATTERN_CHECKER => DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t
                                                                               );
   type READOUT_BOARD_SC_RX_MON_t is record
     RX_LEN                     :std_logic_vector( 7 downto 0);  -- Reply: The length qualifier field specifies the number of bytes contained in the DATA field.
