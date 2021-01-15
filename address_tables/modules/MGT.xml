@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <node id="MGT" fwinfo="endpoint; width=8">
-  <node id="userclk_tx_reset_in"            address="0x0" mask="0x1" permission="rw" description=""/>
-  <node id="userclk_rx_reset_in"            address="0x0" mask="0x2" permission="rw" description=""/>
+  <node id="USERCLK_TX_RESET_IN"            address="0x0" mask="0x1" permission="rw" description=""/>
+  <node id="USERCLK_RX_RESET_IN"            address="0x0" mask="0x2" permission="rw" description=""/>
 
-  <node id="reset_clk_freerun_in"           address="0x0" mask="0x4" permission="rw" description=""/>
-  <node id="reset_all_in"                   address="0x0" mask="0x8" permission="rw" description=""/>
-  <node id="reset_tx_pll_and_datapath_in"   address="0x0" mask="0x10" permission="rw" description=""/>
-  <node id="reset_tx_datapath_in"           address="0x0" mask="0x20" permission="rw" description=""/>
-  <node id="reset_rx_pll_and_datapath_in"   address="0x0" mask="0x40" permission="rw" description=""/>
-  <node id="reset_rx_datapath_in"           address="0x0" mask="0x80" permission="rw" description=""/>
+  <node id="RESET_CLK_FREERUN_IN"           address="0x0" mask="0x4" permission="rw" description=""/>
+  <node id="RESET_ALL_IN"                   address="0x0" mask="0x8" permission="rw" description=""/>
+  <node id="RESET_TX_PLL_AND_DATAPATH_IN"   address="0x0" mask="0x10" permission="rw" description=""/>
+  <node id="RESET_TX_DATAPATH_IN"           address="0x0" mask="0x20" permission="rw" description=""/>
+  <node id="RESET_RX_PLL_AND_DATAPATH_IN"   address="0x0" mask="0x40" permission="rw" description=""/>
+  <node id="RESET_RX_DATAPATH_IN"           address="0x0" mask="0x80" permission="rw" description=""/>
 
   <node id="STATUS" address="0x1">
-    <node id ="userclk_tx_active_out"   address="0x0" mask="0x00000002" permission = "r" description=""/>
-    <node id ="userclk_rx_active_out"   address="0x0" mask="0x00000004" permission = "r" description=""/>
-    <node id ="reset_rx_cdr_stable_out" address="0x0" mask="0x00000008" permission = "r" description=""/>
-    <node id ="reset_tx_done_out"       address="0x0" mask="0x00000010" permission = "r" description=""/>
-    <node id ="reset_rx_done_out"       address="0x0" mask="0x00000020" permission = "r" description=""/>
+    <node id ="USERCLK_TX_ACTIVE_OUT"   address="0x0" mask="0x00000002" permission = "r" description=""/>
+    <node id ="USERCLK_RX_ACTIVE_OUT"   address="0x0" mask="0x00000004" permission = "r" description=""/>
+    <node id ="RESET_RX_CDR_STABLE_OUT" address="0x0" mask="0x00000008" permission = "r" description=""/>
+    <node id ="RESET_TX_DONE_OUT"       address="0x0" mask="0x00000010" permission = "r" description=""/>
+    <node id ="RESET_RX_DONE_OUT"       address="0x0" mask="0x00000020" permission = "r" description=""/>
 
-    <node id ="rxpmaresetdone_out"    address="0x1" mask="0x000003ff" permission = "r" description=""/>
-    <node id ="txpmaresetdone_out"    address="0x1" mask="0x000ffc00" permission = "r" description=""/>
-    <node id ="gtpowergood_out"       address="0x1" mask="0x3ff00000" permission = "r" description=""/>
+    <node id ="RXPMARESETDONE_OUT"    address="0x1" mask="0x000003ff" permission = "r" description=""/>
+    <node id ="TXPMARESETDONE_OUT"    address="0x1" mask="0x000ffc00" permission = "r" description=""/>
+    <node id ="GTPOWERGOOD_OUT"       address="0x1" mask="0x3ff00000" permission = "r" description=""/>
   </node>
 
   <node id="DRP" address="0x3">

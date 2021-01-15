@@ -60,26 +60,26 @@ begin  -- architecture behavioral
           localRdData( 6)            <=  reg_data( 0)( 6);                        --
           localRdData( 7)            <=  reg_data( 0)( 7);                        --
         when 1 => --0x1
-          localRdData( 1)            <=  Mon.STATUS.userclk_tx_active_out;        --
-          localRdData( 2)            <=  Mon.STATUS.userclk_rx_active_out;        --
-          localRdData( 3)            <=  Mon.STATUS.reset_rx_cdr_stable_out;      --
-          localRdData( 4)            <=  Mon.STATUS.reset_tx_done_out;            --
-          localRdData( 5)            <=  Mon.STATUS.reset_rx_done_out;            --
+          localRdData( 1)            <=  Mon.STATUS.USERCLK_TX_ACTIVE_OUT;        --
+          localRdData( 2)            <=  Mon.STATUS.USERCLK_RX_ACTIVE_OUT;        --
+          localRdData( 3)            <=  Mon.STATUS.RESET_RX_CDR_STABLE_OUT;      --
+          localRdData( 4)            <=  Mon.STATUS.RESET_TX_DONE_OUT;            --
+          localRdData( 5)            <=  Mon.STATUS.RESET_RX_DONE_OUT;            --
         when 2 => --0x2
-          localRdData( 9 downto  0)  <=  Mon.STATUS.rxpmaresetdone_out;           --
-          localRdData(19 downto 10)  <=  Mon.STATUS.txpmaresetdone_out;           --
-          localRdData(29 downto 20)  <=  Mon.STATUS.gtpowergood_out;              --
+          localRdData( 9 downto  0)  <=  Mon.STATUS.RXPMARESETDONE_OUT;           --
+          localRdData(19 downto 10)  <=  Mon.STATUS.TXPMARESETDONE_OUT;           --
+          localRdData(29 downto 20)  <=  Mon.STATUS.GTPOWERGOOD_OUT;              --
         when 4 => --0x4
           localRdData( 8 downto  0)  <=  reg_data( 4)( 8 downto  0);              --DRP Address
           localRdData(12)            <=  reg_data( 4)(12);                        --DRP Enable
-          localRdData(13)            <=  Mon.DRP.DRP(0).rd_rdy;                   --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(0).RD_RDY;                   --DRP Enable
         when 5 => --0x5
-          localRdData(15 downto  0)  <=  Mon.DRP.DRP(0).rd_data;                  --DRP Read Data
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(0).RD_DATA;                  --DRP Read Data
           localRdData(31 downto 16)  <=  reg_data( 5)(31 downto 16);              --DRP Write Data
 
         when others =>
           localRdData <= x"DEADDEAD";
-          wb_err <= '1';
+          --wb_err <= '1';
         end case;
       end if;
     end if;
@@ -87,23 +87,27 @@ begin  -- architecture behavioral
 
 
   -- Register mapping to ctrl structures
-  Ctrl.userclk_tx_reset_in           <=  reg_data( 0)( 0);               
-  Ctrl.userclk_rx_reset_in           <=  reg_data( 0)( 1);               
-  Ctrl.reset_clk_freerun_in          <=  reg_data( 0)( 2);               
-  Ctrl.reset_all_in                  <=  reg_data( 0)( 3);               
-  Ctrl.reset_tx_pll_and_datapath_in  <=  reg_data( 0)( 4);               
-  Ctrl.reset_tx_datapath_in          <=  reg_data( 0)( 5);               
-  Ctrl.reset_rx_pll_and_datapath_in  <=  reg_data( 0)( 6);               
-  Ctrl.reset_rx_datapath_in          <=  reg_data( 0)( 7);               
-  Ctrl.DRP.DRP(0).wr_addr            <=  reg_data( 4)( 8 downto  0);     
-  Ctrl.DRP.DRP(0).en                 <=  reg_data( 4)(12);               
-  Ctrl.DRP.DRP(0).wr_data            <=  reg_data( 5)(31 downto 16);     
+  Ctrl.USERCLK_TX_RESET_IN           <=  reg_data( 0)( 0);               
+  Ctrl.USERCLK_RX_RESET_IN           <=  reg_data( 0)( 1);               
+  Ctrl.RESET_CLK_FREERUN_IN          <=  reg_data( 0)( 2);               
+  Ctrl.RESET_ALL_IN                  <=  reg_data( 0)( 3);               
+  Ctrl.RESET_TX_PLL_AND_DATAPATH_IN  <=  reg_data( 0)( 4);               
+  Ctrl.RESET_TX_DATAPATH_IN          <=  reg_data( 0)( 5);               
+  Ctrl.RESET_RX_PLL_AND_DATAPATH_IN  <=  reg_data( 0)( 6);               
+  Ctrl.RESET_RX_DATAPATH_IN          <=  reg_data( 0)( 7);               
+  Ctrl.DRP.DRP(0).WR_ADDR            <=  reg_data( 4)( 8 downto  0);     
+  Ctrl.DRP.DRP(0).EN                 <=  reg_data( 4)(12);               
+  Ctrl.DRP.DRP(0).WR_DATA            <=  reg_data( 5)(31 downto 16);     
 
 
   -- writes to slave
   reg_writes: process (clk) is
   begin  -- process reg_writes
     if (rising_edge(clk)) then  -- rising clock edge
+
+      Ctrl.DRP.DRP(0).WR_EN <= '0';
+      
+
 
       -- Write on strobe=write=1
       if wb_strobe='1' and wb_write = '1' then
@@ -118,7 +122,7 @@ begin  -- architecture behavioral
           reg_data( 0)( 6)            <=  localWrData( 6);                --
           reg_data( 0)( 7)            <=  localWrData( 7);                --
         when 3 => --0x3
-          Ctrl.DRP.DRP(0).wr_en       <=  localWrData( 0);               
+          Ctrl.DRP.DRP(0).WR_EN       <=  localWrData( 0);               
         when 4 => --0x4
           reg_data( 4)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
           reg_data( 4)(12)            <=  localWrData(12);                --DRP Enable
@@ -132,23 +136,17 @@ begin  -- architecture behavioral
 
       -- synchronous reset (active high)
       if reset = '1' then
-      reg_data( 0)( 0)  <= DEFAULT_MGT_CTRL_t.userclk_tx_reset_in;
-      reg_data( 0)( 1)  <= DEFAULT_MGT_CTRL_t.userclk_rx_reset_in;
-      reg_data( 0)( 2)  <= DEFAULT_MGT_CTRL_t.reset_clk_freerun_in;
-      reg_data( 0)( 3)  <= DEFAULT_MGT_CTRL_t.reset_all_in;
-      reg_data( 0)( 4)  <= DEFAULT_MGT_CTRL_t.reset_tx_pll_and_datapath_in;
-      reg_data( 0)( 5)  <= DEFAULT_MGT_CTRL_t.reset_tx_datapath_in;
-      reg_data( 0)( 6)  <= DEFAULT_MGT_CTRL_t.reset_rx_pll_and_datapath_in;
-      reg_data( 0)( 7)  <= DEFAULT_MGT_CTRL_t.reset_rx_datapath_in;
-      reg_data( 4)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).wr_addr;
-      reg_data( 4)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).en;
-      reg_data( 5)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).wr_data;
-
-      Ctrl.DRP.DRP(0).wr_en <= '0';
-      
-
-      Ctrl.DRP.DRP(0).wr_en <= '0';
-      
+      reg_data( 0)( 0)  <= DEFAULT_MGT_CTRL_t.USERCLK_TX_RESET_IN;
+      reg_data( 0)( 1)  <= DEFAULT_MGT_CTRL_t.USERCLK_RX_RESET_IN;
+      reg_data( 0)( 2)  <= DEFAULT_MGT_CTRL_t.RESET_CLK_FREERUN_IN;
+      reg_data( 0)( 3)  <= DEFAULT_MGT_CTRL_t.RESET_ALL_IN;
+      reg_data( 0)( 4)  <= DEFAULT_MGT_CTRL_t.RESET_TX_PLL_AND_DATAPATH_IN;
+      reg_data( 0)( 5)  <= DEFAULT_MGT_CTRL_t.RESET_TX_DATAPATH_IN;
+      reg_data( 0)( 6)  <= DEFAULT_MGT_CTRL_t.RESET_RX_PLL_AND_DATAPATH_IN;
+      reg_data( 0)( 7)  <= DEFAULT_MGT_CTRL_t.RESET_RX_DATAPATH_IN;
+      reg_data( 4)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_ADDR;
+      reg_data( 4)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).EN;
+      reg_data( 5)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_DATA;
 
       end if; -- reset
     end if; -- clk

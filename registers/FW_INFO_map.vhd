@@ -22,8 +22,8 @@ architecture behavioral of FW_INFO_wb_interface is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 3);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 3) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 6);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 6) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -48,7 +48,7 @@ begin  -- architecture behavioral
       localRdData <= x"00000000";
       wb_err <= '0';
       if wb_strobe='1' then
-        case to_integer(unsigned(wb_addr(1 downto 0))) is
+        case to_integer(unsigned(wb_addr(2 downto 0))) is
           when 0 => --0x0
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_DATE;      --
         when 1 => --0x1
@@ -57,10 +57,14 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_VER;       --
         when 3 => --0x3
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_SHA;       --
+        when 5 => --0x5
+          localRdData(31 downto  0)  <=  Mon.UPTIME_MSBS;               --
+        when 6 => --0x6
+          localRdData(31 downto  0)  <=  Mon.UPTIME_LSBS;               --
 
         when others =>
           localRdData <= x"DEADDEAD";
-          wb_err <= '1';
+          --wb_err <= '1';
         end case;
       end if;
     end if;

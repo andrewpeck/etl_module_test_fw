@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <node id="INFO" fwinfo="endpoint; width=8">
 
-  <node id="HOG_INFO" address="0x00000000">
-      <node id="GLOBAL_DATE" address="0x0"  permission="r" mask="0xFFFFFFFF"/>
-      <node id="GLOBAL_TIME" address="0x1"  permission="r" mask="0xFFFFFFFF"/>
-      <node id="GLOBAL_VER"  address="0x2"  permission="r" mask="0xFFFFFFFF"/>
-      <node id="GLOBAL_SHA"  address="0x3"  permission="r" mask="0xFFFFFFFF"/>
-</node>
+      <node id="HOG_INFO" address="0x00000000">
+            <node id="GLOBAL_DATE" address="0x0"  permission="r" mask="0xFFFFFFFF"/>
+            <node id="GLOBAL_TIME" address="0x1"  permission="r" mask="0xFFFFFFFF"/>
+            <node id="GLOBAL_VER"  address="0x2"  permission="r" mask="0xFFFFFFFF"/>
+            <node id="GLOBAL_SHA"  address="0x3"  permission="r" mask="0xFFFFFFFF"/>
+      </node>
+
+      <node id="UPTIME_MSBS" address="0x5"  permission="r" mask="0xFFFFFFFF"/>
+      <node id="UPTIME_LSBS" address="0x6"  permission="r" mask="0xFFFFFFFF"/>
 
 </node>
