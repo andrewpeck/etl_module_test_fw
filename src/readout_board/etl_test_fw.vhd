@@ -491,9 +491,23 @@ begin
     end generate;
   end generate;
 
+  --------------------------------------------------------------------------------
+  -- Firmware Info
+  --------------------------------------------------------------------------------
+
   fw_info_mon.HOG_INFO.GLOBAL_DATE <= GLOBAL_DATE;
   fw_info_mon.HOG_INFO.GLOBAL_TIME <= GLOBAL_TIME;
   fw_info_mon.HOG_INFO.GLOBAL_VER  <= GLOBAL_VER;
   fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_SHA;
+
+  process (ipb_clk) is
+    variable upcnt : unsigned (63 downto 0) := (others => '0');
+  begin
+    if (rising_edge(ipb_clk)) then
+      upcnt                   := upcnt + 1;
+      fw_info_mon.uptime_lsbs <= std_logic_vector(upcnt (31 downto 0));
+      fw_info_mon.uptime_msbs <= std_logic_vector(upcnt (63 downto 32));
+    end if;
+  end process;
 
 end behavioral;
