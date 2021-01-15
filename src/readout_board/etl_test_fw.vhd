@@ -21,6 +21,8 @@ use ipbus.ipbus_decode_etl_test_fw.all;
 entity etl_test_fw is
   generic(
 
+    USE_SYSTEM_IBERT : boolean := true;
+
     MAC_ADDR : std_logic_vector (47 downto 0) := x"00_08_20_83_53_D1";
     IP_ADDR  : ip_addr_t                      := (192, 168, 0, 10);
 
@@ -103,7 +105,7 @@ end etl_test_fw;
 
 architecture behavioral of etl_test_fw is
 
-  constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ  + NUM_LPGBTS_TRIG);
+  constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
 
   signal gtwiz_userdata_tx_in  : std_logic_vector(32*NUM_GTS-1 downto 0);
   signal gtwiz_userdata_rx_out : std_logic_vector(32*NUM_GTS-1 downto 0);
@@ -355,16 +357,78 @@ begin
     end generate;
 
     datagen : for I in 0 to NUM_GTS-1 generate
+
       signal txdata, rxdata : std_logic_vector (31 downto 0);
       signal txclk, rxclk   : std_logic;
+
+      signal drpclk  : std_logic;
+      signal drpaddr : std_logic_vector(8 downto 0);
+      signal drpen   : std_logic;
+      signal drpdi   : std_logic_vector(15 downto 0);
+      signal drprdy  : std_logic;
+      signal drpdo   : std_logic_vector(15 downto 0);
+      signal drpwe   : std_logic;
+
     begin
+
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
       mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
 
+      ibert : if (USE_SYSTEM_IBERT) generate
+        component system_ibert
+          port (
+            drpclk_o       : out std_logic_vector(0 downto 0);
+            gt0_drpen_o    : out std_logic;
+            gt0_drpwe_o    : out std_logic;
+            gt0_drpaddr_o  : out std_logic_vector(8 downto 0);
+            gt0_drpdi_o    : out std_logic_vector(15 downto 0);
+            gt0_drprdy_i   : in  std_logic;
+            gt0_drpdo_i    : in  std_logic_vector(15 downto 0);
+            eyescanreset_o : out std_logic_vector(0 downto 0);
+            rxrate_o       : out std_logic_vector(2 downto 0);
+            txdiffctrl_o   : out std_logic_vector(3 downto 0);
+            txprecursor_o  : out std_logic_vector(4 downto 0);
+            txpostcursor_o : out std_logic_vector(4 downto 0);
+            rxlpmen_o      : out std_logic_vector(0 downto 0);
+            rxoutclk_i     : in  std_logic_vector(0 downto 0);
+            clk            : in  std_logic
+            );
+        end component;
+      begin
+
+        system_ibert_inst : system_ibert
+          port map (
+            drpclk_o(0)       => drpclk,
+            gt0_drpen_o       => drpen,
+            gt0_drpwe_o       => drpwe,
+            gt0_drpaddr_o     => drpaddr,
+            gt0_drpdi_o       => drpdi,
+            gt0_drprdy_i      => drprdy,
+            gt0_drpdo_i       => drpdo,
+            eyescanreset_o(0) => open,
+            rxrate_o          => open,
+            txdiffctrl_o      => open,
+            txprecursor_o     => open,
+            txpostcursor_o    => open,
+            rxlpmen_o(0)      => open,
+            rxoutclk_i(0)     => rxclk,
+            clk               => ipb_clk
+            );
+
+      end generate;
       xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
         port map (
-          mgt_refclk_i      => refclk,
-          mgt_freedrpclk_i  => ipb_clk,
+          mgt_refclk_i => refclk,
+
+          -- drp
+          mgt_freedrpclk_i => drpclk,
+          drpaddr          => drpaddr,
+          drpen            => drpen,
+          drpdi            => drpdi,
+          drprdy           => drprdy,
+          drpdo            => drpdo,
+          drpwe            => drpwe,
+
           mgt_rxusrclk_o    => rxclk,
           mgt_txusrclk_o    => txclk,
           mgt_txreset_i     => not locked,

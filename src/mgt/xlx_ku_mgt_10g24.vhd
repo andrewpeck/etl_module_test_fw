@@ -24,10 +24,21 @@ entity xlx_ku_mgt_10g24 is
     -- Clocks      --
     --=============--
     MGT_REFCLK_i     : in std_logic;
-    MGT_FREEDRPCLK_i : in std_logic;
 
     MGT_RXUSRCLK_o : out std_logic;
     MGT_TXUSRCLK_o : out std_logic;
+
+    --==============--
+    -- DRP
+    --==============--
+
+    mgt_freedrpclk_i : in std_logic;
+    drpaddr : in std_logic_vector(8 downto 0);
+    drpen   : in std_logic;
+    drpdi   : in std_logic_vector(15 downto 0);
+    drprdy  : out std_logic;
+    drpdo   : out std_logic_vector(15 downto 0);
+    drpwe   : in std_logic;
 
     --=============--
     -- Resets      --
@@ -166,13 +177,6 @@ architecture structural of xlx_ku_mgt_10g24 is
   signal txpippmsel_s       : std_logic;
   signal txpippmpd_s        : std_logic;
   signal txpippmstepsize_in : std_logic_vector(4 downto 0);
-
-  signal drpaddr_s : std_logic_vector(8 downto 0);
-  signal drpen_s   : std_logic;
-  signal drpdi_s   : std_logic_vector(15 downto 0);
-  signal drprdy_s  : std_logic;
-  signal drpdo_s   : std_logic_vector(15 downto 0);
-  signal drpwe_s   : std_logic;
 
   signal mgt_rst_phaligner_s : std_logic;
   signal MGT_TX_ALIGNED_s    : std_logic;
@@ -322,12 +326,12 @@ begin  --========####   Architecture Body   ####========--
       txpmaresetdone_out(0) => txpmaresetdone,
 
       -- DRP bus (used by the tx phase aligner)
-      drpaddr_in    => drpaddr_s,
-      drpdi_in      => drpdi_s,
-      drpen_in(0)   => drpen_s,
-      drpwe_in(0)   => drpwe_s,
-      drpdo_out     => drpdo_s,
-      drprdy_out(0) => drprdy_s,
+      drpaddr_in    => drpaddr,
+      drpdi_in      => drpdi,
+      drpen_in(0)   => drpen,
+      drpwe_in(0)   => drpwe,
+      drpdo_out     => drpdo,
+      drprdy_out(0) => drprdy,
 
       -- PI control / monitoring signals
       txpippmen_in(0)     => txpippmen_s,
@@ -353,10 +357,6 @@ begin  --========####   Architecture Body   ####========--
   txpippmpd_s        <= '0';
   txpippmstepsize_in <= (others => '0');
 
-  drpaddr_s        <= (others => '0');
-  drpen_s          <= '0';
-  drpdi_s          <= (others => '0');
-  drpwe_s          <= '0';
   MGT_TX_ALIGNED_s <= tx_reset_done;
 
 end structural;
