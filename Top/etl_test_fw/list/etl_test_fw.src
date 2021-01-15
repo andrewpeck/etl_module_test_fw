@@ -1,10 +1,13 @@
 # -*- mode: TCL;-*-
 src/readout_board/*.vhd  top=etl_test_fw
+
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
 src/wrappers/sc_wrapper.vhd
 src/utils/cylon.v
+src/utils/prbs_any.vhd
 src/utils/fifo_async.vhd
+src/utils/counter.vhd
 
 # ips
 ip/system_clocks/system_clocks.xci
