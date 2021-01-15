@@ -22,3 +22,4 @@ ip/ila_ipb/ila_ipb.xci
 ip/ila_lpgbt/ila_lpgbt.xci
 ip/vio_lpgbt/vio_lpgbt.xci
 ip/vio_mgt/vio_mgt.xci
+ip/system_ibert/system_ibert.xci
