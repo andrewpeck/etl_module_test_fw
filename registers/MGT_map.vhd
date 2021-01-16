@@ -20,6 +20,8 @@ entity MGT_wb_interface is
     );
 end entity MGT_wb_interface;
 architecture behavioral of MGT_wb_interface is
+  signal strobe_r : std_logic := '0';
+  signal strobe_pulse : std_logic := '0';
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
@@ -29,6 +31,15 @@ begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
   localWrData <= wb_wdata;
+
+  strobe_pulse <= '1' when (strobe='1' and strobe_r='0') else '0';
+  process (clk) is
+  begin
+    if (rising_edge(clk)) then
+      strobe_r <= strobe;
+    end if;
+  end process;
+
 
   -- acknowledge
   process (clk) is
@@ -105,12 +116,13 @@ begin  -- architecture behavioral
   begin  -- process reg_writes
     if (rising_edge(clk)) then  -- rising clock edge
 
+      -- action resets
       Ctrl.DRP.DRP(0).WR_EN <= '0';
       
 
 
       -- Write on strobe=write=1
-      if wb_strobe='1' and wb_write = '1' then
+      if strobe_pulse='1' and wb_write = '1' then
         case to_integer(unsigned(wb_addr(2 downto 0))) is
         when 0 => --0x0
           reg_data( 0)( 0)            <=  localWrData( 0);                --

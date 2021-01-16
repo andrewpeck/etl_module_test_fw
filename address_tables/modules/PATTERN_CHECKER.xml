@@ -1,7 +1,7 @@
 <node id="PATTERN_CHECKER">
 
 
-  <node id="RESET"  address="0x0"  mask="0x00000001" permission="wr" description="1 to Reset Pattern Checker"/>
+  <node id="RESET"  address="0x0"  mask="0x00000001" permission="w" description="1 to Reset Pattern Checker"/>
 
   <node id="CHECK_PRBS_EN"  address="0x1" mask="0xFFFFFFFF" permission="rw" parameters="default=0xffffffff" description="Bitmask 1 to enable checking"/>
 

@@ -19,6 +19,8 @@ entity FW_INFO_wb_interface is
     );
 end entity FW_INFO_wb_interface;
 architecture behavioral of FW_INFO_wb_interface is
+  signal strobe_r : std_logic := '0';
+  signal strobe_pulse : std_logic := '0';
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
@@ -28,6 +30,15 @@ begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
   localWrData <= wb_wdata;
+
+  strobe_pulse <= '1' when (strobe='1' and strobe_r='0') else '0';
+  process (clk) is
+  begin
+    if (rising_edge(clk)) then
+      strobe_r <= strobe;
+    end if;
+  end process;
+
 
   -- acknowledge
   process (clk) is
