@@ -227,23 +227,32 @@ begin
   -- PRBS
   --------------------------------------------------------------------------------
 
-  -- TODO: handle clock crossing here?
-  --
-  -- prbs_check : for I in 0 to NUM_ELINKS-1 generate
-  --   signal err : std_logic_vector (7 downto 0);
-  -- begin
+  -- TODO: handle clock crossing here to ipb clock?
 
   pat_checker : for I in 0 to 27 generate
+    constant WIDTH : integer                             := 8;
+    signal data    : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
+
   begin
+
+    -- copy for timing and align to system 40MHz
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
+        data <= daq_uplink_data(0).data(8*(I+1)-1 downto 8*I);
+      end if;
+    end process;
+
     pattern_checker_1 : entity work.pattern_checker
       generic map (
+        DEBUG         => I = 0,
         COUNTER_WIDTH => 32,
-        WIDTH         => 8
+        WIDTH         => WIDTH
         )
       port map (
         clock          => clk40,
         reset          => reset or ctrl.lpgbt.pattern_checker.reset,
-        data           => daq_uplink_data(0).data(8*(I+1)-1 downto 8*I),
+        data           => data,
         check_prbs     => ctrl.lpgbt.pattern_checker.check_prbs_en(I),
         check_upcnt    => ctrl.lpgbt.pattern_checker.check_upcnt_en(I),
         prbs_errors_o  => prbs_err_counters(I),
@@ -251,14 +260,27 @@ begin
         );
   end generate;
 
+  -- multiplex the outputs into one register
   process (ctrl_clk) is
     variable sel : integer;
+
+    signal prbs_ff : std_logic_vector (31 downto 0) := (others => '0');
+    signal upcnt_ff : std_logic_vector (31 downto 0) := (others => '0');
+
+    -- don't care too much about bus coherence here.. the counters should just be zero
+    -- and exact numbers don't really matter..
+    attribute ASYNC_REG                       : string;
+    attribute ASYNC_REG of prbs_ff    : label is "true";
+    attribute ASYNC_REG of upcnt_ff    : label is "true";
   begin
     if (rising_edge(ctrl_clk)) then
       sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
 
-      mon.lpgbt.pattern_checker.prbs_errors <= prbs_err_counters(sel);
-      mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_err_counters(sel);
+      prbs_ff <= prbs_err_counters(sel);
+      upcnt_ff <= upcnt_err_counters(sel);
+
+      mon.lpgbt.pattern_checker.prbs_errors  <= prbs_ff;
+      mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_ff;
     end if;
   end process;
 
