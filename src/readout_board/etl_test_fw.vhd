@@ -161,7 +161,7 @@ architecture behavioral of etl_test_fw is
   component system_clocks is
     port (
       reset     : in  std_logic;
-      clk_in300 : in  std_logic;
+      clk_in320 : in  std_logic;
       clk_40    : out std_logic;
       clk_320   : out std_logic;
       locked    : out std_logic
@@ -256,7 +256,7 @@ begin
   system_clocks_inst : system_clocks
     port map (
       reset     => std_logic0,
-      clk_in300 => refclk_bufg,
+      clk_in320 => refclk_bufg,
       clk_40    => clk40,
       clk_320   => clk320,
       locked    => locked
