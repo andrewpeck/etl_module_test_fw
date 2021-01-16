@@ -241,7 +241,7 @@ begin
         WIDTH         => 8
         )
       port map (
-        clock          => clk320,
+        clock          => clk40,
         reset          => reset or ctrl.lpgbt.pattern_checker.reset,
         data           => daq_uplink_data(0).data(8*(I+1)-1 downto 8*I),
         check_prbs     => ctrl.lpgbt.pattern_checker.check_prbs_en(I),
@@ -270,7 +270,7 @@ begin
       width       => 64
       )
     port map (
-      clk                 => clk320,
+      clk                 => clk40,
       reset               => reset or ctrl.lpgbt.pattern_checker.reset,
       enable              => '1',
       event               => '1',
