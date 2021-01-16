@@ -1,28 +1,14 @@
-
 ################################################################################
 # UDP Clock crossing
 ################################################################################
 
 set_max_delay -datapath_only \
-    -from [get_clocks I]  \
-    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*tx*/D}] 4
-
-set_max_delay \
     -from [get_clocks clk125_i] \
-    -to [get_pins {eth.eth_infra_inst/ipbus/udp_if/clock_crossing_if/*rx*/D}] 4
+    -to   [get_clocks I] 4
 
 set_max_delay -datapath_only \
-    -from [get_clocks clk125_i]  \
-    -to   [get_pins -hierarchical -filter {NAME =~ "*ipbus_tx_ram/ram_reg_*/*DINADIN[*]"}] 4
-
-set_max_delay -datapath_only \
-    -from [get_clocks clk125_i]  \
-    -to   [get_pins -hierarchical -filter {NAME =~ "*ipbus_tx_ram/ram_reg_*/*DINPADINP[*]"}] 4
-
-set_max_delay -datapath_only \
-    -from [get_pins -hierarchical -filter {NAME =~ "*req_send_tff*/Q"}]  \
-    -to   [get_pins -hierarchical -filter {NAME =~ "*req_send_buf*/D"}] 4
-
+    -from [get_clocks I] \
+    -to   [get_clocks clk125_i] 4
 
 ################################################################################
 ## Ipb Clock crossing
