@@ -245,7 +245,6 @@ begin
 
     pattern_checker_1 : entity work.pattern_checker
       generic map (
-        DEBUG         => I = 0,
         COUNTER_WIDTH => 32,
         WIDTH         => WIDTH
         )
