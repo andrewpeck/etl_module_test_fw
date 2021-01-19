@@ -15,6 +15,8 @@ entity pattern_checker is
 
     reset : in std_logic;
 
+    cnt_reset : in std_logic;
+
     data : in std_logic_vector (WIDTH-1 downto 0);
 
     check_prbs  : in std_logic;
@@ -28,7 +30,7 @@ end pattern_checker;
 
 architecture behavioral of pattern_checker is
 
-  signal prbs_errs : std_logic_vector (7 downto 0);
+  signal prbs_errs : std_logic_vector (WIDTH-1 downto 0);
   signal upcnt_err : std_logic;
 
 begin
@@ -64,7 +66,7 @@ begin
       )
     port map (
       clk    => clock,
-      reset  => reset or not check_upcnt,
+      reset  => reset or not check_upcnt or cnt_reset,
       enable => '1',
       event  => upcnt_err,
       count  => upcnt_errors_o,
@@ -76,10 +78,10 @@ begin
   --------------------------------------------------------------------------------
 
   -- FIXME: need to expand for widths more than 8, just generate multiple
-
+  --
   prbs_any_chk : entity work.prbs_any
     generic map (
-      chk_mode    => true,              -- true =>  check mode
+      chk_mode    => true,
       inv_pattern => false,
       poly_lenght => 7,
       poly_tap    => 6,
@@ -100,9 +102,12 @@ begin
       )
     port map (
       clk    => clock,
-      reset  => reset or not check_prbs,
+      reset  => reset or not check_prbs or cnt_reset,
       enable => '1',
-      event  => or_reduce(prbs_errs),
+      -- have to handle the weird case that if the link is idle (e.g. 000000000) the prbs checker
+      -- just registers no errors and marks the link as good... zero should not occur in the PRBS generator
+      -- since the polynomial just gets stuck
+      event  => or_reduce(prbs_errs) or not or_reduce(data),
       count  => prbs_errors_o,
       at_max => open
       );

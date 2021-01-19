@@ -207,6 +207,7 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t is record
     RESET                      :std_logic;     -- 1 to Reset Pattern Checker
+    CNT_RESET                  :std_logic;     -- 1 to Reset Pattern Checker Counters
     CHECK_PRBS_EN              :std_logic_vector(31 downto 0);  -- Bitmask 1 to enable checking
     CHECK_UPCNT_EN             :std_logic_vector(31 downto 0);  -- Bitmask 1 to enable checking
     SEL                        :std_logic_vector(15 downto 0);  -- Channel to select for error counting
@@ -215,9 +216,10 @@ package READOUT_BOARD_CTRL is
 
   constant DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t : READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t := (
                                                                                                                RESET => '0',
+                                                                                                               CNT_RESET => '0',
                                                                                                                SEL => x"0000",
-                                                                                                               CHECK_PRBS_EN => x"ffffffff",
-                                                                                                               CHECK_UPCNT_EN => x"ffffffff"
+                                                                                                               CHECK_PRBS_EN => x"00000000",
+                                                                                                               CHECK_UPCNT_EN => x"00000000"
                                                                                                               );
   type READOUT_BOARD_LPGBT_MON_t is record
     DAQ                        :READOUT_BOARD_LPGBT_DAQ_MON_t;

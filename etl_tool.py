@@ -240,26 +240,20 @@ def action_reg(hw, reg):
 
 
 def regdump():
-
     hw = setup()
-
     for id in hw.getNodes():
         reg = hw.getNode(id)
         if (((reg.getPermission() == uhal.NodePermission.READ) or
-            (reg.getPermission() == uhal.NodePermission.READWRITE)) and
+             (reg.getPermission() == uhal.NodePermission.READWRITE)) and
             (reg.getMode() != uhal.BlockReadWriteMode.HIERARCHICAL)):
-
             print_reg(hw, reg, "")
-            # val = reg.read();
-            # hw.dispatch();
-            # print("%s 0x%08X" % (id, val))
 
 
 def print_reg(hw, reg, pad=""):
     val = reg.read()
     id = reg.getPath()
     hw.dispatch()
-    print(format_reg(reg.getAddress(), id, val, format_permission(reg.getPermission())))
+    print(format_reg(reg.getAddress(), id[4:], val, format_permission(reg.getPermission())))
 
 
 def tab_pad(s, maxlen):
@@ -293,9 +287,10 @@ def reset_pattern_checkers(rb=0):
     write_node(prbs_en_id, 0)
     write_node(upcnt_en_id, 0)
 
-    write_node(prbs_en_id, 0xFFFFFFFF)
-    write_node(upcnt_en_id, 0xFFFFFFFF)
+    write_node(prbs_en_id, 0x00FFFFFF)
+    write_node(upcnt_en_id, 0x00FFFFFF)
 
+    action("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CNT_RESET" % rb)
 
 def read_pattern_checkers(rb=0):
 
@@ -304,7 +299,9 @@ def read_pattern_checkers(rb=0):
 
     for mode in ["PRBS", "UPCNT"]:
         print(mode + ":")
-        for i in range(0, 28):
+        for i in range(28):
+
+            check = False
 
             if mode == "UPCNT" and ((upcnt_en >> i) & 0x1):
                 check = True
@@ -328,6 +325,19 @@ def read_pattern_checkers(rb=0):
 
 def set_uplink_alignment(val, link, lpgbt=0):
     id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (lpgbt, link)
+
+
+def set_downlink_data_src(source, rb=0):
+    id = "READOUT_BOARD_%d.LPGBT.DAQ.DOWNLINK.DL_SRC" % rb
+    if (source=="etroc"):
+        write_node(id, 0)
+    if (source=="upcnt"):
+        write_node(id, 1)
+    if (source=="prbs"):
+        write_node(id, 2)
+
+def set_uplink_alignment(val, link, rb=0):
+    id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (rb, link)
     write_node(id, val)
 
 

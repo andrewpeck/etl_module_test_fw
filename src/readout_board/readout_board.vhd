@@ -21,8 +21,7 @@ entity readout_board is
     NUM_LPGBTS_DAQ  : integer := 1;
     NUM_LPGBTS_TRIG : integer := 1;
     NUM_DOWNLINKS   : integer := 1;
-    NUM_SCAS        : integer := 1;
-    NUM_ELINKS      : integer := 28
+    NUM_SCAS        : integer := 1
     );
   port(
 
@@ -47,8 +46,11 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  constant FREQ  : integer := 320;
-  constant WIDTH : integer := FREQ/40;
+  constant FREQ       : integer := 320; -- uplink frequency
+
+  constant DOWNWIDTH  : integer := 8;
+  constant UPWIDTH    : integer := FREQ/40;
+  constant NUM_ELINKS : integer := 224/UPWIDTH;  -- FIXME: account for fec5/12
 
   signal valid : std_logic;
 
@@ -89,19 +91,17 @@ architecture behavioral of readout_board is
 
   -- master
 
-  signal sca0_data_i : std_logic_vector (1 downto 0);
-  signal sca0_data_o : std_logic_vector (1 downto 0);
+  signal prbs_err_counters  : std32_array_t (NUM_ELINKS-1 downto 0);
+  signal upcnt_err_counters : std32_array_t (NUM_ELINKS-1 downto 0);
 
   signal counter : integer range 0 to 255 := 0;
-
-  signal phase : integer range 0 to 7 := 0;
-
-  signal prbs_err_counters  : std32_array_t (27 downto 0);
-  signal upcnt_err_counters : std32_array_t (27 downto 0);
-
-  signal prbs_gen : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
+  signal prbs_gen : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
 
 begin
+
+  --------------------------------------------------------------------------------
+  -- create 1/8 strobe synced to 40MHz clock
+  --------------------------------------------------------------------------------
 
   clock_strobe_inst : entity work.clock_strobe
     port map (
@@ -112,7 +112,6 @@ begin
   --------------------------------------------------------------------------------
   -- upcounter
   --------------------------------------------------------------------------------
-
 
   process (clk40) is
   begin
@@ -144,7 +143,7 @@ begin
   process (clk40) is
     variable cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
   begin
-    cnt_slv := std_logic_vector (to_unsigned(counter, 8));
+    cnt_slv := std_logic_vector (to_unsigned(counter, cnt_slv'length));
     if (rising_edge(clk40)) then
       if (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 0) then
         daq_downlink_data(0).data <= cnt_slv & cnt_slv & cnt_slv & cnt_slv;
@@ -184,14 +183,12 @@ begin
       valid_i => '1',
 
       -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
-      ic_data_i => daq_uplink_data(0).ic,
-      ic_data_o => daq_downlink_data(0).ic,
+      ic_data_i => daq_uplink_data_aligned(0).ic,
+      ic_data_o => daq_downlink_data_aligned(0).ic,
 
-      sca0_data_i => daq_uplink_data(0).ec,
-      sca0_data_o => daq_downlink_data(0).ec
+      sca0_data_i => daq_uplink_data_aligned(0).ec,
+      sca0_data_o => daq_downlink_data_aligned(0).ec
       );
-
-  daq_downlink_data(0).valid <= valid;
 
   --------------------------------------------------------------------------------
   -- LPGBT Cores
@@ -257,12 +254,12 @@ begin
   -- Frame Aligner
   --------------------------------------------------------------------------------
 
-  daq_downlink_data_aligned(0).valid <= daq_downlink_data(0).valid;
+  daq_downlink_data_aligned(0).valid <= valid;
   daq_downlink_data_aligned(0).ic <= daq_downlink_data(0).ic;
   daq_downlink_data_aligned(0).ec <= daq_downlink_data(0).ec;
 
   downlink_aligners : for I in 0 to 3 generate
-    signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(WIDTH))))-1 downto 0);
+    signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
     -- don't care about bus coherence here..
     -- switching doesn't need to be glitchless
     attribute ASYNC_REG              : string;
@@ -282,18 +279,18 @@ begin
     end process;
 
     frame_aligner_inst : entity work.frame_aligner
-      generic map (WIDTH => 8)
+      generic map (WIDTH => DOWNWIDTH)
       port map (
         clock => clk40,
         cnt   => align_cnt,
-        din   => daq_downlink_data(0).data(WIDTH*(I+1)-1 downto WIDTH*I),
-        dout  => daq_downlink_data_aligned(0).data(WIDTH*(I+1)-1 downto WIDTH*I)
+        din   => daq_downlink_data(0).data(DOWNWIDTH*(I+1)-1 downto DOWNWIDTH*I),
+        dout  => daq_downlink_data_aligned(0).data(DOWNWIDTH*(I+1)-1 downto DOWNWIDTH*I)
         );
 
   end generate;
 
   uplink_aligners : for I in 0 to NUM_ELINKS-1 generate
-    signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(WIDTH))))-1 downto 0);
+    signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
     -- don't care about bus coherence here..
     -- switching doesn't need to be glitchless
     attribute ASYNC_REG              : string;
@@ -337,12 +334,12 @@ begin
     end process;
 
     frame_aligner_inst : entity work.frame_aligner
-      generic map (WIDTH => 8)
+      generic map (WIDTH => UPWIDTH)
       port map (
         clock => clk40,
         cnt   => align_cnt,
-        din   => daq_uplink_data(0).data(WIDTH*(I+1)-1 downto WIDTH*I),
-        dout  => daq_uplink_data_aligned(0).data(WIDTH*(I+1)-1 downto WIDTH*I)
+        din   => daq_uplink_data(0).data(UPWIDTH*(I+1)-1 downto UPWIDTH*I),
+        dout  => daq_uplink_data_aligned(0).data(UPWIDTH*(I+1)-1 downto UPWIDTH*I)
         );
 
   end generate;
@@ -353,9 +350,8 @@ begin
 
   -- TODO: handle clock crossing here to ipb clock?
 
-  pat_checker : for I in 0 to 27 generate
-    constant WIDTH : integer                             := 8;
-    signal data    : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
+  pat_checker : for I in 0 to NUM_ELINKS-1 generate
+    signal data    : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
   begin
 
     -- copy for timing and align to system 40MHz
@@ -368,12 +364,14 @@ begin
 
     pattern_checker_1 : entity work.pattern_checker
       generic map (
+        DEBUG         => I = 8,
         COUNTER_WIDTH => 32,
-        WIDTH         => WIDTH
+        WIDTH         => UPWIDTH
         )
       port map (
         clock          => clk40,
         reset          => reset or ctrl.lpgbt.pattern_checker.reset,
+        cnt_reset      => reset or ctrl.lpgbt.pattern_checker.cnt_reset,
         data           => data,
         check_prbs     => ctrl.lpgbt.pattern_checker.check_prbs_en(I),
         check_upcnt    => ctrl.lpgbt.pattern_checker.check_upcnt_en(I),
@@ -415,7 +413,7 @@ begin
       )
     port map (
       clk                 => clk40,
-      reset               => reset or ctrl.lpgbt.pattern_checker.reset,
+      reset               => reset or ctrl.lpgbt.pattern_checker.reset or ctrl.lpgbt.pattern_checker.cnt_reset,
       enable              => '1',
       event               => '1',
       count(31 downto 0)  => mon.lpgbt.pattern_checker.timer_lsbs,
