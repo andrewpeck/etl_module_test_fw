@@ -367,7 +367,6 @@ begin
 
     pattern_checker_1 : entity work.pattern_checker
       generic map (
-        DEBUG         => I = 8,
         COUNTER_WIDTH => 32,
         WIDTH         => UPWIDTH
         )
@@ -432,11 +431,8 @@ begin
 
     component vio_lpgbt
       port (
-        clk        : in  std_logic;
-        probe_in0  : in  std_logic_vector(0 downto 0);
-        probe_in1  : in  std_logic_vector(0 downto 0);
-        probe_out0 : out std_logic_vector(0 downto 0);
-        probe_out1 : out std_logic_vector(0 downto 0)
+        clk       : in std_logic;
+        probe_in0 : in std_logic_vector(2 downto 0)
         );
     end component;
 
@@ -469,36 +465,35 @@ begin
 
     ila_daq_lpgbt_inst : ila_lpgbt
       port map (
-        clk        => clk320,
-        probe0     => daq_downlink_mgt_word_array(0),
-        probe1     => daq_downlink_data(0).data,
-        probe2(0)  => daq_downlink_data(0).valid,
-        probe3(0)  => daq_downlink_ready(0),
-        probe4(0)  => daq_downlink_reset(0),
-        probe5     => daq_uplink_mgt_word_array(0),
-        probe6     => daq_uplink_data(0).data,
-        probe7(0)  => daq_uplink_data(0).valid,
-        probe8(0)  => daq_uplink_ready(0),
-        probe9(0)  => daq_uplink_reset(0),
-        probe10(0) => daq_uplink_fec_err(0),
-        probe11    => ic_data_i,
-        probe12    => ic_data_o,
-        probe13    => sca0_data_i,
-        probe14    => sca0_data_o,
-        probe15(0) => clk40,
-        probe16(0) => not clk40,
-        probe17(0) => '1',
-        probe18(0) => '1'
+        clk                  => clk320,
+        probe0(7 downto 0)   => daq_uplink_data(0).data(71 downto 64),
+        probe0(15 downto 8)  => daq_uplink_data_aligned(0).data(71 downto 64),
+        probe0(31 downto 16) => ctrl.lpgbt.pattern_checker.sel,
+        probe1               => daq_downlink_data_aligned(0).data,
+        probe2(0)            => daq_downlink_data_aligned(0).valid,
+        probe3(0)            => daq_downlink_ready(0),
+        probe4(0)            => daq_downlink_reset(0),
+        probe5(31 downto 0)  => prbs_err_counters(to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel))),
+        probe6               => daq_uplink_data_aligned(0).data,
+        probe7(0)            => daq_uplink_data_aligned(0).valid,
+        probe8(0)            => daq_uplink_ready(0),
+        probe9(0)            => daq_uplink_reset(0),
+        probe10(0)           => daq_uplink_fec_err(0),
+        probe11              => daq_uplink_data_aligned(0).ic,
+        probe12              => daq_downlink_data_aligned(0).ic,
+        probe13              => daq_uplink_data_aligned(0).ec,
+        probe14              => daq_downlink_data_aligned(0).ec,
+        probe15(0)           => clk40,
+        probe16(0)           => not clk40,
+        probe17(0)           => '1',
+        probe18(0)           => '1'
         );
 
-    -- dl_vio : vio_lpgbt
-    --   port map (
-    --     clk           => clk320,
-    --     probe_out0(0) => daq_downlink_reset(0),
-    --     probe_out1(0) => daq_uplink_reset(0),
-    --     probe_in0(0)  => daq_uplink_ready(0),
-    --     probe_in1(0)  => daq_downlink_ready(0)
-    --     );
+    dl_vio : vio_lpgbt
+      port map (
+        clk       => clk320,
+        probe_in0 => ctrl.lpgbt.daq.uplink.align_8
+        );
 
   end generate;
 
