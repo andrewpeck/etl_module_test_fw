@@ -33,6 +33,16 @@ architecture behavioral of pattern_checker is
   signal prbs_errs : std_logic_vector (WIDTH-1 downto 0);
   signal upcnt_err : std_logic;
 
+  function reverse_vector (a: std_logic_vector)
+    return std_logic_vector is
+    variable result: std_logic_vector(a'RANGE);
+    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+  begin
+    for i in aa'RANGE loop
+      result(i) := aa(i);
+    end loop;
+    return result;
+  end; -- function reverse_vector
 begin
 
   --------------------------------------------------------------------------------
@@ -89,7 +99,7 @@ begin
     port map (
       rst      => reset or not check_prbs,
       clk      => clock,
-      data_in  => data,
+      data_in  => reverse_vector(data),
       en       => '1',
       data_out => prbs_errs
       );

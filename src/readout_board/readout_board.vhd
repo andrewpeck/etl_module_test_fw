@@ -94,8 +94,9 @@ architecture behavioral of readout_board is
   signal prbs_err_counters  : std32_array_t (NUM_ELINKS-1 downto 0);
   signal upcnt_err_counters : std32_array_t (NUM_ELINKS-1 downto 0);
 
-  signal counter : integer range 0 to 255 := 0;
-  signal prbs_gen : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
+  signal counter          : integer range 0 to 255                  := 0;
+  signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
+  signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
 
 begin
 
@@ -140,6 +141,8 @@ begin
       data_out => prbs_gen
       );
 
+  prbs_gen_reverse <= reverse_vector(prbs_gen);
+
   process (clk40) is
     variable cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
   begin
@@ -150,7 +153,7 @@ begin
       elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 1) then
         daq_downlink_data(0).data <= cnt_slv & cnt_slv & cnt_slv & cnt_slv;
       elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 2) then
-        daq_downlink_data(0).data <= prbs_gen & prbs_gen & prbs_gen & prbs_gen;
+        daq_downlink_data(0).data <= prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse;
       end if;
     end if;
   end process;

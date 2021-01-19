@@ -18,6 +18,7 @@ package types is
   type mac_addr_t is array (integer range 0 to 5) of std_logic_vector (7 downto 0);
 
   function to_slv (addr : ip_addr_t) return std_logic_vector;
+  function reverse_vector (a: std_logic_vector) return std_logic_vector;
 
 end package types;
 
@@ -32,5 +33,16 @@ package body types is
     slv(7 downto 0)   := std_logic_vector(to_unsigned(addr(0), 8));
     return slv;
   end;
+
+  function reverse_vector (a: std_logic_vector)
+    return std_logic_vector is
+    variable result: std_logic_vector(a'RANGE);
+    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+  begin
+    for i in aa'RANGE loop
+      result(i) := aa(i);
+    end loop;
+    return result;
+  end; -- function reverse_vector
 
 end package body types;
