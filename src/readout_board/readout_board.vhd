@@ -46,7 +46,7 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  constant FREQ       : integer := 320; -- uplink frequency
+  constant FREQ : integer := 320;       -- uplink frequency
 
   constant DOWNWIDTH  : integer := 8;
   constant UPWIDTH    : integer := FREQ/40;
@@ -69,10 +69,10 @@ architecture behavioral of readout_board is
   signal daq_uplink_ready        : std_logic_vector (NUM_LPGBTS_DAQ-1 downto 0);
   signal daq_uplink_fec_err      : std_logic_vector (NUM_LPGBTS_DAQ-1 downto 0);
 
-  signal daq_downlink_data  : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
-  signal daq_downlink_data_aligned  : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
-  signal daq_downlink_reset : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
-  signal daq_downlink_ready : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
+  signal daq_downlink_data         : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
+  signal daq_downlink_data_aligned : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
+  signal daq_downlink_reset        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
+  signal daq_downlink_ready        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
 
   attribute DONT_TOUCH                        : string;
   attribute DONT_TOUCH of daq_uplink_data     : signal is "true";
@@ -258,8 +258,8 @@ begin
   --------------------------------------------------------------------------------
 
   daq_downlink_data_aligned(0).valid <= valid;
-  daq_downlink_data_aligned(0).ic <= daq_downlink_data(0).ic;
-  daq_downlink_data_aligned(0).ec <= daq_downlink_data(0).ec;
+  daq_downlink_data_aligned(0).ic    <= daq_downlink_data(0).ic;
+  daq_downlink_data_aligned(0).ec    <= daq_downlink_data(0).ec;
 
   downlink_aligners : for I in 0 to 3 generate
     signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
@@ -273,10 +273,10 @@ begin
     begin
       if (rising_edge(clk40)) then
         case I is
-          when 0  => align_cnt <= ctrl.lpgbt.daq.downlink.align_0;
-          when 1  => align_cnt <= ctrl.lpgbt.daq.downlink.align_1;
-          when 2  => align_cnt <= ctrl.lpgbt.daq.downlink.align_2;
-          when 3  => align_cnt <= ctrl.lpgbt.daq.downlink.align_3;
+          when 0 => align_cnt <= ctrl.lpgbt.daq.downlink.align_0;
+          when 1 => align_cnt <= ctrl.lpgbt.daq.downlink.align_1;
+          when 2 => align_cnt <= ctrl.lpgbt.daq.downlink.align_2;
+          when 3 => align_cnt <= ctrl.lpgbt.daq.downlink.align_3;
         end case;
       end if;
     end process;
@@ -354,7 +354,7 @@ begin
   -- TODO: handle clock crossing here to ipb clock?
 
   pat_checker : for I in 0 to NUM_ELINKS-1 generate
-    signal data    : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    signal data : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
   begin
 
     -- copy for timing and align to system 40MHz
