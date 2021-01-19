@@ -8,6 +8,8 @@ src/utils/cylon.v
 src/utils/prbs_any.vhd
 src/utils/fifo_async.vhd
 src/utils/counter.vhd
+src/utils/frame_aligner.vhd
+src/utils/clock_strobe.vhd
 
 # ips
 ip/system_clocks/system_clocks.xci

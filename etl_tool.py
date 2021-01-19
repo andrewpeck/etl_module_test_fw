@@ -98,7 +98,7 @@ def main():
     parser.add_argument('-d',
                         '--dump',
                         action="store_true",
-                        help="Dump test")
+                        help="Dump all registers")
 
     args = parser.parse_args()
 
@@ -185,7 +185,7 @@ def write_node(id, value):
     hw = setup()
     reg = hw.getNode(id)
     if (reg.getPermission() == uhal.NodePermission.WRITE):
-        action(hw, reg)
+        action_reg(hw, reg)
     else:
         reg.write(value)
         hw.dispatch()
@@ -219,11 +219,20 @@ def reset_lpgbt_links():
         print("Resetting %s" % id)
         reg = hw.getNode(id)
         print(str(reg.getPermission()))
-        action(hw, reg)
+        action_reg(hw, reg)
         # hw.dispatch();
 
 
-def action(hw, reg):
+def action(id):
+    hw = setup()
+    reg = hw.getNode(id)
+    addr = reg.getAddress()
+    mask = reg.getMask()
+    hw.getClient().write(addr, mask)
+    hw.dispatch()
+
+
+def action_reg(hw, reg):
     addr = reg.getAddress()
     mask = reg.getMask()
     hw.getClient().write(addr, mask)
@@ -236,9 +245,9 @@ def regdump():
 
     for id in hw.getNodes():
         reg = hw.getNode(id)
-        if ((reg.getPermission() == uhal.NodePermission.READ) or
-            (reg.getPermission() == uhal.NodePermission.READWRITE) and
-            (reg.getModule() == "")):
+        if (((reg.getPermission() == uhal.NodePermission.READ) or
+            (reg.getPermission() == uhal.NodePermission.READWRITE)) and
+            (reg.getMode() != uhal.BlockReadWriteMode.HIERARCHICAL)):
 
             print_reg(hw, reg, "")
             # val = reg.read();
@@ -275,14 +284,17 @@ def format_permission(perm):
 
 
 def reset_pattern_checkers(rb=0):
-    write_node("READOUT_BOARD_%i.LPGBT.PATTERN_CHECKER.RESET" % rb, 1)
-    write_node("READOUT_BOARD_%i.LPGBT.PATTERN_CHECKER.RESET" % rb, 0)
 
-    write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb, 0)
-    write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb, 0)
+    action("READOUT_BOARD_%i.LPGBT.PATTERN_CHECKER.RESET" % rb)
 
-    write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb, 0xFFFFFFFF)
-    write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb, 0xFFFFFFFF)
+    prbs_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb
+    upcnt_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb
+
+    write_node(prbs_en_id, 0)
+    write_node(upcnt_en_id, 0)
+
+    write_node(prbs_en_id, 0xFFFFFFFF)
+    write_node(upcnt_en_id, 0xFFFFFFFF)
 
 
 def read_pattern_checkers(rb=0):
@@ -292,7 +304,7 @@ def read_pattern_checkers(rb=0):
 
     for mode in ["PRBS", "UPCNT"]:
         print(mode + ":")
-        for i in range(0, 27):
+        for i in range(0, 28):
 
             if mode == "UPCNT" and ((upcnt_en >> i) & 0x1):
                 check = True
@@ -300,7 +312,7 @@ def read_pattern_checkers(rb=0):
                 check = True
 
             if check:
-                write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.SEL" % (rb), 1)
+                write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.SEL" % (rb), i)
 
                 uptime_msbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_MSBS" % (rb))
                 uptime_lsbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_LSBS" % (rb))
@@ -309,9 +321,18 @@ def read_pattern_checkers(rb=0):
 
                 errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
 
-                print("    Channel %02d %d bad frames in %.0f Gb (ber<%s)" % (i, errs, uptime*8*40/1000000000.0, "{:e}".format(1/uptime*8*40)))
+                print("    Channel %02d %d bad frames in %.0f Gb (ber<%s)" %
+                      (i, errs, uptime*8*40/1000000000.0, "{:e}".format(1/uptime*8*40)))
+
+
+
+def set_uplink_alignment(val, link, lpgbt=0):
+    id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (lpgbt, link)
+    write_node(id, val)
 
 
 if __name__ == '__main__':
 
+    for i in range(28):
+        set_uplink_alignment(2, i)
     main()
