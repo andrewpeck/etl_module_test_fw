@@ -28,13 +28,30 @@ Libraries:
         - "/usr/local/lib/ghdl/src/synopsys/*.vhdl"
         - "/usr/local/lib/ghdl/src/std/v08/*.vhdl"
         - "/usr/local/lib/ghdl/src/ieee2008/*.vhdl"
+        - "/usr/lib/ghdl/src/synopsys/*.vhdl"
+        - "/usr/lib/ghdl/src/std/v08/*.vhdl"
+        - "/usr/lib/ghdl/src/ieee2008/*.vhdl"
 
-#Enable/disable typechecking
-TypeCheck: True
+
+Preferences:
+    #Enable/disable typechecking
+    TypeCheck: True
 
 
-#Enable/disable check-as-you-type
-CheckOnChange: True
+    #Display errors over multiple lines
+    MultiLineErrors: True
+
+
+    #Enable/disable check-as-you-type
+    CheckOnChange: True
+
+
+    #Enable/disable linting
+    Lint: True
+
+
+    #Display the first sintax error only in a file
+    FirstSyntaxErrorOnly: True
 
 
 #Linter rule configuration.
@@ -68,3 +85,4 @@ Lint:
     DeprecatedPackages:          True #Default severity Warning
     ImplicitLibraries:           True #Default severity Warning
     DisconnectedPorts:           True #Default severity Critical
+    IntNoRange:                  True #Default severity Warning
