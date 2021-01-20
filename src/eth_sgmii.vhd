@@ -86,7 +86,6 @@ end eth_sgmii_lvds;
 
 architecture rtl of eth_sgmii_lvds is
 
-
   --- this is the MAC ---
   component temac_gbe_v9_0
     port (
@@ -162,6 +161,7 @@ architecture rtl of eth_sgmii_lvds is
 
       an_interrupt         : out std_logic;
       an_adv_config_vector : in  std_logic_vector(15 downto 0);
+      an_adv_config_val    : in  std_logic;
 
       an_restart_config : in std_logic;
 
@@ -172,7 +172,19 @@ architecture rtl of eth_sgmii_lvds is
 
       reset : in std_logic;
 
-      signal_detect  : in  std_logic;
+      signal_detect : in std_logic;
+
+      mdc                 : in  std_logic;
+      mdio_i              : in  std_logic;
+      mdio_o              : out std_logic;
+      mdio_t              : out std_logic;
+      ext_mdc             : out std_logic;
+      ext_mdio_i          : in  std_logic;
+      ext_mdio_o          : out std_logic;
+      ext_mdio_t          : out std_logic;
+      phyaddr             : in  std_logic_vector(4 downto 0);
+      configuration_valid : in  std_logic;
+
       idelay_rdy_out : out std_logic
       );
   end component;
@@ -182,10 +194,11 @@ architecture rtl of eth_sgmii_lvds is
   signal speedis10100 : std_logic;
 
   -- vio signals
-  signal rst_vio                : std_logic := '0';
-  signal phy_reset_vio          : std_logic := '0';
-  signal sgmii_reset, mac_reset : std_logic := '0';
-  signal phy_cfg_not_done       : std_logic := '0';
+  signal vio_global_reset               : std_logic := '0';
+  signal vio_phy_reset                  : std_logic := '0';
+  signal vio_sgmii_reset, vio_mac_reset : std_logic := '0';
+  signal phy_reset, mac_reset           : std_logic := '1';
+  signal phy_cfg_not_done               : std_logic := '1';
 
   signal clk_en : std_logic;
 
@@ -195,11 +208,10 @@ architecture rtl of eth_sgmii_lvds is
   --- clocks
   signal clk125_sgmii, clk2mhz      : std_logic;
   --- slow clocks and edges
-  signal onehz, onehz_d, onehz_re   : std_logic                    := '0';              -- slow generated clocks
+  signal onehz, onehz_d, onehz_re   : std_logic := '0';  -- slow generated clocks
   --- resets
-  signal rst_delay_slr              : std_logic_vector(5 downto 0) := (others => '1');  -- reset delay shift-register
-  signal rst125_sgmii               : std_logic;                                        -- out from SGMII
-  signal tx_reset_out, rx_reset_out : std_logic;                                        -- out from MAC
+  signal rst125_sgmii               : std_logic;         -- out from SGMII
+  signal tx_reset_out, rx_reset_out : std_logic;         -- out from MAC
 
   --- locked
   signal mmcm_locked : std_logic;
@@ -209,9 +221,9 @@ architecture rtl of eth_sgmii_lvds is
   signal gmii_tx_en, gmii_tx_er, gmii_rx_dv, gmii_rx_er : std_logic;
 
   -- sgmii controls and status
-  signal force_an     : std_logic := '0';
-  signal force_val    : std_logic := '0';
-  signal an_interrupt : std_logic;
+  signal an_restart, vio_an_restart       : std_logic := '0';
+  signal an_config_val, vio_an_config_val : std_logic := '0';
+  signal an_interrupt                     : std_logic;
 
   signal an_config_vector : std_logic_vector (15 downto 0) := (others => '0');
 
@@ -241,22 +253,59 @@ begin
   end process;
   onehz_re <= '1' when (onehz = '1' and onehz_d = '0') else '0';
 
-  -- Merge with previous loop?
-  process(clk125_fr, rst, rst_vio)      -- async-presettables ff's with CE
+  phy_resetb <= not (phy_reset or vio_phy_reset);
+
+  resetter_proc : process (clk125_fr) is
+    constant MAX     : integer                := 10;
+    variable seconds : integer range 0 to MAX := 0;
   begin
-    if (rst = '1' or rst_vio = '1') then
-      rst_delay_slr <= (others => '1');
-    elsif rising_edge(clk125_fr) then
-      if onehz_re = '1' then
-        rst_delay_slr <= "0" & rst_delay_slr(rst_delay_slr'length-1 downto 1);
+    if (rising_edge(clk125_fr)) then
+
+      if (rst = '1' or vio_global_reset = '1') then
+
+        seconds := 0;
+
+        phy_reset        <= '1';
+        mac_reset        <= '1';
+        an_config_val    <= '1';
+        an_restart       <= '0';
+        phy_cfg_not_done <= '1';
+
+      else
+
+          if (onehz_re = '1' and seconds < MAX) then
+            seconds := seconds + 1;
+          end if;
+
+          if (seconds = 2) then
+            phy_reset <= '0';
+          end if;
+
+          if (seconds = 3) then
+            mac_reset <= '0';
+          end if;
+
+          if (seconds = 4) then
+            an_config_val <= '0';
+          else
+            an_config_val <= '1';
+          end if;
+
+          if (seconds = 6) then
+            an_restart <= '1';
+          else
+            an_restart <= '0';
+          end if;
+
+          if (seconds = 6) then
+            phy_cfg_not_done <= '0';
+          end if;
+
+
       end if;
+
     end if;
   end process;
-
-  phy_cfg_not_done <= rst_delay_slr(0);
-
-  -- Reset to PHY, active low. The first to be release after 2s
-  phy_resetb <= not rst_delay_slr(4) or (not phy_reset_vio);
 
   -- Reset to temac clients (outgoing)
   rst_o <= tx_reset_out or rx_reset_out;
@@ -267,17 +316,19 @@ begin
     port map(
       gtx_clk              => clk125_sgmii,
       --clk_enable              => clk_en,
-      glbl_rstn            => (not rst_delay_slr(1)) or (not mac_reset),
+      glbl_rstn            => not (mac_reset or vio_mac_reset),
       rx_axi_rstn          => not rst125_sgmii,
       tx_axi_rstn          => not rst125_sgmii,
       rx_statistics_vector => open,
       rx_statistics_valid  => open,
       rx_mac_aclk          => open,
-      rx_reset             => rx_reset_out,
-      rx_axis_mac_tdata    => rx_data,
-      rx_axis_mac_tvalid   => rx_valid,
-      rx_axis_mac_tlast    => rx_last,
-      rx_axis_mac_tuser    => rx_error,
+
+      rx_reset           => rx_reset_out,
+      rx_axis_mac_tdata  => rx_data,
+      rx_axis_mac_tvalid => rx_valid,
+      rx_axis_mac_tlast  => rx_last,
+      rx_axis_mac_tuser  => rx_error,
+
       tx_ifg_delay         => X"00",
       tx_statistics_vector => open,
       tx_statistics_valid  => open,
@@ -296,12 +347,12 @@ begin
       speedis10100 => speedis10100,
       speedis100   => speedis100,
 
-      gmii_txd                => gmii_txd,
-      gmii_tx_en              => gmii_tx_en,
-      gmii_tx_er              => gmii_tx_er,
-      gmii_rxd                => gmii_rxd,
-      gmii_rx_dv              => gmii_rx_dv,
-      gmii_rx_er              => gmii_rx_er,
+      gmii_txd                => gmii_txd,    -- out
+      gmii_tx_en              => gmii_tx_en,  -- out
+      gmii_tx_er              => gmii_tx_er,  -- out
+      gmii_rxd                => gmii_rxd,    -- in
+      gmii_rx_dv              => gmii_rx_dv,  -- in
+      gmii_rx_er              => gmii_rx_er,  -- in
       rx_configuration_vector => X"0000_0000_0000_0000_0812",
       tx_configuration_vector => X"0000_0000_0000_0000_0012"
       );
@@ -361,6 +412,20 @@ begin
       gmii_rx_er   => gmii_rx_er,
       gmii_isolate => open,
 
+      mdc                 => clk2mhz,
+      mdio_i              => mdio_i,
+      mdio_o              => mdio_o,
+      mdio_t              => mdio_t,
+      ext_mdc             => open,
+      ext_mdio_i          => '1',
+      ext_mdio_o          => open,
+      ext_mdio_t          => open,
+      phyaddr             => "00111",
+      configuration_valid => '1',
+
+      an_adv_config_val => an_config_val and vio_an_config_val,  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
+      an_restart_config => an_restart or vio_an_restart,  -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
+
       -- Configuration
       configuration_vector => (
         -- 0 = unidirectional enable, set to 0
@@ -374,14 +439,12 @@ begin
       an_interrupt         => an_interrupt,
       an_adv_config_vector => an_config_vector,
 
-      an_restart_config => '1',
-
       speed_is_10_100 => speedis10100,  -- 0 for 1 Gb/s
       speed_is_100    => speedis100,    -- 0 for 1 Gb/s
 
       status_vector => sgmii_status_vector,
 
-      reset => sgmii_reset or phy_cfg_not_done,  -- hold the bridge in reset until PHY is up and happy
+      reset => vio_sgmii_reset or phy_cfg_not_done,  -- hold the bridge in reset until PHY is up and happy
 
       signal_detect  => '1',            -- Signal must be tied to logic 1 (if not connected to an optical module).
       idelay_rdy_out => open
@@ -439,22 +502,23 @@ begin
     end component;
 
   begin
+
     vio_sgmii_1 : vio_sgmii
       port map (
         clk           => clk125_fr,
-        probe_out0(0) => force_an,
-        probe_out1(0) => force_val,
-        probe_out2(0) => phy_reset_vio,
-        probe_out3(0) => sgmii_reset,
-        probe_out4(0) => mac_reset,
-        probe_out5(0) => rst_vio
+        probe_out0(0) => vio_an_restart,
+        probe_out1(0) => vio_an_config_val,
+        probe_out2(0) => vio_phy_reset,
+        probe_out3(0) => vio_sgmii_reset,
+        probe_out4(0) => vio_mac_reset,
+        probe_out5(0) => vio_global_reset
         );
 
     ila_sgmii_inst : ila_sgmii
       port map (
         clk        => clk125_fr,
         probe0(0)  => mmcm_locked,
-        probe1(0)  => '1',
+        probe1(0)  => not clk125_sgmii,
         probe2(0)  => clk_en,
         probe3     => gmii_txd(7 downto 0),
         probe4     => gmii_rxd(7 downto 0),
