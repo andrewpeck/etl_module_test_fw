@@ -26,9 +26,11 @@
 import random  # For randint
 import uhal
 import argparse
+import reg_parser as lpgbt
+import colors
 
 IPB_PATH = "ipbusudp-2.0://192.168.0.10:50001"
-ADR_TABLE = "address_tables/etl_test_fw.xml"
+ADR_TABLE = "../address_tables/etl_test_fw.xml"
 
 
 def main():
@@ -253,7 +255,8 @@ def print_reg(hw, reg, pad=""):
     val = reg.read()
     id = reg.getPath()
     hw.dispatch()
-    print(format_reg(reg.getAddress(), id[4:], val, format_permission(reg.getPermission())))
+    print(format_reg(reg.getAddress(), id[4:], val,
+                     format_permission(reg.getPermission())))
 
 
 def tab_pad(s, maxlen):
@@ -283,7 +286,6 @@ def reset_pattern_checkers(rb=0):
 
     prbs_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb
     upcnt_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb
-
     write_node(prbs_en_id, 0)
     write_node(upcnt_en_id, 0)
 
@@ -291,6 +293,7 @@ def reset_pattern_checkers(rb=0):
     write_node(upcnt_en_id, 0x00FFFFFF)
 
     action("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CNT_RESET" % rb)
+
 
 def read_pattern_checkers(rb=0):
 
@@ -318,31 +321,119 @@ def read_pattern_checkers(rb=0):
 
                 errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
 
-                print("    Channel %02d %d bad frames in %.0f Gb (ber<%s)" %
-                      (i, errs, uptime*8*40/1000000000.0, "{:e}".format(1/uptime*8*40)))
+                s = "    Channel %02d %s bad frames in %.0f Gb" % (i, ("{:.2e}".format(errs)), uptime*8*40/1000000000.0)
+                if (errs == 0):
+                    s += " (ber <%s)" % ("{:.1e}".format(1/uptime*8*40))
+                    print(colors.green(s))
+                else:
+                    s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
+                    print(colors.red(s))
 
 
+def sc_reset(rb=0):
+    action("READOUT_BOARD_%d.SC.TX_RESET" % rb)
+    action("READOUT_BOARD_%d.SC.RX_RESET" % rb)
 
-def set_uplink_alignment(val, link, lpgbt=0):
-    id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (lpgbt, link)
+
+def sca_inj_crc(rb=0):
+    action("READOUT_BOARD_%d.SC.INJ_CRC_ERR" % rb)
+
+# def sca_wr(adr, rb=0):
+# def sca_rd(adr, rb=0):
+    # "READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb
+    # "READOUT_BOARD_%d.SC.RX_RD" % rb
+    # "READOUT_BOARD_%d.SC.RX_EMPTY" % rb
+    # "READOUT_BOARD_%d.SC.TX_READY" % rb
+    # "READOUT_BOARD_%d.SC.TX_CMD" % rb
+    # "READOUT_BOARD_%d.SC.TX_ADDRESS" % rb
+    # "READOUT_BOARD_%d.SC.TX_TRANSID" % rb
+    # "READOUT_BOARD_%d.SC.TX_CHANNEL" % rb
+    # "READOUT_BOARD_%d.SC.TX_DATA" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_LEN" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_ADDRESS" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_CONTROL" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_TRANSID" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_ERR" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_RECEIVED" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_CHANNEL" % rb
+    # "READOUT_BOARD_%d.SC.RX.RX_DATA" % rb
+    # "READOUT_BOARD_%d.SC.SCA_ENABLE" % rb
+    # "READOUT_BOARD_%d.SC.START_RESET" % rb
+    # "READOUT_BOARD_%d.SC.START_CONNECT" % rb
+    # "READOUT_BOARD_%d.SC.START_COMMAND" % rb
 
 
 def set_downlink_data_src(source, rb=0):
     id = "READOUT_BOARD_%d.LPGBT.DAQ.DOWNLINK.DL_SRC" % rb
-    if (source=="etroc"):
+    if (source == "etroc"):
         write_node(id, 0)
-    if (source=="upcnt"):
+    if (source == "upcnt"):
         write_node(id, 1)
-    if (source=="prbs"):
+    if (source == "prbs"):
         write_node(id, 2)
+
 
 def set_uplink_alignment(val, link, rb=0):
     id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (rb, link)
     write_node(id, val)
 
 
+def lpgbt_rd_adr(adr, rb=0):
+    write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
+    write_node("READOUT_BOARD_%d.SC.TX_NUM_BYTES_TO_READ" % rb, 1)
+    write_node("READOUT_BOARD_%d.SC.TX_REGISTER_ADDR" % rb, adr)
+    action("READOUT_BOARD_%d.SC.RX_RD" % rb)
+    action("READOUT_BOARD_%d.SC.TX_START_READ" % rb)
+    read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
+    return read
+
+
+def lpgbt_wr_adr(adr, data, rb=0):
+    write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
+    write_node("READOUT_BOARD_%d.SC.TX_REGISTER_ADDR" % rb, adr)
+    write_node("READOUT_BOARD_%d.SC.TX_DATA_TO_GBTX" % rb, data)
+    action("READOUT_BOARD_%d.SC.TX_WR" % rb)
+    action("READOUT_BOARD_%d.SC.TX_START_WRITE" % rb)
+
+
+def lpgbt_wr_reg(id, data, rb=0):
+    node = lpgbt.get_node(id)
+    lpgbt.write_reg(lpgbt_wr_adr, lpgbt_rd_adr, node, data)
+
+
+def lpgbt_rd_reg(id, rb=0):
+    node = lpgbt.get_node(id)
+    data = lpgbt.read_reg(lpgbt_rd_adr, node)
+    return data
+
+
 if __name__ == '__main__':
 
+    # use 2 for loopback, 0 for internal data generator
     for i in range(28):
         set_uplink_alignment(2, i)
+    # for i in range(28):
+    #    set_uplink_alignment(0, i)
+
+    set_downlink_data_src("prbs")
+
+    lpgbt.parse_xml()
+
+    lpgbt_wr_adr(0, 0xaa)
+    lpgbt_wr_adr(1, 0xaa)
+    lpgbt_wr_adr(2, 0xaa)
+    lpgbt_wr_adr(3, 0xaa)
+    print(hex(lpgbt_rd_adr(0)))
+    print(hex(lpgbt_rd_adr(1)))
+    print(hex(lpgbt_rd_adr(2)))
+    print(hex(lpgbt_rd_adr(3)))
+    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID0", 0xab)
+    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID1", 0xbc)
+    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID2", 0xde)
+    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID3", 0xef)
+    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID0"))
+    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID1"))
+    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID2"))
+    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID3"))
+
     main()
