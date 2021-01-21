@@ -4,6 +4,7 @@ registers/ipbus_decode_etl_test_fw.vhd
 src/pcie_infra.vhd
 src/eth_sgmii.vhd
 src/eth_infra.vhd
+src/eth_clocks.vhd
 
 #ipbus-firmware/boards/k800/synth/firmware/hdl/k800_infra.vhd
 #ipbus-firmware/boards/k800/synth/firmware/hdl/top_k800.vhd
@@ -33,7 +34,6 @@ ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_multi
 ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_multibuffer_rx_dpram.vhd
 ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_multibuffer_tx_dpram.vhd
 ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_ram_if.vhd
-ipbus-firmware/components/ipbus_util/firmware/hdl/clocks/clocks_us_serdes.vhd
 ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_clock_div.vhd
 ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_decode_ipbus_example.vhd
 

@@ -148,7 +148,7 @@ begin
   --     );
 
   --  DCM clock generation for internal bus, ethernet
-  clocks : entity work.clocks_us_serdes
+  clocks : entity work.eth_clocks
     generic map (
       CLK_FR_FREQ => 300.0
       )
