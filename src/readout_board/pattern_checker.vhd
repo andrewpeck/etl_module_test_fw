@@ -33,6 +33,8 @@ architecture behavioral of pattern_checker is
   signal prbs_errs : std_logic_vector (WIDTH-1 downto 0);
   signal upcnt_err : std_logic;
 
+  signal upcnt : integer range 0 to 2**WIDTH-1 := 0;
+
   function reverse_vector (a: std_logic_vector)
     return std_logic_vector is
     variable result: std_logic_vector(a'RANGE);
@@ -50,16 +52,15 @@ begin
   --------------------------------------------------------------------------------
 
   process (clock) is
-    variable upcnt : integer range 0 to 2**WIDTH-1 := 0;
   begin
     if (rising_edge(clock)) then
       if (reset = '1' or check_upcnt = '0') then
-        upcnt := to_integer(unsigned(data))+1;
+        upcnt <= to_integer(unsigned(data))+1;
       else
         if (upcnt = 2**WIDTH-1) then
-          upcnt := 0;
+          upcnt <= 0;
         else
-          upcnt := upcnt + 1;
+          upcnt <= upcnt + 1;
         end if;
       end if;
 

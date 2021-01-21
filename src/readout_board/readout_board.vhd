@@ -98,6 +98,15 @@ architecture behavioral of readout_board is
   signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
   signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
 
+  signal prbs_ff  : std_logic_vector (31 downto 0) := (others => '0');
+  signal upcnt_ff : std_logic_vector (31 downto 0) := (others => '0');
+
+  -- don't care too much about bus coherence here.. the counters should just be zero
+  -- and exact numbers don't really matter..
+  attribute ASYNC_REG             : string;
+  attribute ASYNC_REG of prbs_ff  : signal is "true";
+  attribute ASYNC_REG of upcnt_ff : signal is "true";
+
 begin
 
   --------------------------------------------------------------------------------
@@ -383,21 +392,12 @@ begin
   -- multiplex the outputs into one register
   process (ctrl_clk) is
     variable sel : integer;
-
-    variable prbs_ff  : std_logic_vector (31 downto 0) := (others => '0');
-    variable upcnt_ff : std_logic_vector (31 downto 0) := (others => '0');
-
-    -- don't care too much about bus coherence here.. the counters should just be zero
-    -- and exact numbers don't really matter..
-    attribute ASYNC_REG             : string;
-    attribute ASYNC_REG of prbs_ff  : variable is "true";
-    attribute ASYNC_REG of upcnt_ff : variable is "true";
   begin
     if (rising_edge(ctrl_clk)) then
       sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
 
-      prbs_ff  := prbs_err_counters(sel);
-      upcnt_ff := upcnt_err_counters(sel);
+      prbs_ff  <= prbs_err_counters(sel);
+      upcnt_ff <= upcnt_err_counters(sel);
 
       mon.lpgbt.pattern_checker.prbs_errors  <= prbs_ff;
       mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_ff;
