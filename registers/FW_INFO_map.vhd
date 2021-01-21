@@ -24,8 +24,8 @@ architecture behavioral of FW_INFO_wb_interface is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 6);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 6) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 33);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 33) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -59,7 +59,7 @@ begin  -- architecture behavioral
       localRdData <= x"00000000";
       wb_err <= '0';
       if wb_strobe='1' then
-        case to_integer(unsigned(wb_addr(2 downto 0))) is
+        case to_integer(unsigned(wb_addr(5 downto 0))) is
           when 0 => --0x0
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_DATE;      --
         when 1 => --0x1
@@ -72,6 +72,60 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.UPTIME_MSBS;               --
         when 6 => --0x6
           localRdData(31 downto  0)  <=  Mon.UPTIME_LSBS;               --
+        when 7 => --0x7
+          localRdData(31 downto  0)  <=  Mon.CLK_40_FREQ;               --
+        when 8 => --0x8
+          localRdData(31 downto  0)  <=  Mon.CLK320_FREQ;               --
+        when 9 => --0x9
+          localRdData(31 downto  0)  <=  Mon.REFCLK_FREQ;               --
+        when 10 => --0xa
+          localRdData(31 downto  0)  <=  Mon.IPBCLK_FREQ;               --
+        when 11 => --0xb
+          localRdData(31 downto  0)  <=  Mon.CLK125_FREQ;               --
+        when 12 => --0xc
+          localRdData(31 downto  0)  <=  Mon.CLK300_FREQ;               --
+        when 13 => --0xd
+          localRdData(31 downto  0)  <=  Mon.CLKUSR_FREQ;               --
+        when 14 => --0xe
+          localRdData(31 downto  0)  <=  Mon.TXCLK0_FREQ;               --
+        when 15 => --0xf
+          localRdData(31 downto  0)  <=  Mon.TXCLK1_FREQ;               --
+        when 16 => --0x10
+          localRdData(31 downto  0)  <=  Mon.TXCLK2_FREQ;               --
+        when 17 => --0x11
+          localRdData(31 downto  0)  <=  Mon.TXCLK3_FREQ;               --
+        when 18 => --0x12
+          localRdData(31 downto  0)  <=  Mon.TXCLK4_FREQ;               --
+        when 19 => --0x13
+          localRdData(31 downto  0)  <=  Mon.TXCLK5_FREQ;               --
+        when 20 => --0x14
+          localRdData(31 downto  0)  <=  Mon.TXCLK6_FREQ;               --
+        when 21 => --0x15
+          localRdData(31 downto  0)  <=  Mon.TXCLK7_FREQ;               --
+        when 22 => --0x16
+          localRdData(31 downto  0)  <=  Mon.TXCLK8_FREQ;               --
+        when 23 => --0x17
+          localRdData(31 downto  0)  <=  Mon.TXCLK9_FREQ;               --
+        when 24 => --0x18
+          localRdData(31 downto  0)  <=  Mon.RXCLK0_FREQ;               --
+        when 25 => --0x19
+          localRdData(31 downto  0)  <=  Mon.RXCLK1_FREQ;               --
+        when 26 => --0x1a
+          localRdData(31 downto  0)  <=  Mon.RXCLK2_FREQ;               --
+        when 27 => --0x1b
+          localRdData(31 downto  0)  <=  Mon.RXCLK3_FREQ;               --
+        when 28 => --0x1c
+          localRdData(31 downto  0)  <=  Mon.RXCLK4_FREQ;               --
+        when 29 => --0x1d
+          localRdData(31 downto  0)  <=  Mon.RXCLK5_FREQ;               --
+        when 30 => --0x1e
+          localRdData(31 downto  0)  <=  Mon.RXCLK6_FREQ;               --
+        when 31 => --0x1f
+          localRdData(31 downto  0)  <=  Mon.RXCLK7_FREQ;               --
+        when 32 => --0x20
+          localRdData(31 downto  0)  <=  Mon.RXCLK8_FREQ;               --
+        when 33 => --0x21
+          localRdData(31 downto  0)  <=  Mon.RXCLK9_FREQ;               --
 
         when others =>
           localRdData <= x"DEADDEAD";

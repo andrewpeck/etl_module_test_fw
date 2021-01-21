@@ -14,7 +14,8 @@ entity counter is
   generic (
     roll_over   : boolean          := false;
     async_reset : boolean          := false;
-    width       : integer          := 32
+    width       : natural          := 32;
+    end_value   : unsigned (63 downto 0)  := (others => '1')
     );
   port (
     clk    : in  std_logic;
@@ -32,7 +33,7 @@ architecture behavioral of counter is
   signal reset_async : std_logic;
   signal reset_sync  : std_logic;
 
-  constant max_count : unsigned(WIDTH-1 downto 0) := (others => '1');
+  constant max_count : unsigned(WIDTH-1 downto 0) := end_value (WIDTH-1 downto 0);
   constant min_count : unsigned(WIDTH-1 downto 0) := (others => '0');
   signal local_count : unsigned(WIDTH-1 downto 0) := min_count;
 

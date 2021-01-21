@@ -17,6 +17,33 @@ package FW_INFO_CTRL is
     HOG_INFO                   :FW_INFO_HOG_INFO_MON_t;
     UPTIME_MSBS                :std_logic_vector(31 downto 0);
     UPTIME_LSBS                :std_logic_vector(31 downto 0);
+    CLK_40_FREQ                :std_logic_vector(31 downto 0);
+    CLK320_FREQ                :std_logic_vector(31 downto 0);
+    REFCLK_FREQ                :std_logic_vector(31 downto 0);
+    IPBCLK_FREQ                :std_logic_vector(31 downto 0);
+    CLK125_FREQ                :std_logic_vector(31 downto 0);
+    CLK300_FREQ                :std_logic_vector(31 downto 0);
+    CLKUSR_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK0_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK1_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK2_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK3_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK4_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK5_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK6_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK7_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK8_FREQ                :std_logic_vector(31 downto 0);
+    TXCLK9_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK0_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK1_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK2_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK3_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK4_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK5_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK6_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK7_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK8_FREQ                :std_logic_vector(31 downto 0);
+    RXCLK9_FREQ                :std_logic_vector(31 downto 0);
   end record FW_INFO_MON_t;
 
 

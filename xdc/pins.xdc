@@ -94,12 +94,14 @@ set_property PACKAGE_PIN K2 [get_ports {rx_p[8]}]; # bank 227 HPC_DP6_M2C_P
 set_property PACKAGE_PIN H2 [get_ports {rx_p[7]}]; # bank 227 HPC_DP5_M2C_P -- X0Y14 -- GTH 4
 set_property PACKAGE_PIN F2 [get_ports {rx_p[9]}]; # bank 227 HPC_DP7_M2C_P -- X0Y16 -- GTH 5
 
+set_property IOSTANDARD SUB_LVDS [get_ports si570_usrclk*]  ;
+set_property PACKAGE_PIN M25 [get_ports {si570_usrclk_p}];
+set_property PACKAGE_PIN M26 [get_ports {si570_usrclk_n}];
+
 # refclks
 set_property PACKAGE_PIN P6 [get_ports {si570_refclk_p}]; # bank 227 REFCLK0 QUADX0Y3
 set_property PACKAGE_PIN P5 [get_ports {si570_refclk_n}]; # bank 227 REFCLK0 QUADX0Y3
-place_ports si570_refclk_p P6
 create_clock -period 3.125 -name si570refclk [get_ports si570_refclk_p]
-#place_ports si570_refclk_p P6
 
 set_property PACKAGE_PIN AP8 [get_ports {leds[0]}];
 set_property PACKAGE_PIN H23 [get_ports {leds[1]}];

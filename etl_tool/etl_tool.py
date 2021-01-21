@@ -75,7 +75,7 @@ def main():
     parser.add_argument('-reset',
                         '--reset',
                         dest='reset',
-                        help="Reset")
+                        help="Reset, e.g. reset lpgbt, reset pattern")
 
     parser.add_argument('-pattern',
                         '--pattern',
@@ -91,6 +91,11 @@ def main():
                         '--status',
                         action="store_true",
                         help="Status print")
+
+    parser.add_argument('-c',
+                        '--clocks',
+                        action="store_true",
+                        help="Print Clocks")
 
     parser.add_argument('-p',
                         '--print',
@@ -141,6 +146,9 @@ def main():
     if (args.status):
         status()
 
+    if (args.clocks):
+        read_clock_frequencies()
+
     if (args.print):
         printregs()
 
@@ -170,17 +178,25 @@ def loopback_test(loops=100000):
             print("%i reads done..." % i)
 
 
+def read_clock_frequencies():
+    hw = setup()
+    for id in hw.getNodes(".*FW_INFO.*CLK.*_FREQ"):
+        rd = read_node(id)
+        freq = int(rd) / 1000000.0
+        print("%s = %6.2f MHz" % (id, freq))
+
+
 def status():
 
     hw = setup()
     print("LPGBT Link Status:")
     pad = "    "
     for id in hw.getNodes(".*LPGBT.*DAQ.*DOWNLINK.*READY"):
-        print_reg(hw, id, pad)
+        print_reg(hw, hw.getNode(id), pad)
     for id in hw.getNodes(".*LPGBT.*DAQ.*UPLINK.*READY"):
-        print_reg(hw, id, pad)
+        print_reg(hw, hw.getNode(id), pad)
     for id in hw.getNodes(".*LPGBT.*DAQ.*UPLINK.*FEC_ERR_CNT"):
-        print_reg(hw, id, pad)
+        print_reg(hw, hw.getNode(id), pad)
 
 
 def write_node(id, value):
@@ -214,15 +230,11 @@ def printregs():
 
 
 def reset_lpgbt_links():
-
     hw = setup()
-
     for id in hw.getNodes(".*LPGBT.*LINK.*RESET"):
         print("Resetting %s" % id)
         reg = hw.getNode(id)
-        print(str(reg.getPermission()))
         action_reg(hw, reg)
-        # hw.dispatch();
 
 
 def action(id):
@@ -419,21 +431,21 @@ if __name__ == '__main__':
 
     lpgbt.parse_xml()
 
-    lpgbt_wr_adr(0, 0xaa)
-    lpgbt_wr_adr(1, 0xaa)
-    lpgbt_wr_adr(2, 0xaa)
-    lpgbt_wr_adr(3, 0xaa)
-    print(hex(lpgbt_rd_adr(0)))
-    print(hex(lpgbt_rd_adr(1)))
-    print(hex(lpgbt_rd_adr(2)))
-    print(hex(lpgbt_rd_adr(3)))
-    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID0", 0xab)
-    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID1", 0xbc)
-    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID2", 0xde)
-    lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID3", 0xef)
-    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID0"))
-    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID1"))
-    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID2"))
-    print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID3"))
+    # lpgbt_wr_adr(0, 0xaa)
+    # lpgbt_wr_adr(1, 0xaa)
+    # lpgbt_wr_adr(2, 0xaa)
+    # lpgbt_wr_adr(3, 0xaa)
+    # print(hex(lpgbt_rd_adr(0)))
+    # print(hex(lpgbt_rd_adr(1)))
+    # print(hex(lpgbt_rd_adr(2)))
+    # print(hex(lpgbt_rd_adr(3)))
+    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID0", 0xab)
+    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID1", 0xbc)
+    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID2", 0xde)
+    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID3", 0xef)
+    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID0"))
+    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID1"))
+    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID2"))
+    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID3"))
 
     main()

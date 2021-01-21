@@ -73,6 +73,9 @@ entity etl_test_fw is
     si570_refclk_p : in std_logic;
     si570_refclk_n : in std_logic;
 
+    si570_usrclk_p : in std_logic;
+    si570_usrclk_n : in std_logic;
+
     --sma_refclk_p : in std_logic;
     --sma_refclk_n : in std_logic;
 
@@ -112,7 +115,9 @@ architecture behavioral of etl_test_fw is
 
   signal locked : std_logic;
 
-  signal clk_osc125, clk_osc300 : std_logic;
+  signal clk_osc125, clk_osc300           : std_logic;
+  signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
+  signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
 
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
@@ -124,6 +129,11 @@ architecture behavioral of etl_test_fw is
   signal trig_uplink_mgt_word_array  : std32_array_t (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
   signal daq_uplink_mgt_word_array   : std32_array_t (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
   signal daq_downlink_mgt_word_array : std32_array_t (NUM_RBS*NUM_DOWNLINKS-1 downto 0);
+
+  signal tx_ready, rx_ready : std_logic_vector (NUM_GTS-1 downto 0) := (others => '0');
+  signal txclk, rxclk       : std_logic_vector (9 downto 0)         := (others => '0');
+  signal rxclk_freq         : std32_array_t (9 downto 0);
+  signal txclk_freq         : std32_array_t (9 downto 0);
 
   signal clk40, clk320 : std_logic := '0';
   signal reset         : std_logic := '0';
@@ -168,9 +178,6 @@ architecture behavioral of etl_test_fw is
       );
   end component;
 
-  attribute MARK_DEBUG           : string;
-  attribute MARK_DEBUG of locked : signal is "TRUE";
-
 begin
 
   cylon1_inst : cylon1
@@ -184,26 +191,51 @@ begin
 
   leds(7 downto 0) <= cylon (7 downto 0);
 
-  osc_clk125_ibuf : IBUFDS
+  si570_usrclk_ibuf_inst : IBUFDS
+    port map(
+      i  => si570_usrclk_p,
+      ib => si570_usrclk_n,
+      o  => si570_usrclk_ibuf
+      );
+
+  osc_clk125_ibuf_inst : IBUFDS
     port map(
       i  => osc_clk125_p,
       ib => osc_clk125_n,
-      o  => clk_osc125
+      o  => clk_osc125_ibuf
       );
 
-  osc_clk300_ibuf : IBUFDS
+  osc_clk300_ibuf_inst : IBUFDS
     port map(
       i  => osc_clk300_p,
       ib => osc_clk300_n,
-      o  => clk_osc300
+      o  => clk_osc300_ibuf
+      );
+
+  si570_bufg : BUFG
+    port map(
+      i => si570_usrclk_ibuf,
+      o => si570_usrclk
+      );
+
+  osc125_bufg : BUFG
+    port map(
+      i => clk_osc125_ibuf,
+      o => clk_osc125
+      );
+
+  osc300_bufg : BUFG
+    port map(
+      i => clk_osc300_ibuf,
+      o => clk_osc300
       );
 
   -- Infrastructure
   eth : if (USE_ETH = 1) generate
     eth_infra_inst : entity ipbus.eth_infra
       port map (
-        osc_clk_300   => clk_osc300,
-        osc_clk_125   => clk_osc125,
+        osc_clk_300   => clk_osc300_ibuf,
+        osc_clk_125   => clk_osc125_ibuf,
         rst_in        => (others => '0'),
         dip_sw        => (others => '0'),
         leds          => open,
@@ -241,7 +273,7 @@ begin
         pcie_rx_n      => pcie_rx_n,
         pcie_tx_p      => pcie_tx_p,
         pcie_tx_n      => pcie_tx_n,
-        clk_osc        => clk_osc125,
+        clk_osc        => clk_osc125_ibuf,
         ipb_clk        => ipb_clk,
         ipb_rst        => ipb_rst,
         nuke           => nuke,
@@ -359,7 +391,6 @@ begin
     datagen : for I in 0 to NUM_GTS-1 generate
 
       signal txdata, rxdata : std_logic_vector (31 downto 0);
-      signal txclk, rxclk   : std_logic;
 
       signal drpclk  : std_logic;
       signal drpaddr : std_logic_vector(8 downto 0);
@@ -411,11 +442,12 @@ begin
             txprecursor_o     => open,
             txpostcursor_o    => open,
             rxlpmen_o(0)      => open,
-            rxoutclk_i(0)     => rxclk,
+            rxoutclk_i(0)     => rxclk(I),
             clk               => ipb_clk
             );
 
       end generate;
+
       xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
         port map (
           mgt_refclk_i => refclk,
@@ -429,15 +461,15 @@ begin
           drpdo            => drpdo,
           drpwe            => drpwe,
 
-          mgt_rxusrclk_o    => rxclk,
-          mgt_txusrclk_o    => txclk,
+          mgt_rxusrclk_o    => rxclk(I),
+          mgt_txusrclk_o    => txclk(I),
           mgt_txreset_i     => not locked,
           mgt_rxreset_i     => not locked,
           mgt_rxslide_i     => rxslide(I),
           mgt_entxcalibin_i => '0',
           mgt_txcalib_i     => (others => '0'),
-          mgt_txready_o     => open,
-          mgt_rxready_o     => open,
+          mgt_txready_o     => tx_ready(I),
+          mgt_rxready_o     => rx_ready(I),
           mgt_tx_aligned_o  => open,
           mgt_tx_piphase_o  => open,
           mgt_usrword_i     => txdata,  -- mgt_data_in(I),
@@ -454,18 +486,16 @@ begin
           WR_WIDTH => 32,
           RD_WIDTH => 32)
         port map (
-          rst     => not locked,        -- TODO: reset if the mgt is inactive
-          wr_clk  => rxclk,
-          rd_clk  => clk320,
-          wr_en   => locked,
-          rd_en   => locked,
-          din     => rxdata,
-          dout    => mgt_data_out(I),
-          valid   => open,
-          full    => open,
-          empty   => open,
-          sbiterr => open,
-          dbiterr => open
+          rst    => not locked,         -- TODO: reset if the mgt is inactive
+          wr_clk => rxclk(I),
+          rd_clk => clk320,
+          wr_en  => locked,
+          rd_en  => locked,
+          din    => rxdata,
+          dout   => mgt_data_out(I),
+          valid  => open,
+          full   => open,
+          empty  => open
           );
 
       mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
@@ -474,18 +504,16 @@ begin
           WR_WIDTH => 32,
           RD_WIDTH => 32)
         port map (
-          rst     => not locked,        -- TODO: reset if the mgt is inactive
-          wr_clk  => clk320,
-          rd_clk  => txclk,
-          wr_en   => locked,
-          rd_en   => locked,
-          din     => mgt_data_in(I),
-          dout    => txdata,
-          valid   => open,
-          full    => open,
-          empty   => open,
-          sbiterr => open,
-          dbiterr => open
+          rst    => not locked,         -- TODO: reset if the mgt is inactive
+          wr_clk => clk320,
+          rd_clk => txclk(I),
+          wr_en  => locked,
+          rd_en  => locked,
+          din    => mgt_data_in(I),
+          dout   => txdata,
+          valid  => open,
+          full   => open,
+          empty  => open
           );
 
     end generate;
@@ -509,5 +537,123 @@ begin
       fw_info_mon.uptime_msbs <= std_logic_vector(upcnt (63 downto 32));
     end if;
   end process;
+
+  freq_counters : if (true) generate
+    signal freq_cnt_clk    : std_logic;
+    constant freq_cnt_freq : integer := 125000000;
+  begin
+
+    freq_cnt_clk <= clk_osc125;
+
+    ipb_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => ipb_clk,
+        rate  => fw_info_mon.ipbclk_freq
+        );
+
+    clk40_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => clk40,
+        rate  => fw_info_mon.clk_40_freq
+        );
+
+    clk320_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => clk40,
+        rate  => fw_info_mon.clk320_freq
+        );
+
+    refclk_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => refclk_bufg,
+        rate  => fw_info_mon.refclk_freq
+        );
+
+    si570usr_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => si570_usrclk,
+        rate  => fw_info_mon.clkusr_freq
+        );
+
+
+    clk125_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => clk_osc125,
+        rate  => fw_info_mon.clk125_freq
+        );
+
+    clk300_frequency_counter_inst : entity work.frequency_counter
+      generic map (clk_a_freq => freq_cnt_freq)
+      port map (
+        reset => reset,
+        clk_a => freq_cnt_clk,
+        clk_b => clk_osc300,
+        rate  => fw_info_mon.clk300_freq
+        );
+
+    txrxclks : for I in 0 to 9 generate
+    begin
+
+      rxclk_frequency_counter_inst : entity work.frequency_counter
+        generic map (clk_a_freq => freq_cnt_freq)
+        port map (
+          reset => reset,
+          clk_a => freq_cnt_clk,
+          clk_b => rxclk(I),
+          rate  => rxclk_freq(I)
+          );
+
+      txclk_frequency_counter_inst : entity work.frequency_counter
+        generic map (clk_a_freq => freq_cnt_freq)
+        port map (
+          reset => reset,
+          clk_a => freq_cnt_clk,
+          clk_b => txclk(I),
+          rate  => txclk_freq(I)
+          );
+
+    end generate;
+
+    fw_info_mon.rxclk0_freq <= rxclk_freq(0);
+    fw_info_mon.rxclk1_freq <= rxclk_freq(1);
+    fw_info_mon.rxclk2_freq <= rxclk_freq(2);
+    fw_info_mon.rxclk3_freq <= rxclk_freq(3);
+    fw_info_mon.rxclk4_freq <= rxclk_freq(4);
+    fw_info_mon.rxclk5_freq <= rxclk_freq(5);
+    fw_info_mon.rxclk6_freq <= rxclk_freq(6);
+    fw_info_mon.rxclk7_freq <= rxclk_freq(7);
+    fw_info_mon.rxclk8_freq <= rxclk_freq(8);
+    fw_info_mon.rxclk9_freq <= rxclk_freq(9);
+
+    fw_info_mon.txclk0_freq <= txclk_freq(0);
+    fw_info_mon.txclk1_freq <= txclk_freq(1);
+    fw_info_mon.txclk2_freq <= txclk_freq(2);
+    fw_info_mon.txclk3_freq <= txclk_freq(3);
+    fw_info_mon.txclk4_freq <= txclk_freq(4);
+    fw_info_mon.txclk5_freq <= txclk_freq(5);
+    fw_info_mon.txclk6_freq <= txclk_freq(6);
+    fw_info_mon.txclk7_freq <= txclk_freq(7);
+    fw_info_mon.txclk8_freq <= txclk_freq(8);
+    fw_info_mon.txclk9_freq <= txclk_freq(9);
+
+  end generate;
 
 end behavioral;
