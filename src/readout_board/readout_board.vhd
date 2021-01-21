@@ -258,8 +258,6 @@ begin
   --------------------------------------------------------------------------------
 
   daq_downlink_data_aligned(0).valid <= valid;
-  daq_downlink_data_aligned(0).ic    <= daq_downlink_data(0).ic;
-  daq_downlink_data_aligned(0).ec    <= daq_downlink_data(0).ec;
 
   downlink_aligners : for I in 0 to 3 generate
     signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
