@@ -404,7 +404,6 @@ begin
     end if;
   end process;
 
-
   timer : entity work.counter
     generic map (
       roll_over   => false,
@@ -463,7 +462,7 @@ begin
 
     ila_daq_lpgbt_inst : ila_lpgbt
       port map (
-        clk                  => clk320,
+        clk                  => clk40,
         probe0(7 downto 0)   => daq_uplink_data(0).data(71 downto 64),
         probe0(15 downto 8)  => daq_uplink_data_aligned(0).data(71 downto 64),
         probe0(31 downto 16) => ctrl.lpgbt.pattern_checker.sel,
@@ -471,7 +470,7 @@ begin
         probe2(0)            => daq_downlink_data_aligned(0).valid,
         probe3(0)            => daq_downlink_ready(0),
         probe4(0)            => daq_downlink_reset(0),
-        probe5(31 downto 0)  => prbs_err_counters(to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel))),
+        probe5(31 downto 0)  => prbs_ff,
         probe6               => daq_uplink_data_aligned(0).data,
         probe7(0)            => daq_uplink_data_aligned(0).valid,
         probe8(0)            => daq_uplink_ready(0),
@@ -481,15 +480,15 @@ begin
         probe12              => daq_downlink_data_aligned(0).ic,
         probe13              => daq_uplink_data_aligned(0).ec,
         probe14              => daq_downlink_data_aligned(0).ec,
-        probe15(0)           => clk40,
-        probe16(0)           => not clk40,
+        probe15(0)           => '1',
+        probe16(0)           => '1',
         probe17(0)           => '1',
         probe18(0)           => '1'
         );
 
     dl_vio : vio_lpgbt
       port map (
-        clk       => clk320,
+        clk       => clk40,
         probe_in0 => ctrl.lpgbt.daq.uplink.align_8
         );
 
