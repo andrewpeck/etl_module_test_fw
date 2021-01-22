@@ -165,7 +165,7 @@ def read_reg(mpeek, reg):
     return value
 
 
-def write_reg(mpoke, mpeek, reg, value, readback=True):
+def write_reg(mpoke, mpeek, reg, value, readback=False):
     try:
         address = reg.real_address
     except:

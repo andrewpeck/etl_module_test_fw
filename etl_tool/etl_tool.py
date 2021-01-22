@@ -28,6 +28,7 @@ import uhal
 import argparse
 import reg_parser as lpgbt
 import colors
+from time import sleep
 
 IPB_PATH = "ipbusudp-2.0://192.168.0.10:50001"
 ADR_TABLE = "../address_tables/etl_test_fw.xml"
@@ -333,9 +334,9 @@ def read_pattern_checkers(rb=0):
 
                 errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
 
-                s = "    Channel %02d %s bad frames in %.0f Gb" % (i, ("{:.2e}".format(errs)), uptime*8*40/1000000000.0)
+                s = "    Channel %02d %s bad frames of %s (%.0f Gb)" % (i, ("{:.2e}".format(errs)), "{:.2e}".format(uptime), uptime*8*40/1000000000.0)
                 if (errs == 0):
-                    s += " (ber <%s)" % ("{:.1e}".format(1/uptime*8*40))
+                    s += " (ber <%s)" % ("{:.1e}".format(1/(uptime*8)))
                     print(colors.green(s))
                 else:
                     s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
@@ -354,7 +355,6 @@ def sca_inj_crc(rb=0):
 # def sca_rd(adr, rb=0):
     # "READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb
     # "READOUT_BOARD_%d.SC.RX_RD" % rb
-    # "READOUT_BOARD_%d.SC.RX_EMPTY" % rb
     # "READOUT_BOARD_%d.SC.TX_READY" % rb
     # "READOUT_BOARD_%d.SC.TX_CMD" % rb
     # "READOUT_BOARD_%d.SC.TX_ADDRESS" % rb
@@ -394,10 +394,23 @@ def lpgbt_rd_adr(adr, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
     write_node("READOUT_BOARD_%d.SC.TX_NUM_BYTES_TO_READ" % rb, 1)
     write_node("READOUT_BOARD_%d.SC.TX_REGISTER_ADDR" % rb, adr)
-    action("READOUT_BOARD_%d.SC.RX_RD" % rb)
     action("READOUT_BOARD_%d.SC.TX_START_READ" % rb)
-    read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
-    return read
+    empty = read_node("READOUT_BOARD_%d.SC.RX_EMPTY" % rb)
+    if empty:
+        print("RX Fifo empty")
+        read = "0xDD"
+    else:
+        #action("READOUT_BOARD_%d.SC.RX_RD" % rb)
+        lpgbt_rd_flush()
+        read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
+        return read
+
+def lpgbt_rd_flush(rb=0):
+    #i = 0
+    while (not read_node("READOUT_BOARD_%d.SC.RX_EMPTY" % rb)):
+        action("READOUT_BOARD_%d.SC.RX_RD" % rb)
+        #print("FlushLoop %d" % i)
+        #i= i + 1
 
 
 def lpgbt_wr_adr(adr, data, rb=0):
@@ -406,11 +419,13 @@ def lpgbt_wr_adr(adr, data, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_DATA_TO_GBTX" % rb, data)
     action("READOUT_BOARD_%d.SC.TX_WR" % rb)
     action("READOUT_BOARD_%d.SC.TX_START_WRITE" % rb)
+    lpgbt_rd_flush()
 
 
 def lpgbt_wr_reg(id, data, rb=0):
     node = lpgbt.get_node(id)
     lpgbt.write_reg(lpgbt_wr_adr, lpgbt_rd_adr, node, data)
+    action("READOUT_BOARD_%d.SC.RX_RD" % 0)
 
 
 def lpgbt_rd_reg(id, rb=0):
@@ -419,11 +434,23 @@ def lpgbt_rd_reg(id, rb=0):
     return data
 
 
+def lpgbt_loopback(nloops=100, rb=0):
+    for i in range(nloops):
+        wr = random.randint(0, 255)
+        lpgbt_wr_adr (0, wr)
+        rd = lpgbt_rd_adr (0)
+        if wr != rd:
+            print("ERR: %d wr=0x%08X rd=0x%08X" % (i, wr, rd))
+            return
+        if (i % (nloops/100) == 0 and i != 0):
+            print("%i reads done..." % i)
+
+
 if __name__ == '__main__':
 
     # use 2 for loopback, 0 for internal data generator
     for i in range(28):
-        set_uplink_alignment(2, i)
+        set_uplink_alignment(0, i)
     # for i in range(28):
     #    set_uplink_alignment(0, i)
 
@@ -431,21 +458,6 @@ if __name__ == '__main__':
 
     lpgbt.parse_xml()
 
-    # lpgbt_wr_adr(0, 0xaa)
-    # lpgbt_wr_adr(1, 0xaa)
-    # lpgbt_wr_adr(2, 0xaa)
-    # lpgbt_wr_adr(3, 0xaa)
-    # print(hex(lpgbt_rd_adr(0)))
-    # print(hex(lpgbt_rd_adr(1)))
-    # print(hex(lpgbt_rd_adr(2)))
-    # print(hex(lpgbt_rd_adr(3)))
-    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID0", 0xab)
-    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID1", 0xbc)
-    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID2", 0xde)
-    # lpgbt_wr_reg("LPGBT.RWF.CHIPID.CHIPID3", 0xef)
-    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID0"))
-    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID1"))
-    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID2"))
-    # print("0x%02x" % lpgbt_rd_reg("LPGBT.RWF.CHIPID.CHIPID3"))
+    #lpgbt_loopback(nloops=1000, rb=0)
 
     main()

@@ -42,14 +42,6 @@ architecture common_controller of gbt_controller_wrapper is
   signal txclk, rxclk     : std_logic;
   signal txvalid, rxvalid : std_logic;
 
-  -- EC line
-  signal ec_data_down : reg2_arr((g_SCAS_PER_LPGBT-1) downto 0);  --! (TX) Array of bits to be mapped to the TX GBT-Frame
-  signal ec_data_up   : reg2_arr((g_SCAS_PER_LPGBT-1) downto 0);  --! (RX) Array of bits to be mapped to the RX GBT-Frame
-
-  -- IC lines
-  signal ic_data_down : std_logic_vector(1 downto 0);  --! (TX) Array of bits to be mapped to the TX GBT-Frame (bits 83/84)
-  signal ic_data_up   : std_logic_vector(1 downto 0);  --! (RX) Array of bits to be mapped to the RX GBT-Frame (bits 83/84)
-
   -- master
   signal ic_data_i_int : std_logic_vector (1 downto 0);
   signal ic_data_o_int : std_logic_vector (1 downto 0);
@@ -57,22 +49,83 @@ architecture common_controller of gbt_controller_wrapper is
   signal sca0_data_i_int : std_logic_vector (1 downto 0);
   signal sca0_data_o_int : std_logic_vector (1 downto 0);
 
+  component ila_sc
+    port (
+      clk     : in std_logic;
+      probe0  : in std_logic_vector(1 downto 0);
+      probe1  : in std_logic_vector(1 downto 0);
+      probe2  : in std_logic_vector(1 downto 0);
+      probe3  : in std_logic_vector(1 downto 0);
+      probe4  : in std_logic_vector(1 downto 0);
+      probe5  : in std_logic_vector(1 downto 0);
+      probe6  : in std_logic_vector(1 downto 0);
+      probe7  : in std_logic_vector(1 downto 0);
+      probe8  : in std_logic_vector(0 downto 0);
+      probe9  : in std_logic_vector(0 downto 0);
+      probe10 : in std_logic_vector(0 downto 0);
+      probe11 : in std_logic_vector(0 downto 0);
+      probe12 : in std_logic_vector(0 downto 0);
+      probe13 : in std_logic_vector(0 downto 0);
+      probe14 : in std_logic_vector(0 downto 0);
+      probe15 : in std_logic_vector(0 downto 0);
+      probe16 : in std_logic_vector(0 downto 0);
+      probe17 : in std_logic_vector(7 downto 0);
+      probe18 : in std_logic_vector(15 downto 0);
+      probe19 : in std_logic_vector(15 downto 0);
+      probe20 : in std_logic_vector(0 downto 0);
+      probe21 : in std_logic_vector(0 downto 0);
+      probe22 : in std_logic_vector(7 downto 0);
+      probe23 : in std_logic_vector(7 downto 0);
+      probe24 : in std_logic_vector(0 downto 0);
+      probe25 : in std_logic_vector(0 downto 0)
+      );
+  end component;
 
 begin
 
+  -- ila_sc_inst : ila_sc
+  --   port map (
+  --     clk                  => clk40,
+  --     probe0(1 downto 0)   => ic_data_i,
+  --     probe1(1 downto 0)   => ic_data_o,
+  --     probe2(1 downto 0)   => sca0_data_i,
+  --     probe3(1 downto 0)   => sca0_data_o,
+  --     probe4(1 downto 0)   => ic_data_i_int,
+  --     probe5(1 downto 0)   => ic_data_o_int,
+  --     probe6(1 downto 0)   => sca0_data_i_int,
+  --     probe7(1 downto 0)   => sca0_data_o_int,
+  --     probe8(0)            => valid_i,
+  --     probe9(0)            => '1',
+  --     probe10(0)           => '1',
+  --     probe11(0)           => '1',
+  --     probe12(0)           => reset_i,
+  --     probe13(0)           => ctrl.rx_reset,
+  --     probe14(0)           => ctrl.tx_reset,
+  --     probe15(0)           => ctrl.tx_start_write,
+  --     probe16(0)           => ctrl.tx_start_read,
+  --     probe17(7 downto 0)  => ctrl.tx_gbtx_addr,
+  --     probe18(15 downto 0) => ctrl.tx_register_addr,
+  --     probe19(15 downto 0) => ctrl.tx_num_bytes_to_read,
+  --     probe20(0)           => ctrl.rx_rd,
+  --     probe21(0)           => ctrl.tx_wr,
+  --     probe22(7 downto 0)  => mon.rx_data_from_gbtx,
+  --     probe23(7 downto 0)  => ctrl.tx_data_to_gbtx,
+  --     probe24(0)           => mon.tx_ready,
+  --     probe25(0)           => mon.rx_empty
+  --     );
+
   -- register inputs/outputs
-  process (txclk) is
-  begin
-    if (rising_edge(txclk)) then
-      ic_data_i_int   <= ic_data_i;
-      sca0_data_i_int <= sca0_data_i;
-
-    end if;
-  end process;
-
   process (rxclk) is
   begin
     if (rising_edge(rxclk)) then
+      ic_data_i_int   <= ic_data_i;
+      sca0_data_i_int <= sca0_data_i;
+    end if;
+  end process;
+
+  process (txclk) is
+  begin
+    if (rising_edge(txclk)) then
       ic_data_o   <= ic_data_o_int;
       sca0_data_o <= sca0_data_o_int;
     end if;
@@ -104,20 +157,19 @@ begin
       )
     port map (
 
-      -- tx to lpgbt etc
+      -- tx to lpgbt-fpga
       tx_clk_i  => txclk,
       tx_clk_en => txvalid,
 
-      -- rx from lpgbt etc
+      -- rx from lpgbt-fpga
       rx_clk_i  => rxclk,
       rx_clk_en => txvalid,
 
-      -- IC/EC data from controller
+      -- IC data to/from lpgbt-fpga
       ic_data_i => ic_data_i_int,
       ic_data_o => ic_data_o_int,
 
-      -- multiplexed IC/EC data from all lpgbts
-
+      -- EC data to/from lpgbt-fpga
       ec_data_o(0) => sca0_data_o_int,
       ec_data_i(0) => sca0_data_i_int,
 
@@ -125,24 +177,30 @@ begin
       rx_reset_i => reset_i or ctrl.rx_reset,
       tx_reset_i => reset_i or ctrl.tx_reset,
 
-      -- connect all of the following to AXI slave
-
+      -- initiate read/write sequences w/ lgpbt (drains FIFO)
       tx_start_write_i => ctrl.tx_start_write,
       tx_start_read_i  => ctrl.tx_start_read,
 
+      -- read/write settings
       tx_gbtx_address_i  => ctrl.tx_gbtx_addr,
       tx_register_addr_i => ctrl.tx_register_addr,
       tx_nb_to_be_read_i => ctrl.tx_num_bytes_to_read,
 
+      -- write into internal FIFO (on control clock domain)
       wr_clk_i          => ctrl_clk,
       tx_wr_i           => ctrl.tx_wr,
       tx_data_to_gbtx_i => ctrl.tx_data_to_gbtx,
 
+      -- read from internal FIFO (on control clock domain)
       rd_clk_i            => ctrl_clk,
       rx_rd_i             => ctrl.rx_rd,
       rx_data_from_gbtx_o => mon.rx_data_from_gbtx,
 
-      -- SCA Command
+      -- FIFO status
+      tx_ready_o => mon.tx_ready,       --! IC core ready for a transaction
+      rx_empty_o => mon.rx_empty,
+
+      -- SCA Control
       rx_address_o(0)  => mon.rx.rx_address,
       rx_channel_o(0)  => mon.rx.rx_channel,
       rx_control_o(0)  => mon.rx.rx_control,
@@ -152,9 +210,6 @@ begin
       rx_received_o(0) => mon.rx.rx_received,
       rx_transID_o(0)  => mon.rx.rx_transID,
 
-      --
-      tx_ready_o          => mon.tx_ready,  --! IC core ready for a transaction
-      rx_empty_o          => mon.rx_empty,
       sca_enable_i(0)     => ctrl.sca_enable,
       start_reset_cmd_i   => ctrl.start_reset,
       start_connect_cmd_i => ctrl.start_connect,

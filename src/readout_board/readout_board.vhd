@@ -195,10 +195,10 @@ begin
       valid_i => '1',
 
       -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
-      ic_data_i => daq_uplink_data_aligned(0).ic,
+      ic_data_i => daq_uplink_data(0).ic,
       ic_data_o => daq_downlink_data_aligned(0).ic,
 
-      sca0_data_i => daq_uplink_data_aligned(0).ec,
+      sca0_data_i => daq_uplink_data(0).ec,
       sca0_data_o => daq_downlink_data_aligned(0).ec
       );
 
@@ -247,7 +247,7 @@ begin
       uplink_clk   => clk320,
 
       downlink_reset_i => (others => reset),
-      uplink_reset_i   => (others => reset),
+      uplink_reset_i   => trig_uplink_reset,
 
       downlink_data_i => (others => lpgbt_downlink_data_rt_zero),
       uplink_data_o   => trig_uplink_data,
@@ -476,9 +476,9 @@ begin
         probe8(0)            => daq_uplink_ready(0),
         probe9(0)            => daq_uplink_reset(0),
         probe10(0)           => daq_uplink_fec_err(0),
-        probe11              => daq_uplink_data_aligned(0).ic,
+        probe11              => daq_uplink_data(0).ic,
         probe12              => daq_downlink_data_aligned(0).ic,
-        probe13              => daq_uplink_data_aligned(0).ec,
+        probe13              => daq_uplink_data(0).ec,
         probe14              => daq_downlink_data_aligned(0).ec,
         probe15(0)           => '1',
         probe16(0)           => '1',
