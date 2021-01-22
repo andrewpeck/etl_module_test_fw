@@ -2,6 +2,17 @@
 #This section is compulsory.
 Libraries:
     #The name of the library.
+    - name: lpgbt_fpga
+      paths:
+        - "lpgbt-fpga/*.vhd"
+        - "lpgbt-fpga/uplink/*.vhd"
+        - "lpgbt-fpga/downlink/*.vhd"
+
+    - name: gbt_sc
+      paths:
+        - "gbt-sc/GBT-SC/*.vhd"
+        - "gbt-sc/GBT-SC/*/*.vhd"
+
     - name: ctrl_lib
       paths:
         - "registers/*.vhd"
