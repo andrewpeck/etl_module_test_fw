@@ -413,23 +413,14 @@ def lpgbt_rd_adr(adr, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_NUM_BYTES_TO_READ" % rb, 1)
     write_node("READOUT_BOARD_%d.SC.TX_REGISTER_ADDR" % rb, adr)
     action("READOUT_BOARD_%d.SC.TX_START_READ" % rb)
-    empty = read_node("READOUT_BOARD_%d.SC.RX_EMPTY" % rb)
-    if empty:
-        print("RX Fifo empty")
-        read = "0xDD"
-    else:
-        #action("READOUT_BOARD_%d.SC.RX_RD" % rb)
-        lpgbt_rd_flush()
-        read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
-        return read
-
-def lpgbt_rd_flush(rb=0):
-    #i = 0
+    i = 0
     while (not read_node("READOUT_BOARD_%d.SC.RX_EMPTY" % rb)):
         action("READOUT_BOARD_%d.SC.RX_RD" % rb)
-        #print("FlushLoop %d" % i)
-        #i= i + 1
-
+        read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
+        #print("i=%d, data=0x%02x" % (i,read))
+        if i == 6:
+            return read
+        i += 1
 
 def lpgbt_wr_adr(adr, data, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
@@ -443,7 +434,6 @@ def lpgbt_wr_adr(adr, data, rb=0):
 def lpgbt_wr_reg(id, data, rb=0):
     node = lpgbt.get_node(id)
     lpgbt.write_reg(lpgbt_wr_adr, lpgbt_rd_adr, node, data)
-    action("READOUT_BOARD_%d.SC.RX_RD" % 0)
 
 
 def lpgbt_rd_reg(id, rb=0):
