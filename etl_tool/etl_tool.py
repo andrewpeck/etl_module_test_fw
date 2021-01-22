@@ -308,13 +308,17 @@ def reset_pattern_checkers(rb=0):
     action("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CNT_RESET" % rb)
 
 
-def read_pattern_checkers(rb=0):
+def read_pattern_checkers(rb=0, quiet=False):
 
     prbs_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb)
     upcnt_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb)
 
+    prbs_errs = 28*[0]
+    upcnt_errs = 28*[0]
+
     for mode in ["PRBS", "UPCNT"]:
-        print(mode + ":")
+        if quiet is False:
+            print(mode + ":")
         for i in range(28):
 
             check = False
@@ -334,13 +338,27 @@ def read_pattern_checkers(rb=0):
 
                 errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
 
-                s = "    Channel %02d %s bad frames of %s (%.0f Gb)" % (i, ("{:.2e}".format(errs)), "{:.2e}".format(uptime), uptime*8*40/1000000000.0)
-                if (errs == 0):
-                    s += " (ber <%s)" % ("{:.1e}".format(1/(uptime*8)))
-                    print(colors.green(s))
-                else:
-                    s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
-                    print(colors.red(s))
+                if quiet is False:
+                    s = "    Channel %02d %s bad frames of %s (%.0f Gb)" % (i, ("{:.2e}".format(errs)), "{:.2e}".format(uptime), uptime*8*40/1000000000.0)
+                    if (errs == 0):
+                        s += " (ber <%s)" % ("{:.1e}".format(1/(uptime*8)))
+                        print(colors.green(s))
+                    else:
+                        s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
+                        print(colors.red(s))
+
+                if mode == "UPCNT":
+                    upcnt_errs[i] = errs
+                if mode == "PRBS":
+                    prbs_errs[i] = errs
+
+            else:
+                if mode == "UPCNT":
+                    upcnt_errs[i] = 0xFFFFFFFF
+                if mode == "PRBS":
+                    prbs_errs[i] = 0xFFFFFFFF
+
+    return (prbs_errs, upcnt_errs)
 
 
 def sc_reset(rb=0):
