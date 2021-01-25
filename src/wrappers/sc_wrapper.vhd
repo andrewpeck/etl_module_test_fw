@@ -3,6 +3,9 @@ use IEEE.STD_LOGIC_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_misc.all;
 
+library work;
+use work.components.all;
+
 library gbt_sc;
 use gbt_sc.sca_pkg.all;
 
@@ -12,7 +15,9 @@ use ctrl_lib.READOUT_BOARD_Ctrl.all;
 entity gbt_controller_wrapper is
   generic(
     g_CLK_FREQ       : integer := 40;
-    g_SCAS_PER_LPGBT : integer := 3
+    g_SCAS_PER_LPGBT : integer := 3;
+    g_DEBUG_IC       : boolean := false;
+    g_DEBUG_SCA      : boolean := false
     );
   port(
     -- reset
@@ -49,70 +54,66 @@ architecture common_controller of gbt_controller_wrapper is
   signal sca0_data_i_int : std_logic_vector (1 downto 0);
   signal sca0_data_o_int : std_logic_vector (1 downto 0);
 
-  component ila_sc
-    port (
-      clk     : in std_logic;
-      probe0  : in std_logic_vector(1 downto 0);
-      probe1  : in std_logic_vector(1 downto 0);
-      probe2  : in std_logic_vector(1 downto 0);
-      probe3  : in std_logic_vector(1 downto 0);
-      probe4  : in std_logic_vector(1 downto 0);
-      probe5  : in std_logic_vector(1 downto 0);
-      probe6  : in std_logic_vector(1 downto 0);
-      probe7  : in std_logic_vector(1 downto 0);
-      probe8  : in std_logic_vector(0 downto 0);
-      probe9  : in std_logic_vector(0 downto 0);
-      probe10 : in std_logic_vector(0 downto 0);
-      probe11 : in std_logic_vector(0 downto 0);
-      probe12 : in std_logic_vector(0 downto 0);
-      probe13 : in std_logic_vector(0 downto 0);
-      probe14 : in std_logic_vector(0 downto 0);
-      probe15 : in std_logic_vector(0 downto 0);
-      probe16 : in std_logic_vector(0 downto 0);
-      probe17 : in std_logic_vector(7 downto 0);
-      probe18 : in std_logic_vector(15 downto 0);
-      probe19 : in std_logic_vector(15 downto 0);
-      probe20 : in std_logic_vector(0 downto 0);
-      probe21 : in std_logic_vector(0 downto 0);
-      probe22 : in std_logic_vector(7 downto 0);
-      probe23 : in std_logic_vector(7 downto 0);
-      probe24 : in std_logic_vector(0 downto 0);
-      probe25 : in std_logic_vector(0 downto 0)
-      );
-  end component;
-
 begin
 
-  -- ila_sc_inst : ila_sc
-  --   port map (
-  --     clk                  => clk40,
-  --     probe0(1 downto 0)   => ic_data_i,
-  --     probe1(1 downto 0)   => ic_data_o,
-  --     probe2(1 downto 0)   => sca0_data_i,
-  --     probe3(1 downto 0)   => sca0_data_o,
-  --     probe4(1 downto 0)   => ic_data_i_int,
-  --     probe5(1 downto 0)   => ic_data_o_int,
-  --     probe6(1 downto 0)   => sca0_data_i_int,
-  --     probe7(1 downto 0)   => sca0_data_o_int,
-  --     probe8(0)            => valid_i,
-  --     probe9(0)            => '1',
-  --     probe10(0)           => '1',
-  --     probe11(0)           => '1',
-  --     probe12(0)           => reset_i,
-  --     probe13(0)           => ctrl.rx_reset,
-  --     probe14(0)           => ctrl.tx_reset,
-  --     probe15(0)           => ctrl.tx_start_write,
-  --     probe16(0)           => ctrl.tx_start_read,
-  --     probe17(7 downto 0)  => ctrl.tx_gbtx_addr,
-  --     probe18(15 downto 0) => ctrl.tx_register_addr,
-  --     probe19(15 downto 0) => ctrl.tx_num_bytes_to_read,
-  --     probe20(0)           => ctrl.rx_rd,
-  --     probe21(0)           => ctrl.tx_wr,
-  --     probe22(7 downto 0)  => mon.rx_data_from_gbtx,
-  --     probe23(7 downto 0)  => ctrl.tx_data_to_gbtx,
-  --     probe24(0)           => mon.tx_ready,
-  --     probe25(0)           => mon.rx_empty
-  --     );
+
+  sca_ila_gen : if (g_DEBUG_SCA) generate
+    ila_sca_inst : ila_sca
+      port map (
+        clk                  => clk40,
+        probe0(7 downto 0)   => mon.rx.rx_address,
+        probe1(7 downto 0)   => mon.rx.rx_channel,
+        probe2(7 downto 0)   => mon.rx.rx_control,
+        probe3(31 downto 0)  => mon.rx.rx_data,
+        probe4(7 downto 0)   => mon.rx.rx_err,
+        probe5(7 downto 0)   => mon.rx.rx_len,
+        probe6(0)            => mon.rx.rx_received,
+        probe7(7 downto 0)   => mon.rx.rx_transid,
+        probe8(0)            => ctrl.sca_enable,
+        probe9(0)            => ctrl.start_reset,
+        probe10(0)           => ctrl.start_connect,
+        probe11(0)           => ctrl.inj_crc_err,
+        probe12(7 downto 0)  => ctrl.tx_transid,
+        probe13(7 downto 0)  => ctrl.tx_channel,
+        probe14(7 downto 0)  => ctrl.tx_cmd,
+        probe15(31 downto 0) => ctrl.tx_data,
+        probe16(1 downto 0)  => sca0_data_o_int,
+        probe17(1 downto 0)  => sca0_data_i_int
+        );
+  end generate;
+
+  ic_ila_gen : if (g_DEBUG_IC) generate
+    ila_sc_inst : ila_sc
+      port map (
+        clk                  => clk40,
+        probe0(1 downto 0)   => ic_data_i,
+        probe1(1 downto 0)   => ic_data_o,
+        probe2(1 downto 0)   => sca0_data_i,
+        probe3(1 downto 0)   => sca0_data_o,
+        probe4(1 downto 0)   => ic_data_i_int,
+        probe5(1 downto 0)   => ic_data_o_int,
+        probe6(1 downto 0)   => sca0_data_i_int,
+        probe7(1 downto 0)   => sca0_data_o_int,
+        probe8(0)            => valid_i,
+        probe9(0)            => '1',
+        probe10(0)           => '1',
+        probe11(0)           => '1',
+        probe12(0)           => reset_i,
+        probe13(0)           => ctrl.rx_reset,
+        probe14(0)           => ctrl.tx_reset,
+        probe15(0)           => ctrl.tx_start_write,
+        probe16(0)           => ctrl.tx_start_read,
+        probe17(7 downto 0)  => ctrl.tx_gbtx_addr,
+        probe18(15 downto 0) => ctrl.tx_register_addr,
+        probe19(15 downto 0) => ctrl.tx_num_bytes_to_read,
+        probe20(0)           => ctrl.rx_rd,
+        probe21(0)           => ctrl.tx_wr,
+        probe22(7 downto 0)  => mon.rx_data_from_gbtx,
+        probe23(7 downto 0)  => ctrl.tx_data_to_gbtx,
+        probe24(0)           => mon.tx_ready,
+        probe25(0)           => mon.rx_empty
+        );
+  end generate;
 
   -- register inputs/outputs
   process (rxclk) is

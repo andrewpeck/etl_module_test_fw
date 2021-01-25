@@ -408,6 +408,17 @@ def set_uplink_alignment(val, link, rb=0):
     write_node(id, val)
 
 
+def lpgbt_rd_flush(rb=0):
+    i = 0
+    #print("Flushing...")
+    while (not read_node("READOUT_BOARD_%d.SC.RX_EMPTY" % rb)):
+        action("READOUT_BOARD_%d.SC.RX_RD" % rb)
+        read = read_node("READOUT_BOARD_%d.SC.RX_DATA_FROM_GBTX" % rb)
+        #print("i=%d, data=0x%02x" % (i,read))
+        #print("FlushLoop %d" % i)
+        i= i + 1
+
+
 def lpgbt_rd_adr(adr, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
     write_node("READOUT_BOARD_%d.SC.TX_NUM_BYTES_TO_READ" % rb, 1)
@@ -421,6 +432,9 @@ def lpgbt_rd_adr(adr, rb=0):
         if i == 6:
             return read
         i += 1
+    print("lpgbt read failed!! SC RX empty")
+    return 0xE9
+
 
 def lpgbt_wr_adr(adr, data, rb=0):
     write_node("READOUT_BOARD_%d.SC.TX_GBTX_ADDR" % rb, 115)
@@ -442,11 +456,20 @@ def lpgbt_rd_reg(id, rb=0):
     return data
 
 
+def lpgbt_wr_node(node, data, rb=0):
+    lpgbt.write_reg(lpgbt_wr_adr, lpgbt_rd_adr, node, data)
+
+
+def lpgbt_rd_node(node, rb=0):
+    data = lpgbt.read_reg(lpgbt_rd_adr, node)
+    return data
+
+
 def lpgbt_loopback(nloops=100, rb=0):
     for i in range(nloops):
         wr = random.randint(0, 255)
-        lpgbt_wr_adr (0, wr)
-        rd = lpgbt_rd_adr (0)
+        lpgbt_wr_adr(1, wr)
+        rd = lpgbt_rd_adr(1)
         if wr != rd:
             print("ERR: %d wr=0x%08X rd=0x%08X" % (i, wr, rd))
             return
@@ -454,18 +477,395 @@ def lpgbt_loopback(nloops=100, rb=0):
             print("%i reads done..." % i)
 
 
+def sca_reset(rb=0):
+    action("READOUT_BOARD_%d.SC.START_RESET" % rb)
+
+def sca_connect(rb=0):
+    action("READOUT_BOARD_%d.SC.START_CONNECT" % rb)
+
+class SCA_CRB:
+    ENSPI  = 0
+    ENGPIO = 1
+    ENI2C0 = 2
+    ENI2C1 = 3
+    ENI2C2 = 4
+    ENI2C3 = 5
+    ENI2C4 = 6
+
+class SCA_CRC:
+    ENI2C5 = 0
+    ENI2C6 = 1
+    ENI2C7 = 2
+    ENI2C8 = 3
+    ENI2C9 = 4
+    ENI2CA = 5
+    ENI2CB = 6
+    ENI2CC = 7
+
+class SCA_CRD:
+    ENI2CD = 0
+    ENI2CE = 1
+    ENI2CF = 2
+    ENJTAG = 3
+    ENADC  = 4
+    ENDAC  = 6
+
+class SCA_CONTROL:
+    CTRL_R_ID  = 0x14D1  # this is SCA V2
+    CTRL_W_CRB = 0x0002
+    CTRL_R_CRB = 0x0003
+    CTRL_W_CRC = 0x0004
+    CTRL_R_CRC = 0x0005
+    CTRL_W_CRD = 0x0006
+    CTRL_R_CRD = 0x0007
+    CTRL_R_SEU = 0x13F1
+    CTRL_C_SEU = 0x13F1
+
+class SCA_GPIO:
+    GPIO_W_DATAOUT   = 0x0210
+    GPIO_R_DATAOUT   = 0x0211
+    GPIO_R_DATAIN    = 0x0201
+    GPIO_W_DIRECTION = 0x0220
+    GPIO_R_DIRECTION = 0x0221
+
+class SCA_JTAG:
+    # JTAG COMMANDS
+    JTAG_W_CTRL = 0x1380
+    JTAG_R_CTRL = 0x1381
+    JTAG_W_FREQ = 0x1390
+    JTAG_R_FREQ = 0x1391
+    JTAG_W_TDO0 = 0x1300
+    JTAG_R_TDI0 = 0x1301
+    JTAG_W_TDO1 = 0x1310
+    JTAG_R_TDI1 = 0x1311
+    JTAG_W_TDO2 = 0x1320
+    JTAG_R_TDI2 = 0x1321
+    JTAG_W_TDO3 = 0x1330
+    JTAG_R_TDI3 = 0x1331
+    JTAG_W_TMS0 = 0x1340
+    JTAG_R_TMS0 = 0x1341
+    JTAG_W_TMS1 = 0x1350
+    JTAG_R_TMS1 = 0x1351
+    JTAG_W_TMS2 = 0x1360
+    JTAG_R_TMS2 = 0x1361
+    JTAG_W_TMS3 = 0x1370
+    JTAG_R_TMS3 = 0x1371
+    JTAG_ARESET = 0x13C0
+    JTAG_GO     = 0x13A2
+    JTAG_GO_M   = 0x13B0
+
+
+def sca_rw_reg(reg, data=0x0, adr=0x00, transid=0x00, rb=0):
+
+    cmd = reg & 0xFF
+    channel = (reg >> 8) & 0xFF
+
+    return sca_rw_cmd(cmd, channel, data, adr, transid, rb)
+
+
+def sca_rw_cmd(cmd, channel, data, adr=0x0, transid=0x00, rb=0):
+
+    """
+    adr = chip address (0x0 by default)
+    """
+
+    if transid == 0:
+        transid = random.randint(0, 2**8-1)
+
+    # request packet structure
+    # sof
+    # address : destination packet address (chip id)
+    # control : connect/sabm, reset, test
+    # {
+    #  transid
+    #  channel
+    #  length
+    #  command
+    #  data[31:0]
+    # }
+    # fcs
+    # eof
+
+    write_node("READOUT_BOARD_%d.SC.TX_CHANNEL" % rb, channel)
+    write_node("READOUT_BOARD_%d.SC.TX_CMD" % rb, cmd)
+    write_node("READOUT_BOARD_%d.SC.TX_ADDRESS" % rb, adr)
+
+    write_node("READOUT_BOARD_%d.SC.TX_TRANSID" % rb, transid)
+
+    write_node("READOUT_BOARD_%d.SC.TX_DATA" % rb, data)
+    action("READOUT_BOARD_%d.SC.START_COMMAND" % rb)
+
+    # reply packet structure
+    # sof
+    # address
+    # control
+    # {
+    #  transid
+    #  channel
+    #  error
+    #  length
+    #  data
+    # }
+    # fcs
+    # eof
+
+    # TODO: read reply
+    err = read_node("READOUT_BOARD_%d.SC.RX.RX_ERR" % rb)  # 8 bit
+    if err > 0:
+        if (err & 0x1):
+            print("SCA Read Error :: Generic Error Flag")
+        if (err & 0x2):
+            print("SCA Read Error :: Invalid Channel Request")
+        if (err & 0x4):
+            print("SCA Read Error :: Invalid Command Request")
+        if (err & 0x8):
+            print("SCA Read Error :: Invalid Transaction Number Request")
+        if (err & 0x10):
+            print("SCA Read Error :: Invalid Length")
+        if (err & 0x20):
+            print("SCA Read Error :: Channel Not Enabled")
+        if (err & 0x40):
+            print("SCA Read Error :: Command In Treatment")
+
+    if transid != read_node("READOUT_BOARD_%d.SC.RX.RX_TRANSID" % rb):
+        print("SCA Read Error :: Transaction ID Does Not Match")
+
+
+    return(read_node("READOUT_BOARD_%d.SC.RX.RX_DATA" % rb))  # 32 bit read data
+
+    read_node("READOUT_BOARD_%d.SC.RX.RX_RECEIVED" % rb)  # flag pulse
+    read_node("READOUT_BOARD_%d.SC.RX.RX_CHANNEL" % rb)  # channel reply
+    read_node("READOUT_BOARD_%d.SC.RX.RX_LEN" % rb)
+    read_node("READOUT_BOARD_%d.SC.RX.RX_ADDRESS" % rb)
+    read_node("READOUT_BOARD_%d.SC.RX.RX_CONTROL" % rb)
+
+
+def sca_setup():
+
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECTERM", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECENABLE", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECACBIAS", 0)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECINVERT", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECPHASESELECT", 8)
+
+    lpgbt_wr_reg("LPGBT.RWF.EPORTTX.EPTXECINVERT", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTTX.EPTXECENABLE", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTTX.EPTXECDRIVESTRENGTH", 4)
+
+    lpgbt_wr_reg("LPGBT.RWF.EPORTCLK.EPCLK28FREQ", 1)  # 1 =  40mhz
+    lpgbt_wr_reg("LPGBT.RWF.EPORTCLK.EPCLK28INVERT", 1)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTCLK.EPCLK28DRIVESTRENGTH", 4)
+
+
+def lpgbt_configure_clocks(en_mask, invert_mask=0, rb=0):
+    for i in range(27):
+        if 0x1 & (en_mask >> i):
+            lpgbt_wr_reg("LPGBT.RWF.EPORTCLK.EPCLK%dFREQ" % i, 1)
+        if 0x1 & (invert_mask >> i):
+            lpgbt_wr_reg("LPGBT.RWF.EPORTCLK.EPCLK%dINVERT" % i, 1)
+
+
+def sca_enable(state=1, rb=0):
+    write_node("READOUT_BOARD_%d.SC.SCA_ENABLE" % rb, state)
+
+
+def sca_inject_crc(rb=0):
+    action("READOUT_BOARD_%d.SC.INJ_CRC_ERR" % rb)
+
+
+def lpgbt_init():
+    # invert high speed data output
+    lpgbt_wr_adr(0x36, 0x80)  # "LPGBT.RWF.CHIPCONFIG.HIGHSPEEDDATAOUTINVERT"
+
+    # turn on clock outputs
+    lpgbt_configure_clocks(0x0fc0081f, 0x0)
+
+    # setup up sca eptx/rx
+    sca_setup()
+
+    #lpgbt_configure_eptx()
+    #lpgbt_configure_eprx()
+
+
+def sca_hard_reset():
+    bit = 0
+    set_gpio(bit, 0)
+    set_gpio(bit, 1)
+
+
+def ld_disable():
+    bit = 13
+    set_gpio(bit, 1)
+
+
+def ld_enable():
+    bit = 13
+    set_gpio(bit, 0)
+
+
+def ld_reset():
+    bit = 10
+    set_gpio(bit, 0)
+    set_gpio(bit, 1)
+
+
+def set_gpio(ch, val, default=0x401):
+
+    if (ch > 7):
+        rd = default >> 8
+        node = "LPGBT.RWF.PIO.PIOOUTH"
+        ch = ch - 8
+    else:
+        node = "LPGBT.RWF.PIO.PIOOUTL"
+        rd = default & 0xff
+
+    if val == 0:
+        rd = rd & (0xff ^ (1 << ch))
+    else:
+        rd = rd | (1 << ch)
+
+    reg = lpgbt.get_node(node)
+    adr = reg.address
+    lpgbt_wr_adr(adr, rd)
+
+
+def configure_gpio_outputs(outputs=0x2401, defaults=0x0401):
+    lpgbt_wr_adr(0x52, outputs >> 8)
+    lpgbt_wr_adr(0x53, outputs & 0xFF)
+    lpgbt_wr_adr(0x54, defaults >> 8)
+    lpgbt_wr_adr(0x55, defaults & 0xFF)
+
+
+def check_rom_readback():
+    romreg=lpgbt_rd_reg("LPGBT.RO.ROMREG")
+    if (romreg != 0xA5):
+        print ("ERROR: no communication with LPGBT. ROMREG=0x%x, EXPECT=0x%x" % (romreg, 0xA5))
+    else:
+        print ("Testing communication with LGPBT IC... ok")
+
+def configure_sca_control_registers(en_spi=0, en_gpio=0, en_i2c=0, en_adc=0, en_dac=0, rb=0):
+
+    ENI2C0  = (en_i2c >> 0) & 0x1
+    ENI2C1  = (en_i2c >> 1) & 0x1
+    ENI2C2  = (en_i2c >> 2) & 0x1
+    ENI2C3  = (en_i2c >> 3) & 0x1
+    ENI2C4  = (en_i2c >> 4) & 0x1
+    ENI2C5  = (en_i2c >> 5) & 0x1
+    ENI2C6  = (en_i2c >> 6) & 0x1
+    ENI2C7  = (en_i2c >> 7) & 0x1
+    ENI2C8  = (en_i2c >> 8) & 0x1
+    ENI2C9  = (en_i2c >> 9) & 0x1
+    ENI2CA  = (en_i2c >> 10) & 0x1
+    ENI2CB  = (en_i2c >> 11) & 0x1
+    ENI2CC  = (en_i2c >> 12) & 0x1
+    ENI2CD  = (en_i2c >> 13) & 0x1
+    ENI2CE  = (en_i2c >> 14) & 0x1
+    ENI2CF  = (en_i2c >> 15) & 0x1
+
+    crb = 0
+    crb |= en_spi << SCA_CRB.ENSPI
+    crb |= en_gpio << SCA_CRB.ENGPIO
+    crb |= ENI2C0 << SCA_CRB.ENI2C0
+    crb |= ENI2C1 << SCA_CRB.ENI2C1
+    crb |= ENI2C2 << SCA_CRB.ENI2C2
+    crb |= ENI2C3 << SCA_CRB.ENI2C3
+    crb |= ENI2C4 << SCA_CRB.ENI2C4
+
+    crc = 0
+    crc |= ENI2C5 << SCA_CRC.ENI2C5
+    crc |= ENI2C6 << SCA_CRC.ENI2C6
+    crc |= ENI2C7 << SCA_CRC.ENI2C7
+    crc |= ENI2C8 << SCA_CRC.ENI2C8
+    crc |= ENI2C9 << SCA_CRC.ENI2C9
+    crc |= ENI2CA << SCA_CRC.ENI2CA
+    crc |= ENI2CB << SCA_CRC.ENI2CB
+    crc |= ENI2CC << SCA_CRC.ENI2CC
+
+    crd = 0
+    crd |= ENI2CD << SCA_CRD.ENI2CD
+    crd |= ENI2CE << SCA_CRD.ENI2CE
+    crd |= ENI2CF << SCA_CRD.ENI2CF
+    crd |= en_adc << SCA_CRD.ENADC
+    crd |= en_dac << SCA_CRD.ENDAC
+
+    sca_rw_reg(SCA_CONTROL.CTRL_W_CRB, crb << 24)
+    sca_rw_reg(SCA_CONTROL.CTRL_W_CRC, crc << 24)
+    sca_rw_reg(SCA_CONTROL.CTRL_W_CRD, crd << 24)
+
+    crb_rd = sca_rw_reg(SCA_CONTROL.CTRL_R_CRB) >> 24
+    crc_rd = sca_rw_reg(SCA_CONTROL.CTRL_R_CRC) >> 24
+    crd_rd = sca_rw_reg(SCA_CONTROL.CTRL_R_CRD) >> 24
+
+    if (crb != crb_rd or crc != crc_rd or crd != crd_rd):
+        print("SCA Control Register Readback Error, Not configured Correctly")
+        print("CRB wr=%02X, rd=%02X" % (crb, crb_rd))
+        print("CRC wr=%02X, rd=%02X" % (crc, crc_rd))
+        print("CRD wr=%02X, rd=%02X" % (crd, crd_rd))
 if __name__ == '__main__':
 
-    # use 2 for loopback, 0 for internal data generator
-    for i in range(28):
-        set_uplink_alignment(0, i)
-    # for i in range(28):
+    # use 2 for loopback, 0 for internal data ggenerator
+    #for i in range(28):
     #    set_uplink_alignment(0, i)
-
-    set_downlink_data_src("prbs")
 
     lpgbt.parse_xml()
 
+    configure_gpio_outputs()
+    lpgbt_init()
+    #config_lpgbt()
+    config_eport_dlls()
+
+    sca_hard_reset()
+    sca_setup()
+    sca_reset()
+    sca_connect()
+
+    action("READOUT_BOARD_%d.SC.TX_RESET" % 0)
+    action("READOUT_BOARD_%d.SC.RX_RESET" % 0)
+
+    configure_sca_control_registers(en_adc=1, en_gpio=1)
+
+    print(hex(sca_rw_reg(SCA_CONTROL.CTRL_R_ID)))
+    #print(hex(sca_rw_reg(SCA_JTAG.JTAG_R_CTRL)))
+
+    #lpgbt_eyescan(count=15)
+    #lpgbt_loopback()
+    check_rom_readback()
+    main()
+    # for i in range(28):
+    #    set_uplink_alignment(0, i)
+
+    #set_downlink_data_src("prbs")
+
+    #ld_disable()
+
+    #configure_gpio_outputs()
+    #ld_enable()
+
+    #lpgbt_prbs_phase_scan()
+    #plot_phase_scan("phase_scan.txt", 1)
+    #set_ps0_phase(0x1ff)
+    #lpgbt_wr_adr(0x0, 0xaa)
+    #lpgbt_wr_adr(0x1, 0xbb)
+    #lpgbt_wr_adr(0x2, 0xcc)
+    #lpgbt_wr_adr(0x3, 0xdd)
+    #print(hex(lpgbt_rd_adr(0x0)))
+    #print(hex(lpgbt_rd_adr(0x1)))
+    #print(hex(lpgbt_rd_adr(0x2)))
+    #print(hex(lpgbt_rd_adr(0x3)))
+    #print(hex(lpgbt_rd_adr(0x00)))
+    #print(hex(lpgbt_rd_adr(0x01)))
+    #lpgbt_wr_adr(0x2, 0xcc)
+    #print(hex(lpgbt_rd_adr(0x01)))
+    #lpgbt_wr_adr(0x3, 0xdd)
+    #print(hex(lpgbt_rd_adr(0x01)))
+
+    #lpgbt_wr_adr(0x5d, 0x0)
+    #lpgbt_rd_flush()
+    #print(hex(lpgbt_rd_adr(0x5d)))
+    #lpgbt_rd_flush()
+    #print(hex(lpgbt_rd_reg("LPGBT.RWF.PHASE_SHIFTER.PS0DELAY_7TO0")))
+    #lpgbt_wr_reg("LPGBT.RWF.PHASE_SHIFTER.PS0DELAY_7TO0", 0xbb)
+    #print(hex(lpgbt_rd_adr(0x5D)))
+    #print(hex(lpgbt_rd_reg("LPGBT.RWF.PHASE_SHIFTER.PS0DELAY_7TO0")))
     #lpgbt_loopback(nloops=1000, rb=0)
 
-    main()
