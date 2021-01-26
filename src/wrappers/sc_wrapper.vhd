@@ -78,7 +78,8 @@ begin
         probe14(7 downto 0)  => ctrl.tx_cmd,
         probe15(31 downto 0) => ctrl.tx_data,
         probe16(1 downto 0)  => sca0_data_o_int,
-        probe17(1 downto 0)  => sca0_data_i_int
+        probe17(1 downto 0)  => sca0_data_i_int,
+        probe18(0)           => ctrl.start_command
         );
   end generate;
 

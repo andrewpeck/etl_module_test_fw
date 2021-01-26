@@ -25,7 +25,8 @@ package components is
       probe14 : in std_logic_vector(7 downto 0);
       probe15 : in std_logic_vector(31 downto 0);
       probe16 : in std_logic_vector(1 downto 0);
-      probe17 : in std_logic_vector(1 downto 0)
+      probe17 : in std_logic_vector(1 downto 0);
+      probe18 : in std_logic_vector(0 downto 0)
       );
   end component;
 

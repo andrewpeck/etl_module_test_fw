@@ -23,6 +23,7 @@ ip/xlx_ku_mgt_ip_10g24/xlx_ku_mgt_ip_10g24.xci
 # ilas
 ip/ila_ipb/ila_ipb.xci
 ip/ila_sc/ila_sc.xci
+ip/ila_sca/ila_sca.xci
 ip/ila_lpgbt/ila_lpgbt.xci
 ip/vio_lpgbt/vio_lpgbt.xci
 ip/vio_mgt/vio_mgt.xci
