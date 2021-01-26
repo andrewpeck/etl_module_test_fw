@@ -1185,10 +1185,7 @@ def lpgbt_eyescan(count=7):
         f.write ("    [")
         for x in range (xmin,xmax):
             # normalize for plotting
-            if system!="dryrun":
-                f.write("%d" % (100*(cntvalmax - eyeimage[x][y])/(cntvalmax-cntvalmin)))
-            else:
-                f.write("0")
+            f.write("%d" % (100*(cntvalmax - eyeimage[x][y])/(cntvalmax-cntvalmin)))
             if (x<(xmax-1)):
                 f.write(",")
             else:
