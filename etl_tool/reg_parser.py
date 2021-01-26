@@ -152,7 +152,9 @@ def read_reg(mpeek, reg):
     except:
         print('Reg', reg, 'not a Node')
         return
+
     if 'r' not in reg.permission:
+        print('No read permission!')
         return 'No read permission!'
 
     # read
