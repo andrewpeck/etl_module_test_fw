@@ -2,13 +2,14 @@
 # UDP Clock crossing
 ################################################################################
 
+# 125MHz clk -> 8 ns
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks I] 4
+    -to   [get_clocks I] 7
 
 set_max_delay -datapath_only \
     -from [get_clocks I] \
-    -to   [get_clocks clk125_i] 4
+    -to   [get_clocks clk125_i] 7
 
 ################################################################################
 ## Ipb Clock crossing
@@ -41,6 +42,9 @@ set_max_delay -datapath_only \
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
     -to [get_pins -hierarchical -filter { NAME =~  "*U0/PROBE_PIPE*/D" }] 4
+
+set_false_path -from \
+    [get_pins {eth.eth_infra_inst/eth/debugilas.vio_sgmii_1/inst/*/Probe_out_reg[*]/C}]
 
 ################################################################################
 # Resets

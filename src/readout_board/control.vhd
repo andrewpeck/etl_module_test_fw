@@ -19,7 +19,7 @@ entity control is
   generic(
     NUM_RBS   : integer              := 8;
     EN_LPGBTS : integer range 0 to 1 := 0;
-    DEBUG     : boolean              := true
+    DEBUG     : boolean              := false
     );
   port(
 

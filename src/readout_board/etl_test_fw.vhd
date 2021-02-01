@@ -238,8 +238,6 @@ begin
         osc_clk_125   => clk_osc125_ibuf,
         rst_in        => (others => '0'),
         dip_sw        => (others => '0'),
-        leds          => open,
-        debug_leds    => open,
         sgmii_clk_p   => sgmii_clk_p,
         sgmii_clk_n   => sgmii_clk_n,
         sgmii_txp     => sgmii_txp,

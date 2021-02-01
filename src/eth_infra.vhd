@@ -24,9 +24,11 @@
 ---------------------------------------------------------------------------------
 
 
--- Infrastructural firmware for the Xilinx VCU118 board; includes clock configuration, PCIe interface, IPbus transactor & master.
+-- Infrastructural firmware for the Xilinx KCU105 board; includes clock configuration, PCIe interface, IPbus transactor & master.
 --
 -- Tom Williams, July 2018
+--
+-- Modified for KCU105 by ap
 
 
 library IEEE;
@@ -41,6 +43,9 @@ use UNISIM.VComponents.all;
 
 
 entity eth_infra is
+  generic(
+    C_DEBUG : boolean := false
+    );
   port (
     -- External oscillators
     osc_clk_300   : in    std_logic;
@@ -48,8 +53,6 @@ entity eth_infra is
     -- status LEDs
     rst_in        : in    std_logic_vector(4 downto 0);  -- external reset button
     dip_sw        : in    std_logic_vector(3 downto 0);
-    leds          : out   std_logic_vector(1 downto 0);
-    debug_leds    : out   std_logic_vector(7 downto 0);  -- should be 1 on stable running
     -- SGMII clk and data
     sgmii_clk_p   : in    std_logic;
     sgmii_clk_n   : in    std_logic;
@@ -93,59 +96,8 @@ architecture rtl of eth_infra is
   signal trans_in  : ipbus_trans_in;
   signal trans_out : ipbus_trans_out;
 
-  component ila_ipb
-    port (
-      clk    : in std_logic;
-      probe0 : in std_logic_vector(31 downto 0);
-      probe1 : in std_logic_vector(31 downto 0);
-      probe2 : in std_logic_vector(0 downto 0);
-      probe3 : in std_logic_vector(0 downto 0);
-      probe4 : in std_logic_vector(31 downto 0);
-      probe5 : in std_logic_vector(0 downto 0);
-      probe6 : in std_logic_vector(0 downto 0)
-      );
-  end component;
-
-  component ila_eth_infra
-    port (
-      clk     : in std_logic;
-      probe0  : in std_logic_vector(7 downto 0);
-      probe1  : in std_logic_vector(7 downto 0);
-      probe2  : in std_logic_vector(0 downto 0);
-      probe3  : in std_logic_vector(0 downto 0);
-      probe4  : in std_logic_vector(0 downto 0);
-      probe5  : in std_logic_vector(0 downto 0);
-      probe6  : in std_logic_vector(0 downto 0);
-      probe7  : in std_logic_vector(0 downto 0);
-      probe8  : in std_logic_vector(0 downto 0);
-      probe9  : in std_logic_vector(0 downto 0);
-      probe10 : in std_logic_vector(0 downto 0);
-      probe11 : in std_logic_vector(0 downto 0);
-      probe12 : in std_logic_vector(0 downto 0);
-      probe13 : in std_logic_vector(0 downto 0)
-      );
-  end component;
-
 begin
 
-  -- ila_eth_infra_inst : ila_eth_infra
-  --   port map (
-  --     clk        => clk_eth,
-  --     probe0     => tx_data,
-  --     probe1     => rx_data,
-  --     probe2(0)  => tx_valid,
-  --     probe3(0)  => tx_last,
-  --     probe4(0)  => tx_error,
-  --     probe5(0)  => tx_ready,
-  --     probe6(0)  => rx_valid,
-  --     probe7(0)  => rx_last,
-  --     probe8(0)  => rx_error,
-  --     probe9(0)  => clk_eth,
-  --     probe10(0) => eth_locked,
-  --     probe11(0) => locked,
-  --     probe12(0) => rst_phy,
-  --     probe13(0) => rst_eth
-  --     );
 
   --  DCM clock generation for internal bus, ethernet
   clocks : entity work.eth_clocks
@@ -178,39 +130,36 @@ begin
 
   eth : entity work.eth_sgmii_lvds
     port map(
-      -- free running 125 MHz clk
-      clk125_fr              => osc_clk_125,
-      -- reset in
-      rst                    => rst_phy,
-      -- reset out
-      rst_o                  => rst_eth,
-      -- status
-      locked                 => eth_locked,
-      debug_leds(7 downto 0) => debug_leds(7 downto 0),
-      dip_sw                 => dip_sw,
-      -- eth clock out
-      clk125_eth             => clk_eth,
-      -- mac ports (go to ipbus)
-      tx_data                => tx_data,
-      rx_data                => rx_data,
-      tx_valid               => tx_valid,
-      tx_last                => tx_last,
-      tx_error               => tx_error,
-      tx_ready               => tx_ready,
-      rx_valid               => rx_valid,
-      rx_last                => rx_last,
-      rx_error               => rx_error,
+      clk125_fr  => osc_clk_125,        -- free running 125 MHz clk
+      rst        => rst_phy,            -- reset in
+      rst_o      => rst_eth,            -- reset out
+      locked     => eth_locked,         -- status
+      clk125_eth => clk_eth,            -- eth clock out
+
+      -- mac tx
+      tx_data  => tx_data,
+      tx_valid => tx_valid,
+      tx_last  => tx_last,
+      tx_error => tx_error,
+      tx_ready => tx_ready,
+
+      -- mac rx
+      rx_data  => rx_data,
+      rx_valid => rx_valid,
+      rx_last  => rx_last,
+      rx_error => rx_error,
+
       -- eth external ports (go to top level ports)
-      sgmii_clk_p            => sgmii_clk_p,
-      sgmii_clk_n            => sgmii_clk_n,
-      sgmii_txp              => sgmii_txp,
-      sgmii_txn              => sgmii_txn,
-      sgmii_rxp              => sgmii_rxp,
-      sgmii_rxn              => sgmii_rxn,
-      phy_resetb             => phy_resetb,
-      phy_mdio               => phy_mdio,
-      phy_interrupt          => phy_interrupt,
-      phy_mdc                => phy_mdc
+      sgmii_clk_p   => sgmii_clk_p,
+      sgmii_clk_n   => sgmii_clk_n,
+      sgmii_txp     => sgmii_txp,
+      sgmii_txn     => sgmii_txn,
+      sgmii_rxp     => sgmii_rxp,
+      sgmii_rxn     => sgmii_rxn,
+      phy_resetb    => phy_resetb,
+      phy_mdio      => phy_mdio,
+      phy_interrupt => phy_interrupt,
+      phy_mdc       => phy_mdc
       );
 
   ipbus : entity work.ipbus_ctrl
@@ -235,18 +184,74 @@ begin
       pkt          => pkt
       );
 
-  -- ila_ipb_master_inst : ila_ipb
-  --   port map (
-  --     clk       => clk_ipb_i,
-  --     probe0    => ipb_out.ipb_addr,
-  --     probe1    => ipb_out.ipb_wdata,
-  --     probe2(0) => ipb_out.ipb_strobe,
-  --     probe3(0) => ipb_out.ipb_write,
-  --     probe4    => ipb_in.ipb_rdata,
-  --     probe5(0) => ipb_in.ipb_ack,
-  --     probe6(0) => ipb_in.ipb_err
-  --     );
 
-  leds <= '0' & (locked and onehz);
+  debugilas : if (C_DEBUG) generate
+
+    component ila_ipb
+      port (
+        clk    : in std_logic;
+        probe0 : in std_logic_vector(31 downto 0);
+        probe1 : in std_logic_vector(31 downto 0);
+        probe2 : in std_logic_vector(0 downto 0);
+        probe3 : in std_logic_vector(0 downto 0);
+        probe4 : in std_logic_vector(31 downto 0);
+        probe5 : in std_logic_vector(0 downto 0);
+        probe6 : in std_logic_vector(0 downto 0)
+        );
+    end component;
+
+    component ila_eth_infra
+      port (
+        clk     : in std_logic;
+        probe0  : in std_logic_vector(7 downto 0);
+        probe1  : in std_logic_vector(7 downto 0);
+        probe2  : in std_logic_vector(0 downto 0);
+        probe3  : in std_logic_vector(0 downto 0);
+        probe4  : in std_logic_vector(0 downto 0);
+        probe5  : in std_logic_vector(0 downto 0);
+        probe6  : in std_logic_vector(0 downto 0);
+        probe7  : in std_logic_vector(0 downto 0);
+        probe8  : in std_logic_vector(0 downto 0);
+        probe9  : in std_logic_vector(0 downto 0);
+        probe10 : in std_logic_vector(0 downto 0);
+        probe11 : in std_logic_vector(0 downto 0);
+        probe12 : in std_logic_vector(0 downto 0);
+        probe13 : in std_logic_vector(0 downto 0)
+        );
+    end component;
+
+  begin
+
+    -- ila_ipb_master_inst : ila_ipb
+    --   port map (
+    --     clk       => clk_ipb_i,
+    --     probe0    => ipb_out.ipb_addr,
+    --     probe1    => ipb_out.ipb_wdata,
+    --     probe2(0) => ipb_out.ipb_strobe,
+    --     probe3(0) => ipb_out.ipb_write,
+    --     probe4    => ipb_in.ipb_rdata,
+    --     probe5(0) => ipb_in.ipb_ack,
+    --     probe6(0) => ipb_in.ipb_err
+    --     );
+
+    ila_eth_infra_inst : ila_eth_infra
+      port map (
+        clk        => clk_eth,
+        probe0     => tx_data,
+        probe1     => rx_data,
+        probe2(0)  => tx_valid,
+        probe3(0)  => tx_last,
+        probe4(0)  => tx_error,
+        probe5(0)  => tx_ready,
+        probe6(0)  => rx_valid,
+        probe7(0)  => rx_last,
+        probe8(0)  => rx_error,
+        probe9(0)  => clk_eth,
+        probe10(0) => eth_locked,
+        probe11(0) => locked,
+        probe12(0) => '1',
+        probe13(0) => rst_eth
+        );
+  end generate;
 
 end rtl;
