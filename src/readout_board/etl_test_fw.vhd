@@ -142,8 +142,12 @@ architecture behavioral of etl_test_fw is
   signal nuke, soft_rst   : std_logic := '0';
   signal pcie_sys_rst_n   : std_logic;
 
-  signal ipb_w : ipb_wbus;
-  signal ipb_r : ipb_rbus;
+  signal eth_ipb_w, pci_ipb_w : ipb_wbus := (ipb_strobe => '0',
+                                             ipb_addr   => (others => '0'),
+                                             ipb_wdata  => (others => '0'),
+                                             ipb_write  => '0');
+
+  signal eth_ipb_r, pci_ipb_r : ipb_rbus;
 
   signal refclk, refclk_mirror : std_logic;
 
@@ -256,8 +260,8 @@ begin
         soft_rst      => soft_rst,
         mac_addr      => MAC_ADDR,
         ip_addr       => to_slv(IP_ADDR),
-        ipb_in        => ipb_r,
-        ipb_out       => ipb_w
+        ipb_in        => eth_ipb_r,
+        ipb_out       => eth_ipb_w
         );
   end generate;
 
@@ -277,8 +281,8 @@ begin
         nuke           => nuke,
         soft_rst       => soft_rst,
         leds           => leds(1 downto 0),
-        ipb_in         => ipb_r,
-        ipb_out        => ipb_w
+        ipb_in         => pci_ipb_r,
+        ipb_out        => pci_ipb_w
         );
 
   end generate;
@@ -305,8 +309,10 @@ begin
       readout_board_ctrl => readout_board_ctrl,
       mgt_mon            => mgt_mon,
       mgt_ctrl           => mgt_ctrl,
-      ipb_w              => ipb_w,
-      ipb_r              => ipb_r
+      pci_ipb_w          => pci_ipb_w,
+      pci_ipb_r          => pci_ipb_r,
+      eth_ipb_w          => eth_ipb_w,
+      eth_ipb_r          => eth_ipb_r
       );
 
   refclk_ibufds : ibufds_gte3

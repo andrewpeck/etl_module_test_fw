@@ -34,13 +34,19 @@ entity control is
     mgt_mon  : in  MGT_Mon_t;
     mgt_ctrl : out MGT_Ctrl_t;
 
-    ipb_w : in  ipb_wbus;
-    ipb_r : out ipb_rbus
+    pci_ipb_w : in  ipb_wbus;
+    pci_ipb_r : out ipb_rbus;
+
+    eth_ipb_w : in  ipb_wbus;
+    eth_ipb_r : out ipb_rbus
 
     );
 end control;
 
 architecture behavioral of control is
+
+  signal ipb_w : ipb_wbus;
+  signal ipb_r : ipb_rbus;
 
   signal loopback : std_logic_vector (31 downto 0) := x"01234567";
 
@@ -62,6 +68,21 @@ architecture behavioral of control is
 
 begin
 
+  ipbus_arb_inst : entity ipbus.ipbus_arb
+    generic map (N_BUS => 2)
+    port map (
+      clk          => clock,
+      rst          => reset,
+      ipb_m_out(0) => eth_ipb_w,
+      ipb_m_out(1) => pci_ipb_w,
+      ipb_m_in(0)  => eth_ipb_r,
+      ipb_m_in(1)  => pci_ipb_r,
+      ipb_req(0)   => eth_ipb_w.ipb_strobe,
+      ipb_req(1)   => pci_ipb_w.ipb_strobe,
+      ipb_grant    => open,
+      ipb_out      => ipb_w,
+      ipb_in       => ipb_r
+      );
 
   -- Special Loopback register at Adr 0...
   process (clock) is

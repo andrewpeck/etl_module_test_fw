@@ -17,6 +17,7 @@ src/eth_clocks.vhd
 #ipbus-firmware/components/ipbus_util/firmware/hdl/payload_example.vhd
 ip/axi_bram_ctrl_0/axi_bram_ctrl_0.xci
 ip/xdma_0/xdma_0.xci
+ipbus-firmware/components/ipbus_core/firmware/hdl/ipbus_arb.vhd
 ipbus-firmware/components/ipbus_core/firmware/hdl/ipbus_fabric_sel.vhd
 ipbus-firmware/components/ipbus_core/firmware/hdl/ipbus_package.vhd
 ipbus-firmware/components/ipbus_core/firmware/hdl/ipbus_trans_decl.vhd
