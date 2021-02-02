@@ -156,8 +156,10 @@ architecture rtl of eth_sgmii_lvds is
   signal vio_phy_reset                      : std_logic := '0';
   signal vio_sgmii_reset, vio_mac_reset     : std_logic := '0';
   signal vio_mac_rx_reset, vio_mac_tx_reset : std_logic := '0';
-  signal phy_reset, mac_reset               : std_logic := '1';
-  signal phy_cfg_not_done                   : std_logic := '1';
+  signal vio_rst_o                          : std_logic := '0';  -- out from MAC
+
+  signal phy_reset, mac_reset : std_logic := '1';
+  signal phy_cfg_not_done     : std_logic := '1';
 
   signal clk_en : std_logic;
 
@@ -165,12 +167,12 @@ architecture rtl of eth_sgmii_lvds is
   signal mdio_i, mdio_o, mdio_t : std_logic;
 
   --- clocks
-  signal clk125_sgmii, clk2mhz                 : std_logic;
+  signal clk125_sgmii, clk2mhz      : std_logic;
   --- slow clocks and edges
-  signal onehz, onehz_d, onehz_re              : std_logic := '0';  -- slow generated clocks
+  signal onehz, onehz_d, onehz_re   : std_logic := '0';  -- slow generated clocks
   --- resets
-  signal rst125_sgmii                          : std_logic;         -- out from SGMII
-  signal vio_rst_o, tx_reset_out, rx_reset_out : std_logic;         -- out from MAC
+  signal rst125_sgmii               : std_logic;         -- out from SGMII
+  signal tx_reset_out, rx_reset_out : std_logic := '0';  -- out from MAC
 
   --- locked
   signal mmcm_locked : std_logic;
@@ -180,11 +182,10 @@ architecture rtl of eth_sgmii_lvds is
   signal gmii_tx_en, gmii_tx_er, gmii_rx_dv, gmii_rx_er : std_logic;
 
   -- sgmii controls and status
-  signal an_restart, vio_an_restart       : std_logic := '0';
-  signal an_config_val, vio_an_config_val : std_logic := '0';
-  signal vio_config_val                   : std_logic := '0';
-  signal configuration_valid              : std_logic := '1';
-  signal an_interrupt                     : std_logic;
+  signal an_restart          : std_logic := '0';
+  signal an_config_val       : std_logic := '1';
+  signal configuration_valid : std_logic := '1';
+  signal an_interrupt        : std_logic;
 
   signal an_config_vector : std_logic_vector (15 downto 0) := (others => '0');
 
@@ -249,21 +250,8 @@ begin
         end if;
 
         if (seconds = 4) then
-          an_config_val <= '0';
-        else
-          an_config_val <= '1';
-        end if;
-
-        if (seconds = 6) then
-          an_restart <= '1';
-        else
-          an_restart <= '0';
-        end if;
-
-        if (seconds = 6) then
           phy_cfg_not_done <= '0';
         end if;
-
 
       end if;
 
@@ -307,6 +295,7 @@ begin
 
   -- https://www.xilinx.com/support/documentation/ip_documentation/gig_ethernet_pcs_pma/v16_0/pg047-gig-eth-pcs-pma.pdf
   -- Figure 3-58
+  -- https://github.com/alexforencich/verilog-ethernet/blob/master/example/KC705/fpga_sgmii/rtl/fpga.v
   sgmii : gig_eth_pcs_pma_gmii_to_sgmii_bridge
     port map (
       txp => sgmii_txp,
@@ -345,9 +334,9 @@ begin
       ext_mdio_o          => mdio_o,    -- out
       ext_mdio_t          => mdio_t,    -- out
       phyaddr             => "00111",
-      configuration_valid => vio_config_val,                -- For triggering a fresh update of Register 0 through configuration_vector, this signal should be deasserted and then reasserted
-      an_adv_config_val   => an_config_val and vio_an_config_val,  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
-      an_restart_config   => an_restart or vio_an_restart,  -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
+      configuration_valid => '1',       -- For triggering a fresh update of Register 0 through configuration_vector, this signal should be deasserted and then reasserted
+      an_adv_config_val   => '0',       -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
+      an_restart_config   => '0',  -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
 
       -- Configuration
       configuration_vector => (
@@ -439,12 +428,12 @@ begin
         tx_statistics_valid  => open,
         tx_mac_aclk          => open,
 
-        tx_reset             => tx_reset_out,  -- Out: Active-High TX software reset from Ethernet MAC core level
-        tx_axis_mac_tdata    => tx_data,   --  In: Frame data to be transmitted
-        tx_axis_mac_tvalid   => tx_valid,  -- In: Control signal for tx_axis_mac_tdata port. Indicates the data is valid.
-        tx_axis_mac_tlast    => tx_last,   --  In:Control signal for tx_axis_mac_tdataport. Indicates the final transfer in a frame
-        tx_axis_mac_tuser(0) => tx_error,  -- In: Control signal for tx_axis_mac_tdataport. Indicates an error condition, such as FIFO underrun, in the frame allowing the MAC to send an error to the PH
-        tx_axis_mac_tready   => tx_ready,  -- Out Handshaking signal. Asserted when the current data on tx_axis_mac_tdata has been accepted and tx_axis_mac_tvalid is High. At 10/100 Mb/s this is used to meter the data into the core at the correct rate.
+        tx_reset             => tx_reset_out, -- Out: Active-High TX software reset from Ethernet MAC core level
+        tx_axis_mac_tdata    => tx_data,      -- In:  Frame data to be transmitted
+        tx_axis_mac_tvalid   => tx_valid,     -- In:  Control signal for tx_axis_mac_tdata port. Indicates the data is valid.
+        tx_axis_mac_tlast    => tx_last,      -- In:  Control signal for tx_axis_mac_tdataport. Indicates the final transfer in a frame
+        tx_axis_mac_tuser(0) => tx_error,     -- In:  Control signal for tx_axis_mac_tdataport. Indicates an error condition, such as FIFO underrun, in the frame allowing the MAC to send an error to the PH
+        tx_axis_mac_tready   => tx_ready,     -- Out: Handshaking signal. Asserted when the current data on tx_axis_mac_tdata has been accepted and tx_axis_mac_tvalid is High. At 10/100 Mb/s this is used to meter the data into the core at the correct rate.
 
         pause_req => '0',
         pause_val => X"0000",
@@ -653,15 +642,15 @@ begin
     vio_sgmii_1 : vio_sgmii
       port map (
         clk           => clk125_fr,
-        probe_out0(0) => vio_an_restart,
-        probe_out1(0) => vio_an_config_val,
+        probe_out0(0) => open,
+        probe_out1(0) => open,
         probe_out2(0) => vio_phy_reset,
         probe_out3(0) => vio_sgmii_reset,
         probe_out4(0) => vio_mac_reset,
         probe_out5(0) => vio_global_reset,
         probe_out6(0) => vio_mac_rx_reset,
         probe_out7(0) => vio_mac_tx_reset,
-        probe_out8(0) => vio_config_val,
+        probe_out8(0) => open,
         probe_out9(0) => vio_rst_o
         );
 
