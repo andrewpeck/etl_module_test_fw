@@ -45,7 +45,7 @@ use unisim.vcomponents.all;
 
 entity eth_sgmii_lvds is
   generic(
-    C_DEBUG        : boolean := true;
+    C_DEBUG        : boolean := false;
     USE_XILINX_MAC : boolean := false
     );
   port(
