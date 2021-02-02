@@ -165,11 +165,11 @@ architecture rtl of eth_sgmii_lvds is
   signal mdio_i, mdio_o, mdio_t : std_logic;
 
   --- clocks
-  signal clk125_sgmii, clk2mhz      : std_logic;
+  signal clk125_sgmii, clk2mhz                 : std_logic;
   --- slow clocks and edges
-  signal onehz, onehz_d, onehz_re   : std_logic := '0';  -- slow generated clocks
+  signal onehz, onehz_d, onehz_re              : std_logic := '0';  -- slow generated clocks
   --- resets
-  signal rst125_sgmii               : std_logic;         -- out from SGMII
+  signal rst125_sgmii                          : std_logic;         -- out from SGMII
   signal vio_rst_o, tx_reset_out, rx_reset_out : std_logic;         -- out from MAC
 
   --- locked
@@ -190,6 +190,8 @@ architecture rtl of eth_sgmii_lvds is
 
   signal sgmii_status_vector : std_logic_vector(15 downto 0);
 
+  signal mac_tx_reset : std_logic;
+  signal mac_rx_reset : std_logic;
 
 begin
 
@@ -214,13 +216,13 @@ begin
   end process;
   onehz_re <= '1' when (onehz = '1' and onehz_d = '0') else '0';
 
-  phy_resetb <= not (phy_reset or vio_phy_reset);
-
   resetter_proc : process (clk125_fr) is
     constant MAX     : integer                := 10;
     variable seconds : integer range 0 to MAX := 0;
   begin
     if (rising_edge(clk125_fr)) then
+
+      phy_resetb <= not (phy_reset or vio_phy_reset);
 
       if (rst = '1' or vio_global_reset = '1') then
 
@@ -269,7 +271,14 @@ begin
   end process;
 
   -- Reset to temac clients (outgoing)
-  rst_o <= vio_rst_o or tx_reset_out or rx_reset_out;
+  sgmii_resetter_proc : process (clk125_sgmii) is
+  begin
+    if (rising_edge(clk125_sgmii)) then
+      rst_o        <= vio_rst_o or tx_reset_out or rx_reset_out;
+      mac_rx_reset <= vio_mac_reset or mac_reset or vio_mac_rx_reset or rst125_sgmii;
+      mac_tx_reset <= vio_mac_reset or mac_reset or vio_mac_tx_reset or rst125_sgmii;
+    end if;
+  end process;
 
   clk125_eth <= clk125_sgmii;
 
@@ -425,7 +434,7 @@ begin
         rx_axis_mac_tlast  => rx_last,
         rx_axis_mac_tuser  => rx_error,
 
-        tx_ifg_delay         => std_logic_vector(to_unsigned(12,8)),
+        tx_ifg_delay         => std_logic_vector(to_unsigned(12, 8)),
         tx_statistics_vector => open,
         tx_statistics_valid  => open,
         tx_mac_aclk          => open,
@@ -521,15 +530,10 @@ begin
         );
     end component;
 
-    signal tx_reset : std_logic;
-    signal rx_reset : std_logic;
-
   begin
-    rx_reset <= vio_mac_reset or mac_reset or vio_mac_rx_reset or rst125_sgmii;
-    tx_reset <= vio_mac_reset or mac_reset or vio_mac_tx_reset or rst125_sgmii;
 
-    tx_reset_out <= tx_reset;
-    rx_reset_out <= rx_reset;
+    tx_reset_out <= mac_tx_reset;
+    rx_reset_out <= mac_rx_reset;
 
     -- https://github.com/alexforencich/verilog-ethernet/blob/master/example/KC705/fpga_sgmii/rtl/fpga_core.v
     eth_mac_1g_inst : eth_mac_1g
@@ -547,10 +551,10 @@ begin
       --  TX_PTP_TS_ENABLE  => 0
       --  )
       port map (
-        rx_clk => clk125_sgmii,                                                    -- in
-        tx_clk => clk125_sgmii,                                                    -- in
-        rx_rst => rx_reset,  -- in
-        tx_rst => tx_reset,  -- in
+        rx_clk => clk125_sgmii,         -- in
+        tx_clk => clk125_sgmii,         -- in
+        rx_rst => mac_rx_reset,         -- in
+        tx_rst => mac_tx_reset,         -- in
 
         tx_axis_tdata    => tx_data,
         tx_axis_tvalid   => tx_valid,
@@ -587,7 +591,7 @@ begin
         rx_start_packet    => open,
         rx_error_bad_frame => open,
         rx_error_bad_fcs   => open,
-        ifg_delay          => std_logic_vector(to_unsigned(12,8))
+        ifg_delay          => std_logic_vector(to_unsigned(12, 8))
         );
   end generate;
 
