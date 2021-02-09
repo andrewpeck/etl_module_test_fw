@@ -1313,9 +1313,12 @@ def configure_sca_control_registers(en_spi=0, en_gpio=0, en_i2c=0, en_adc=0, en_
 
 if __name__ == '__main__':
 
-    # use 2 for loopback, 0 for internal data ggenerator
-    #for i in range(28):
-    #    set_uplink_alignment(0, i)
+    #lpgbt_program_from_file("config_slave.txt")
+
+    # use n for loopback, 0 for internal data generators
+    for i in range(28):
+        set_daq_uplink_alignment(2, i) # 2 for daq loopback
+        set_trig_uplink_alignment(4, i) # 4 for trigger loopback
 
     lpgbt.parse_xml()
 
@@ -1324,27 +1327,27 @@ if __name__ == '__main__':
     #config_lpgbt()
     config_eport_dlls()
 
-    sca_hard_reset()
-    sca_setup()
-    sca_reset()
-    sca_connect()
+    init_sca = True
+    if init_sca:
+        sca_hard_reset()
+        sca_setup()
+        sca_reset()
+        sca_connect()
 
-    action("READOUT_BOARD_%d.SC.TX_RESET" % 0)
-    action("READOUT_BOARD_%d.SC.RX_RESET" % 0)
+    #action("READOUT_BOARD_%d.SC.TX_RESET" % 0)
+    #action("READOUT_BOARD_%d.SC.RX_RESET" % 0)
 
-    configure_sca_control_registers(en_adc=1, en_gpio=1)
+    #configure_sca_control_registers(en_adc=1, en_gpio=1)
 
-    print(hex(sca_rw_reg(SCA_CONTROL.CTRL_R_ID)))
-    #print(hex(sca_rw_reg(SCA_JTAG.JTAG_R_CTRL)))
+    #print(hex(sca_rw_reg(SCA_CONTROL.CTRL_R_ID)))
+    ##print(hex(sca_rw_reg(SCA_JTAG.JTAG_R_CTRL)))
 
-    lpgbt_eyescan(count=7)
+    #lpgbt_eyescan(count=7)
     #lpgbt_loopback()
-    check_rom_readback()
+    #check_rom_readback()
     main()
     # for i in range(28):
     #    set_uplink_alignment(0, i)
-
-    #set_downlink_data_src("prbs")
 
     #ld_disable()
 
