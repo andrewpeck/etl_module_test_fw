@@ -24,6 +24,16 @@ set_max_delay -datapath_only \
 ## Ipb Clock crossing
 ################################################################################
 
+# ipb to tx/rx outclk
+set_max_delay \
+         -from [get_clocks I] \
+         -to [get_clocks *xoutclk_out*] 12.0
+
+# tx/rx outclk to ipb
+set_max_delay \
+         -from [get_clocks *xoutclk_out*] \
+         -to [get_clocks I] 12.0
+
 # ipb to clk40
 set_max_delay \
          -from [get_clocks I] \
