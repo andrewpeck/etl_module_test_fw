@@ -420,7 +420,6 @@ begin
 
       pattern_checker_inst : entity work.pattern_checker
         generic map (
-          DEBUG         => false,
           COUNTER_WIDTH => 32,
           WIDTH         => UPWIDTH
           )
