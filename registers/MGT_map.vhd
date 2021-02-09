@@ -25,8 +25,8 @@ architecture behavioral of MGT_wb_interface is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 5);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 5) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 49);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 49) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -60,33 +60,83 @@ begin  -- architecture behavioral
       localRdData <= x"00000000";
       wb_err <= '0';
       if wb_strobe='1' then
-        case to_integer(unsigned(wb_addr(2 downto 0))) is
+        case to_integer(unsigned(wb_addr(5 downto 0))) is
           when 0 => --0x0
-          localRdData( 0)            <=  reg_data( 0)( 0);                        --
-          localRdData( 1)            <=  reg_data( 0)( 1);                        --
-          localRdData( 2)            <=  reg_data( 0)( 2);                        --
-          localRdData( 3)            <=  reg_data( 0)( 3);                        --
-          localRdData( 4)            <=  reg_data( 0)( 4);                        --
-          localRdData( 5)            <=  reg_data( 0)( 5);                        --
-          localRdData( 6)            <=  reg_data( 0)( 6);                        --
-          localRdData( 7)            <=  reg_data( 0)( 7);                        --
+          localRdData( 9 downto  0)  <=  reg_data( 0)( 9 downto  0);      --
+          localRdData(21 downto 12)  <=  reg_data( 0)(21 downto 12);      --
         when 1 => --0x1
-          localRdData( 1)            <=  Mon.STATUS.USERCLK_TX_ACTIVE_OUT;        --
-          localRdData( 2)            <=  Mon.STATUS.USERCLK_RX_ACTIVE_OUT;        --
-          localRdData( 3)            <=  Mon.STATUS.RESET_RX_CDR_STABLE_OUT;      --
-          localRdData( 4)            <=  Mon.STATUS.RESET_TX_DONE_OUT;            --
-          localRdData( 5)            <=  Mon.STATUS.RESET_RX_DONE_OUT;            --
-        when 2 => --0x2
-          localRdData( 9 downto  0)  <=  Mon.STATUS.RXPMARESETDONE_OUT;           --
-          localRdData(19 downto 10)  <=  Mon.STATUS.TXPMARESETDONE_OUT;           --
-          localRdData(29 downto 20)  <=  Mon.STATUS.GTPOWERGOOD_OUT;              --
+          localRdData( 9 downto  0)  <=  Mon.MGT_TX_READY;                --
+          localRdData(21 downto 12)  <=  Mon.MGT_RX_READY;                --
+        when 3 => --0x3
+          localRdData( 8 downto  0)  <=  reg_data( 3)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data( 3)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(0).RD_RDY;           --DRP Enable
         when 4 => --0x4
-          localRdData( 8 downto  0)  <=  reg_data( 4)( 8 downto  0);              --DRP Address
-          localRdData(12)            <=  reg_data( 4)(12);                        --DRP Enable
-          localRdData(13)            <=  Mon.DRP.DRP(0).RD_RDY;                   --DRP Enable
-        when 5 => --0x5
-          localRdData(15 downto  0)  <=  Mon.DRP.DRP(0).RD_DATA;                  --DRP Read Data
-          localRdData(31 downto 16)  <=  reg_data( 5)(31 downto 16);              --DRP Write Data
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(0).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data( 4)(31 downto 16);      --DRP Write Data
+        when 8 => --0x8
+          localRdData( 8 downto  0)  <=  reg_data( 8)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data( 8)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(1).RD_RDY;           --DRP Enable
+        when 9 => --0x9
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(1).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data( 9)(31 downto 16);      --DRP Write Data
+        when 13 => --0xd
+          localRdData( 8 downto  0)  <=  reg_data(13)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(13)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(2).RD_RDY;           --DRP Enable
+        when 14 => --0xe
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(2).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(14)(31 downto 16);      --DRP Write Data
+        when 18 => --0x12
+          localRdData( 8 downto  0)  <=  reg_data(18)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(18)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(3).RD_RDY;           --DRP Enable
+        when 19 => --0x13
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(3).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(19)(31 downto 16);      --DRP Write Data
+        when 23 => --0x17
+          localRdData( 8 downto  0)  <=  reg_data(23)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(23)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(4).RD_RDY;           --DRP Enable
+        when 24 => --0x18
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(4).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(24)(31 downto 16);      --DRP Write Data
+        when 28 => --0x1c
+          localRdData( 8 downto  0)  <=  reg_data(28)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(28)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(5).RD_RDY;           --DRP Enable
+        when 29 => --0x1d
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(5).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(29)(31 downto 16);      --DRP Write Data
+        when 33 => --0x21
+          localRdData( 8 downto  0)  <=  reg_data(33)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(33)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(6).RD_RDY;           --DRP Enable
+        when 34 => --0x22
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(6).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(34)(31 downto 16);      --DRP Write Data
+        when 38 => --0x26
+          localRdData( 8 downto  0)  <=  reg_data(38)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(38)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(7).RD_RDY;           --DRP Enable
+        when 39 => --0x27
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(7).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(39)(31 downto 16);      --DRP Write Data
+        when 43 => --0x2b
+          localRdData( 8 downto  0)  <=  reg_data(43)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(43)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(8).RD_RDY;           --DRP Enable
+        when 44 => --0x2c
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(8).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(44)(31 downto 16);      --DRP Write Data
+        when 48 => --0x30
+          localRdData( 8 downto  0)  <=  reg_data(48)( 8 downto  0);      --DRP Address
+          localRdData(12)            <=  reg_data(48)(12);                --DRP Enable
+          localRdData(13)            <=  Mon.DRP.DRP(9).RD_RDY;           --DRP Enable
+        when 49 => --0x31
+          localRdData(15 downto  0)  <=  Mon.DRP.DRP(9).RD_DATA;          --DRP Read Data
+          localRdData(31 downto 16)  <=  reg_data(49)(31 downto 16);      --DRP Write Data
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -98,17 +148,38 @@ begin  -- architecture behavioral
 
 
   -- Register mapping to ctrl structures
-  Ctrl.USERCLK_TX_RESET_IN           <=  reg_data( 0)( 0);               
-  Ctrl.USERCLK_RX_RESET_IN           <=  reg_data( 0)( 1);               
-  Ctrl.RESET_CLK_FREERUN_IN          <=  reg_data( 0)( 2);               
-  Ctrl.RESET_ALL_IN                  <=  reg_data( 0)( 3);               
-  Ctrl.RESET_TX_PLL_AND_DATAPATH_IN  <=  reg_data( 0)( 4);               
-  Ctrl.RESET_TX_DATAPATH_IN          <=  reg_data( 0)( 5);               
-  Ctrl.RESET_RX_PLL_AND_DATAPATH_IN  <=  reg_data( 0)( 6);               
-  Ctrl.RESET_RX_DATAPATH_IN          <=  reg_data( 0)( 7);               
-  Ctrl.DRP.DRP(0).WR_ADDR            <=  reg_data( 4)( 8 downto  0);     
-  Ctrl.DRP.DRP(0).EN                 <=  reg_data( 4)(12);               
-  Ctrl.DRP.DRP(0).WR_DATA            <=  reg_data( 5)(31 downto 16);     
+  Ctrl.MGT_TX_RESET        <=  reg_data( 0)( 9 downto  0);     
+  Ctrl.MGT_RX_RESET        <=  reg_data( 0)(21 downto 12);     
+  Ctrl.DRP.DRP(0).WR_ADDR  <=  reg_data( 3)( 8 downto  0);     
+  Ctrl.DRP.DRP(0).EN       <=  reg_data( 3)(12);               
+  Ctrl.DRP.DRP(0).WR_DATA  <=  reg_data( 4)(31 downto 16);     
+  Ctrl.DRP.DRP(1).WR_ADDR  <=  reg_data( 8)( 8 downto  0);     
+  Ctrl.DRP.DRP(1).EN       <=  reg_data( 8)(12);               
+  Ctrl.DRP.DRP(1).WR_DATA  <=  reg_data( 9)(31 downto 16);     
+  Ctrl.DRP.DRP(2).WR_ADDR  <=  reg_data(13)( 8 downto  0);     
+  Ctrl.DRP.DRP(2).EN       <=  reg_data(13)(12);               
+  Ctrl.DRP.DRP(2).WR_DATA  <=  reg_data(14)(31 downto 16);     
+  Ctrl.DRP.DRP(3).WR_ADDR  <=  reg_data(18)( 8 downto  0);     
+  Ctrl.DRP.DRP(3).EN       <=  reg_data(18)(12);               
+  Ctrl.DRP.DRP(3).WR_DATA  <=  reg_data(19)(31 downto 16);     
+  Ctrl.DRP.DRP(4).WR_ADDR  <=  reg_data(23)( 8 downto  0);     
+  Ctrl.DRP.DRP(4).EN       <=  reg_data(23)(12);               
+  Ctrl.DRP.DRP(4).WR_DATA  <=  reg_data(24)(31 downto 16);     
+  Ctrl.DRP.DRP(5).WR_ADDR  <=  reg_data(28)( 8 downto  0);     
+  Ctrl.DRP.DRP(5).EN       <=  reg_data(28)(12);               
+  Ctrl.DRP.DRP(5).WR_DATA  <=  reg_data(29)(31 downto 16);     
+  Ctrl.DRP.DRP(6).WR_ADDR  <=  reg_data(33)( 8 downto  0);     
+  Ctrl.DRP.DRP(6).EN       <=  reg_data(33)(12);               
+  Ctrl.DRP.DRP(6).WR_DATA  <=  reg_data(34)(31 downto 16);     
+  Ctrl.DRP.DRP(7).WR_ADDR  <=  reg_data(38)( 8 downto  0);     
+  Ctrl.DRP.DRP(7).EN       <=  reg_data(38)(12);               
+  Ctrl.DRP.DRP(7).WR_DATA  <=  reg_data(39)(31 downto 16);     
+  Ctrl.DRP.DRP(8).WR_ADDR  <=  reg_data(43)( 8 downto  0);     
+  Ctrl.DRP.DRP(8).EN       <=  reg_data(43)(12);               
+  Ctrl.DRP.DRP(8).WR_DATA  <=  reg_data(44)(31 downto 16);     
+  Ctrl.DRP.DRP(9).WR_ADDR  <=  reg_data(48)( 8 downto  0);     
+  Ctrl.DRP.DRP(9).EN       <=  reg_data(48)(12);               
+  Ctrl.DRP.DRP(9).WR_DATA  <=  reg_data(49)(31 downto 16);     
 
 
   -- writes to slave
@@ -118,28 +189,94 @@ begin  -- architecture behavioral
 
       -- action resets
       Ctrl.DRP.DRP(0).WR_EN <= '0';
+      Ctrl.DRP.DRP(1).WR_EN <= '0';
+      Ctrl.DRP.DRP(2).WR_EN <= '0';
+      Ctrl.DRP.DRP(3).WR_EN <= '0';
+      Ctrl.DRP.DRP(4).WR_EN <= '0';
+      Ctrl.DRP.DRP(5).WR_EN <= '0';
+      Ctrl.DRP.DRP(6).WR_EN <= '0';
+      Ctrl.DRP.DRP(7).WR_EN <= '0';
+      Ctrl.DRP.DRP(8).WR_EN <= '0';
+      Ctrl.DRP.DRP(9).WR_EN <= '0';
       
 
 
       -- Write on strobe=write=1
       if strobe_pulse='1' and wb_write = '1' then
-        case to_integer(unsigned(wb_addr(2 downto 0))) is
+        case to_integer(unsigned(wb_addr(5 downto 0))) is
         when 0 => --0x0
-          reg_data( 0)( 0)            <=  localWrData( 0);                --
-          reg_data( 0)( 1)            <=  localWrData( 1);                --
-          reg_data( 0)( 2)            <=  localWrData( 2);                --
-          reg_data( 0)( 3)            <=  localWrData( 3);                --
-          reg_data( 0)( 4)            <=  localWrData( 4);                --
-          reg_data( 0)( 5)            <=  localWrData( 5);                --
-          reg_data( 0)( 6)            <=  localWrData( 6);                --
-          reg_data( 0)( 7)            <=  localWrData( 7);                --
-        when 3 => --0x3
+          reg_data( 0)( 9 downto  0)  <=  localWrData( 9 downto  0);      --
+          reg_data( 0)(21 downto 12)  <=  localWrData(21 downto 12);      --
+        when 2 => --0x2
           Ctrl.DRP.DRP(0).WR_EN       <=  localWrData( 0);               
+        when 3 => --0x3
+          reg_data( 3)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data( 3)(12)            <=  localWrData(12);                --DRP Enable
         when 4 => --0x4
-          reg_data( 4)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
-          reg_data( 4)(12)            <=  localWrData(12);                --DRP Enable
-        when 5 => --0x5
-          reg_data( 5)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+          reg_data( 4)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 7 => --0x7
+          Ctrl.DRP.DRP(1).WR_EN       <=  localWrData( 0);               
+        when 8 => --0x8
+          reg_data( 8)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data( 8)(12)            <=  localWrData(12);                --DRP Enable
+        when 9 => --0x9
+          reg_data( 9)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 12 => --0xc
+          Ctrl.DRP.DRP(2).WR_EN       <=  localWrData( 0);               
+        when 13 => --0xd
+          reg_data(13)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(13)(12)            <=  localWrData(12);                --DRP Enable
+        when 14 => --0xe
+          reg_data(14)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 17 => --0x11
+          Ctrl.DRP.DRP(3).WR_EN       <=  localWrData( 0);               
+        when 18 => --0x12
+          reg_data(18)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(18)(12)            <=  localWrData(12);                --DRP Enable
+        when 19 => --0x13
+          reg_data(19)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 22 => --0x16
+          Ctrl.DRP.DRP(4).WR_EN       <=  localWrData( 0);               
+        when 23 => --0x17
+          reg_data(23)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(23)(12)            <=  localWrData(12);                --DRP Enable
+        when 24 => --0x18
+          reg_data(24)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 27 => --0x1b
+          Ctrl.DRP.DRP(5).WR_EN       <=  localWrData( 0);               
+        when 28 => --0x1c
+          reg_data(28)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(28)(12)            <=  localWrData(12);                --DRP Enable
+        when 29 => --0x1d
+          reg_data(29)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 32 => --0x20
+          Ctrl.DRP.DRP(6).WR_EN       <=  localWrData( 0);               
+        when 33 => --0x21
+          reg_data(33)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(33)(12)            <=  localWrData(12);                --DRP Enable
+        when 34 => --0x22
+          reg_data(34)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 37 => --0x25
+          Ctrl.DRP.DRP(7).WR_EN       <=  localWrData( 0);               
+        when 38 => --0x26
+          reg_data(38)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(38)(12)            <=  localWrData(12);                --DRP Enable
+        when 39 => --0x27
+          reg_data(39)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 42 => --0x2a
+          Ctrl.DRP.DRP(8).WR_EN       <=  localWrData( 0);               
+        when 43 => --0x2b
+          reg_data(43)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(43)(12)            <=  localWrData(12);                --DRP Enable
+        when 44 => --0x2c
+          reg_data(44)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 47 => --0x2f
+          Ctrl.DRP.DRP(9).WR_EN       <=  localWrData( 0);               
+        when 48 => --0x30
+          reg_data(48)( 8 downto  0)  <=  localWrData( 8 downto  0);      --DRP Address
+          reg_data(48)(12)            <=  localWrData(12);                --DRP Enable
+        when 49 => --0x31
+          reg_data(49)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
 
         when others => null;
 
@@ -148,17 +285,38 @@ begin  -- architecture behavioral
 
       -- synchronous reset (active high)
       if reset = '1' then
-      reg_data( 0)( 0)  <= DEFAULT_MGT_CTRL_t.USERCLK_TX_RESET_IN;
-      reg_data( 0)( 1)  <= DEFAULT_MGT_CTRL_t.USERCLK_RX_RESET_IN;
-      reg_data( 0)( 2)  <= DEFAULT_MGT_CTRL_t.RESET_CLK_FREERUN_IN;
-      reg_data( 0)( 3)  <= DEFAULT_MGT_CTRL_t.RESET_ALL_IN;
-      reg_data( 0)( 4)  <= DEFAULT_MGT_CTRL_t.RESET_TX_PLL_AND_DATAPATH_IN;
-      reg_data( 0)( 5)  <= DEFAULT_MGT_CTRL_t.RESET_TX_DATAPATH_IN;
-      reg_data( 0)( 6)  <= DEFAULT_MGT_CTRL_t.RESET_RX_PLL_AND_DATAPATH_IN;
-      reg_data( 0)( 7)  <= DEFAULT_MGT_CTRL_t.RESET_RX_DATAPATH_IN;
-      reg_data( 4)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_ADDR;
-      reg_data( 4)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).EN;
-      reg_data( 5)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_DATA;
+      reg_data( 0)( 9 downto  0)  <= DEFAULT_MGT_CTRL_t.MGT_TX_RESET;
+      reg_data( 0)(21 downto 12)  <= DEFAULT_MGT_CTRL_t.MGT_RX_RESET;
+      reg_data( 3)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_ADDR;
+      reg_data( 3)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).EN;
+      reg_data( 4)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_DATA;
+      reg_data( 8)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).WR_ADDR;
+      reg_data( 8)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).EN;
+      reg_data( 9)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).WR_DATA;
+      reg_data(13)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).WR_ADDR;
+      reg_data(13)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).EN;
+      reg_data(14)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).WR_DATA;
+      reg_data(18)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).WR_ADDR;
+      reg_data(18)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).EN;
+      reg_data(19)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).WR_DATA;
+      reg_data(23)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).WR_ADDR;
+      reg_data(23)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).EN;
+      reg_data(24)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).WR_DATA;
+      reg_data(28)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).WR_ADDR;
+      reg_data(28)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).EN;
+      reg_data(29)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).WR_DATA;
+      reg_data(33)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).WR_ADDR;
+      reg_data(33)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).EN;
+      reg_data(34)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).WR_DATA;
+      reg_data(38)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).WR_ADDR;
+      reg_data(38)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).EN;
+      reg_data(39)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).WR_DATA;
+      reg_data(43)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).WR_ADDR;
+      reg_data(43)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).EN;
+      reg_data(44)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).WR_DATA;
+      reg_data(48)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).WR_ADDR;
+      reg_data(48)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).EN;
+      reg_data(49)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).WR_DATA;
 
       end if; -- reset
     end if; -- clk

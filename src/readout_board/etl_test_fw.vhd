@@ -108,6 +108,7 @@ end etl_test_fw;
 
 architecture behavioral of etl_test_fw is
 
+  constant MAX_GTS : integer := 10;
   constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
 
   constant NUM_UPLINKS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
@@ -129,7 +130,9 @@ architecture behavioral of etl_test_fw is
   signal uplink_mgt_word_array   : std32_array_t (NUM_UPLINKS-1 downto 0);
   signal downlink_mgt_word_array : std32_array_t (NUM_DOWNLINKS-1 downto 0);
 
-  signal tx_ready, rx_ready : std_logic_vector (NUM_GTS-1 downto 0) := (others => '0');
+  signal mgt_tx_reset, mgt_rx_reset : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
+  signal mgt_tx_ready, mgt_rx_ready : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
+
   signal txclk, rxclk       : std_logic_vector (9 downto 0)         := (others => '0');
   signal rxclk_freq         : std32_array_t (9 downto 0);
   signal txclk_freq         : std32_array_t (9 downto 0);
@@ -342,8 +345,8 @@ begin
   lpgbt_gen : if (EN_LPGBTS = 1) generate
 
     rbgen : for I in 0 to NUM_RBS-1 generate
-      constant NU: integer := NUM_LPGBTS_TRIG + NUM_LPGBTS_DAQ;
-      constant ND: integer := 1;
+      constant NU : integer := NUM_LPGBTS_TRIG + NUM_LPGBTS_DAQ;
+      constant ND : integer := 1;
     begin
       readout_board_inst : entity work.readout_board
         generic map (
@@ -369,8 +372,8 @@ begin
           ctrl     => readout_board_ctrl(I),
 
           -- data
-          uplink_bitslip          => uplink_bitslip         (NU*(I+1)-1 downto NU*I),
-          uplink_mgt_word_array   => uplink_mgt_word_array  (NU*(I+1)-1 downto NU*I),
+          uplink_bitslip          => uplink_bitslip (NU*(I+1)-1 downto NU*I),
+          uplink_mgt_word_array   => uplink_mgt_word_array (NU*(I+1)-1 downto NU*I),
           downlink_mgt_word_array => downlink_mgt_word_array(ND*(I+1)-1 downto ND*I)
           );
     end generate;
@@ -378,6 +381,12 @@ begin
 
     -- TODO: check this mapping the correspondence between mgt array and daq/trig array are what
     -- create the mapping to different sfp/firefly
+
+    mgt_mon.mgt_tx_ready <= mgt_tx_ready;
+    mgt_mon.mgt_rx_ready <= mgt_rx_ready;
+
+    mgt_tx_reset <= mgt_ctrl.mgt_tx_reset;
+    mgt_rx_reset <= mgt_ctrl.mgt_rx_reset;
 
     rbdata : for I in 0 to NUM_GTS-1 generate
     begin
@@ -403,6 +412,7 @@ begin
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
       mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
 
+      -- TODO: connect DRP to ipb control registers
       ibert : if (USE_SYSTEM_IBERT) generate
         component system_ibert
           port (
@@ -461,13 +471,13 @@ begin
 
           mgt_rxusrclk_o    => rxclk(I),
           mgt_txusrclk_o    => txclk(I),
-          mgt_txreset_i     => not locked,
-          mgt_rxreset_i     => not locked,
+          mgt_txreset_i     => not locked or mgt_tx_reset(I),
+          mgt_rxreset_i     => not locked or mgt_rx_reset(I),
           mgt_rxslide_i     => rxslide(I),
           mgt_entxcalibin_i => '0',
           mgt_txcalib_i     => (others => '0'),
-          mgt_txready_o     => tx_ready(I),
-          mgt_rxready_o     => rx_ready(I),
+          mgt_txready_o     => mgt_tx_ready(I),
+          mgt_rxready_o     => mgt_rx_ready(I),
           mgt_tx_aligned_o  => open,
           mgt_tx_piphase_o  => open,
           mgt_usrword_i     => txdata,  -- mgt_data_in(I),
