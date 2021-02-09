@@ -301,66 +301,69 @@ def reset_pattern_checkers(rb=0):
 
     action("READOUT_BOARD_%i.LPGBT.PATTERN_CHECKER.RESET" % rb)
 
-    prbs_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb
-    upcnt_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb
-    write_node(prbs_en_id, 0)
-    write_node(upcnt_en_id, 0)
+    for link in (0, 1):
+        prbs_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_%d" % (rb, link)
+        upcnt_en_id = "READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_%d" % (rb, link)
+        write_node(prbs_en_id, 0)
+        write_node(upcnt_en_id, 0)
 
-    write_node(prbs_en_id, 0x00FFFFFF)
-    write_node(upcnt_en_id, 0x00FFFFFF)
+        write_node(prbs_en_id, 0x00FFFFFF)
+        write_node(upcnt_en_id, 0x00FFFFFF)
 
     action("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CNT_RESET" % rb)
 
 
 def read_pattern_checkers(rb=0, quiet=False):
 
-    prbs_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN" % rb)
-    upcnt_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN" % rb)
+    for link in (0, 1):
 
-    prbs_errs = 28*[0]
-    upcnt_errs = 28*[0]
+        prbs_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_%d" % (rb, link))
+        upcnt_en = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_%d" % (rb, link))
 
-    for mode in ["PRBS", "UPCNT"]:
-        if quiet is False:
-            print(mode + ":")
-        for i in range(28):
+        prbs_errs = 28*[0]
+        upcnt_errs = 28*[0]
 
-            check = False
+        for mode in ["PRBS", "UPCNT"]:
+            if quiet is False:
+                print("Link " + str(link) + " " + mode + ":")
+            for i in range(28):
 
-            if mode == "UPCNT" and ((upcnt_en >> i) & 0x1):
-                check = True
-            if mode == "PRBS" and ((prbs_en >> i) & 0x1):
-                check = True
+                check = False
 
-            if check:
-                write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.SEL" % (rb), i)
+                if mode == "UPCNT" and ((upcnt_en >> i) & 0x1):
+                    check = True
+                if mode == "PRBS" and ((prbs_en >> i) & 0x1):
+                    check = True
 
-                uptime_msbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_MSBS" % (rb))
-                uptime_lsbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_LSBS" % (rb))
+                if check:
+                    write_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.SEL" % (rb), link*28+i)
 
-                uptime = (uptime_msbs << 32) | uptime_lsbs
+                    uptime_msbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_MSBS" % (rb))
+                    uptime_lsbs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.TIMER_LSBS" % (rb))
 
-                errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
+                    uptime = (uptime_msbs << 32) | uptime_lsbs
 
-                if quiet is False:
-                    s = "    Channel %02d %s bad frames of %s (%.0f Gb)" % (i, ("{:.2e}".format(errs)), "{:.2e}".format(uptime), uptime*8*40/1000000000.0)
-                    if (errs == 0):
-                        s += " (ber <%s)" % ("{:.1e}".format(1/(uptime*8)))
-                        print(colors.green(s))
-                    else:
-                        s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
-                        print(colors.red(s))
+                    errs = read_node("READOUT_BOARD_%d.LPGBT.PATTERN_CHECKER.%s_ERRORS" % (rb, mode))
 
-                if mode == "UPCNT":
-                    upcnt_errs[i] = errs
-                if mode == "PRBS":
-                    prbs_errs[i] = errs
+                    if quiet is False:
+                        s = "    Channel %02d %s bad frames of %s (%.0f Gb)" % (i, ("{:.2e}".format(errs)), "{:.2e}".format(uptime), uptime*8*40/1000000000.0)
+                        if (errs == 0):
+                            s += " (ber <%s)" % ("{:.1e}".format(1/(uptime*8)))
+                            print(colors.green(s))
+                        else:
+                            s += " (ber>=%s)" % ("{:.1e}".format((1.0*errs)/uptime))
+                            print(colors.red(s))
 
-            else:
-                if mode == "UPCNT":
-                    upcnt_errs[i] = 0xFFFFFFFF
-                if mode == "PRBS":
-                    prbs_errs[i] = 0xFFFFFFFF
+                    if mode == "UPCNT":
+                        upcnt_errs[i] = errs
+                    if mode == "PRBS":
+                        prbs_errs[i] = errs
+
+                else:
+                    if mode == "UPCNT":
+                        upcnt_errs[i] = 0xFFFFFFFF
+                    if mode == "PRBS":
+                        prbs_errs[i] = 0xFFFFFFFF
 
     return (prbs_errs, upcnt_errs)
 
@@ -407,8 +410,12 @@ def set_downlink_data_src(source, rb=0):
         write_node(id, 2)
 
 
-def set_uplink_alignment(val, link, rb=0):
+def set_daq_uplink_alignment(val, link, rb=0):
     id = "READOUT_BOARD_%d.LPGBT.DAQ.UPLINK.ALIGN_%d" % (rb, link)
+    write_node(id, val)
+
+def set_trig_uplink_alignment(val, link, rb=0):
+    id = "READOUT_BOARD_%d.LPGBT.TRIGGER.UPLINK.ALIGN_%d" % (rb, link)
     write_node(id, val)
 
 
@@ -681,6 +688,7 @@ def sca_setup():
     lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECACBIAS", 0)
     lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECINVERT", 1)
     lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECPHASESELECT", 8)
+    lpgbt_wr_reg("LPGBT.RWF.EPORTRX.EPRXECTRACKMODE", 2)
 
     lpgbt_wr_reg("LPGBT.RWF.EPORTTX.EPTXECINVERT", 1)
     lpgbt_wr_reg("LPGBT.RWF.EPORTTX.EPTXECENABLE", 1)

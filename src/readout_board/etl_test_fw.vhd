@@ -36,7 +36,7 @@ entity etl_test_fw is
     NUM_RBS : integer := 1;
 
     NUM_LPGBTS_DAQ  : integer := 1;     -- Number of DAQ / Rb
-    NUM_LPGBTS_TRIG : integer := 0;     -- Number of Trig / Rb
+    NUM_LPGBTS_TRIG : integer := 1;     -- Number of Trig / Rb
     NUM_DOWNLINKS   : integer := 1;     -- Number of Downlinks / Rb
     NUM_SCAS        : integer := 1;     -- Number of SCAs / Downlink
 
@@ -110,6 +110,8 @@ architecture behavioral of etl_test_fw is
 
   constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
 
+  constant NUM_UPLINKS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
+
   signal gtwiz_userdata_tx_in  : std_logic_vector(32*NUM_GTS-1 downto 0);
   signal gtwiz_userdata_rx_out : std_logic_vector(32*NUM_GTS-1 downto 0);
 
@@ -122,13 +124,10 @@ architecture behavioral of etl_test_fw is
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
 
-  signal rxslide             : std_logic_vector (NUM_GTS-1 downto 0);
-  signal trig_uplink_bitslip : std_logic_vector (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
-  signal daq_uplink_bitslip  : std_logic_vector (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
-
-  signal trig_uplink_mgt_word_array  : std32_array_t (NUM_RBS*NUM_LPGBTS_TRIG-1 downto 0);
-  signal daq_uplink_mgt_word_array   : std32_array_t (NUM_RBS*NUM_LPGBTS_DAQ-1 downto 0);
-  signal daq_downlink_mgt_word_array : std32_array_t (NUM_RBS*NUM_DOWNLINKS-1 downto 0);
+  signal rxslide                 : std_logic_vector (NUM_GTS-1 downto 0);
+  signal uplink_bitslip          : std_logic_vector (NUM_UPLINKS-1 downto 0);
+  signal uplink_mgt_word_array   : std32_array_t (NUM_UPLINKS-1 downto 0);
+  signal downlink_mgt_word_array : std32_array_t (NUM_DOWNLINKS-1 downto 0);
 
   signal tx_ready, rx_ready : std_logic_vector (NUM_GTS-1 downto 0) := (others => '0');
   signal txclk, rxclk       : std_logic_vector (9 downto 0)         := (others => '0');
@@ -343,8 +342,8 @@ begin
   lpgbt_gen : if (EN_LPGBTS = 1) generate
 
     rbgen : for I in 0 to NUM_RBS-1 generate
-      constant NT : integer := NUM_LPGBTS_TRIG;
-      constant ND : integer := NUM_LPGBTS_DAQ;
+      constant NU: integer := NUM_LPGBTS_TRIG + NUM_LPGBTS_DAQ;
+      constant ND: integer := 1;
     begin
       readout_board_inst : entity work.readout_board
         generic map (
@@ -357,6 +356,10 @@ begin
         port map (
           reset => not locked,
 
+          --daq_txready  => tx_ready(I*2),
+          --daq_rxready  => rx_ready(I*2),
+          --trig_rxready => rx_ready(I*2+1),
+
           clk40  => clk40,
           clk320 => clk320,
 
@@ -366,30 +369,21 @@ begin
           ctrl     => readout_board_ctrl(I),
 
           -- data
-          trig_uplink_bitslip         => trig_uplink_bitslip(NT*(I+1)-1 downto NT*I),
-          daq_uplink_bitslip          => daq_uplink_bitslip(ND*(I+1)-1 downto ND*I),
-          trig_uplink_mgt_word_array  => trig_uplink_mgt_word_array(NT*(I+1)-1 downto NT*I),
-          daq_uplink_mgt_word_array   => daq_uplink_mgt_word_array(ND*(I+1)-1 downto ND*I),
-          daq_downlink_mgt_word_array => daq_downlink_mgt_word_array(I downto I)
+          uplink_bitslip          => uplink_bitslip         (NU*(I+1)-1 downto NU*I),
+          uplink_mgt_word_array   => uplink_mgt_word_array  (NU*(I+1)-1 downto NU*I),
+          downlink_mgt_word_array => downlink_mgt_word_array(ND*(I+1)-1 downto ND*I)
           );
     end generate;
 
 
     -- TODO: check this mapping the correspondence between mgt array and daq/trig array are what
     -- create the mapping to different sfp/firefly
-    rbdata : for I in 0 to NUM_RBS-1 generate
+
+    rbdata : for I in 0 to NUM_GTS-1 generate
     begin
-      -- rxslide
-      rxslide(I*2) <= daq_uplink_bitslip(I);
-      --rxslide(I*2+1) <= trig_uplink_bitslip(I);
-
-      -- mgt downlink map
-      mgt_data_in(I*2) <= daq_downlink_mgt_word_array(I);
-      --mgt_data_in(I*2+1) <= daq_downlink_mgt_word_array(I);
-
-      -- mgt uplink map
-      --trig_uplink_mgt_word_array(I) <= mgt_data_out(I*2+1);
-      daq_uplink_mgt_word_array(I) <= mgt_data_out(I*2);
+      rxslide(I)               <= uplink_bitslip(I);
+      uplink_mgt_word_array(I) <= mgt_data_out(I);
+      mgt_data_in(I)           <= downlink_mgt_word_array(I/2);
     end generate;
 
     datagen : for I in 0 to NUM_GTS-1 generate
