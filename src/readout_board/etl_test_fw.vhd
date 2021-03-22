@@ -576,7 +576,7 @@ begin
       port map (
         reset => reset,
         clk_a => freq_cnt_clk,
-        clk_b => clk40,
+        clk_b => clk320,
         rate  => fw_info_mon.clk320_freq
         );
 
