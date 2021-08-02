@@ -23,8 +23,8 @@ entity etl_test_fw is
 
     USE_SYSTEM_IBERT : boolean := true;
 
-    MAC_ADDR : std_logic_vector (47 downto 0) := x"00_08_20_83_53_D1";
-    IP_ADDR  : ip_addr_t                      := (192, 168, 0, 10);
+    MAC_ADDR_BASE : std_logic_vector (47 downto 0) := x"00_08_20_83_53_00";
+    IP_ADDR_BASE  : ip_addr_t                      := (192, 168, 0, 10);
 
     USE_PCIE : integer range 0 to 1 := 0;
     USE_ETH  : integer range 0 to 1 := 1;
@@ -101,12 +101,17 @@ entity etl_test_fw is
     phy_interrupt : out   std_logic;    --
 
     -- status LEDs
-    leds : out std_logic_vector(7 downto 0)
+    leds : out std_logic_vector(7 downto 0);
+
+    sw : in std_logic_vector (3 downto 0)
 
     );
 end etl_test_fw;
 
 architecture behavioral of etl_test_fw is
+
+  signal mac_addr : std_logic_vector (47 downto 0) := MAC_ADDR_BASE; 
+  signal ip_addr : ip_addr_t := IP_ADDR_BASE;
 
   constant MAX_GTS : integer := 10;
   constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
@@ -236,6 +241,10 @@ begin
       o => clk_osc300
       );
 
+
+  ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
+  mac_addr(3 downto 0) <= sw(3 downto 0);
+
   -- Infrastructure
   eth : if (USE_ETH = 1) generate
     eth_infra_inst : entity ipbus.eth_infra
@@ -260,7 +269,7 @@ begin
         rst_aux_o     => open,
         nuke          => nuke,
         soft_rst      => soft_rst,
-        mac_addr      => MAC_ADDR,
+        mac_addr      => mac_addr,
         ip_addr       => to_slv(IP_ADDR),
         ipb_in        => eth_ipb_r,
         ipb_out       => eth_ipb_w
