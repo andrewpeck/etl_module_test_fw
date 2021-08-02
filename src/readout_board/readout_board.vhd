@@ -169,7 +169,7 @@ begin
 
   mon.lpgbt.daq.uplink.ready     <= uplink_ready(0);
   mon.lpgbt.daq.downlink.ready   <= downlink_ready(0);
-  mon.lpgbt.trigger.uplink.ready <= uplink_ready(0);
+  mon.lpgbt.trigger.uplink.ready <= uplink_ready(1);
   downlink_reset(0)              <= ctrl.lpgbt.daq.downlink.reset;
   uplink_reset(0)                <= ctrl.lpgbt.daq.uplink.reset;
 
