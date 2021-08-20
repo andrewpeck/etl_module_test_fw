@@ -54,7 +54,7 @@ architecture common_controller of gbt_controller_wrapper is
   signal sca0_data_i_int : std_logic_vector (1 downto 0);
   signal sca0_data_o_int : std_logic_vector (1 downto 0);
 
-  signal ic_rx_data  : std_logic_vector;
+  signal ic_rx_data  : std_logic_vector (7 downto 0);
   signal ic_rx_empty : std_logic;
 
 
