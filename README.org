@@ -51,7 +51,7 @@ make reg
 |----------------+---------------|
 
 ** Hardware Setup
-Details of the hardware setup and a shopping list can be read at [[file:doc/shopping.org][shopping]].
+Details of the hardware setup and a shopping list can be read at [[http://etl-rb.web.cern.ch/Setup/test-stand-shopping/][shopping]].
 *** XDMA
 We are using the Xilinx PCIE XDMA driver for register access to the KCU105 board. It is configured
 for 8 GT/s, 1 lane PCIE (we can expand the number of lanes in the future if needed).
