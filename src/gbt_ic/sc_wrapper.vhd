@@ -54,6 +54,9 @@ architecture common_controller of gbt_controller_wrapper is
   signal sca0_data_i_int : std_logic_vector (1 downto 0);
   signal sca0_data_o_int : std_logic_vector (1 downto 0);
 
+  signal ic_rx_data : std_logic_vector (7 downto 0) := (others => '0');
+
+
 begin
 
 
@@ -195,8 +198,8 @@ begin
 
       -- read from internal FIFO (on control clock domain)
       rd_clk_i            => ctrl_clk,
-      rx_rd_i             => ctrl.rx_rd,
-      rx_data_from_gbtx_o => mon.rx_data_from_gbtx,
+      rx_rd_i             => '1',
+      rx_data_from_gbtx_o => ic_rx_data,
 
       -- FIFO status
       tx_ready_o => mon.tx_ready,       --! IC core ready for a transaction
@@ -222,6 +225,23 @@ begin
       tx_channel_i        => ctrl.tx_channel,
       tx_command_i        => ctrl.tx_cmd,
       tx_data_i           => ctrl.tx_data
+      );
+
+  gbt_ic_rx_1 : entity work.gbt_ic_rx
+    port map (
+      clock_i              => ctrl_clk,
+      reset_i              => reset_i,
+      frame_i              => ic_rx_data,
+      valid_i              => not ic_rx_empty,
+      chip_adr_o           => open,
+      data_o               => mon.rx_data_from_gbtx,
+
+      length_o             => open,
+      reg_adr_o            => open,
+      uplink_parity_ok_o   => open,
+      downlink_parity_ok_o => open,
+      err_o                => open,
+      valid_o              => open
       );
 
 end common_controller;
