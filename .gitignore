@@ -9,6 +9,7 @@ ip/*/*
 !ip/*/*.xci
 registers/*
 !registers/*.vhd
+!registers/*.xml
 bin/
 Projects/
 trash
