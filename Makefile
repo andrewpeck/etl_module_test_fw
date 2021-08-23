@@ -52,6 +52,10 @@ XML_FILES=$(shell find registers/ -name *.xml -type l)
 MAP_OBJS = $(patsubst %.xml, %_map.vhd, $(XML_FILES))
 PKG_OBJS = $(patsubst %.xml, %_PKG.vhd, $(XML_FILES))
 
+reg:
+	make clean_regmap
+	make regmap
+
 # Update the XML2VHDL register map
 regmap : $(MAP_OBJS)
 
