@@ -44,9 +44,13 @@ use UNISIM.VComponents.all;
 
 entity eth_infra is
   generic(
-    C_DEBUG : boolean := false
+    C_DEBUG     : boolean := false;
+    C_EXT_CLOCK : boolean := false
     );
   port (
+
+    ext_clk_i : in std_logic;
+
     -- External oscillators
     osc_clk_300   : in    std_logic;
     osc_clk_125   : in    std_logic;
@@ -84,8 +88,9 @@ end eth_infra;
 
 architecture rtl of eth_infra is
 
-  signal clk_eth, clk_ipb_i, clk_aux, clk_200                                                    : std_logic;
-  signal locked, clk_locked, eth_locked, rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
+  signal clk_eth, clk_ipb, clk_ipb_i, clk_aux, clk_200           : std_logic;
+  signal locked, clk_locked, eth_locked                          : std_logic;
+  signal rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
 
   -- ipbus to ethernet
   signal tx_data, rx_data : std_logic_vector(7 downto 0);
@@ -122,7 +127,14 @@ begin
       onehz         => onehz
       );
 
-  clk_ipb_o <= clk_ipb_i;
+  clk_ipb_o <= clk_ipb;
+  extgen : if (C_EXT_CLOCK) generate
+    clk_ipb <= ext_clk_i;
+  end generate;
+  intgen : if (not C_EXT_CLOCK) generate
+    clk_ipb <= clk_ipb_i;
+  end generate;
+
   rst_ipb_o <= rst_ipb;
   clk_aux_o <= clk_aux;
   rst_aux_o <= rst_aux;
@@ -166,7 +178,7 @@ begin
     port map(
       mac_clk      => clk_eth,
       rst_macclk   => rst_eth,
-      ipb_clk      => clk_ipb_i,
+      ipb_clk      => clk_ipb,
       rst_ipb      => rst_ipb_ctrl,
       mac_rx_data  => rx_data,
       mac_rx_valid => rx_valid,
@@ -224,7 +236,7 @@ begin
 
     -- ila_ipb_master_inst : ila_ipb
     --   port map (
-    --     clk       => clk_ipb_i,
+    --     clk       => clk_ipb,
     --     probe0    => ipb_out.ipb_addr,
     --     probe1    => ipb_out.ipb_wdata,
     --     probe2(0) => ipb_out.ipb_strobe,

@@ -170,6 +170,7 @@ architecture behavioral of etl_test_fw is
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
 
+
   signal fw_info_mon : FW_INFO_Mon_t;
 
   component cylon1 is
@@ -251,7 +252,10 @@ begin
   -- Infrastructure
   eth : if (USE_ETH = 1) generate
     eth_infra_inst : entity ipbus.eth_infra
+      generic map (
+        C_EXT_CLOCK => true)
       port map (
+        ext_clk_i     => clk40,
         osc_clk_300   => clk_osc300_ibuf,
         osc_clk_125   => clk_osc125_ibuf,
         rst_in        => (others => '0'),
@@ -330,6 +334,7 @@ begin
 
       daq_ipb_w_array => fifo_ipb_w_array,
       daq_ipb_r_array => fifo_ipb_r_array
+
       );
 
   refclk_ibufds : ibufds_gte3
