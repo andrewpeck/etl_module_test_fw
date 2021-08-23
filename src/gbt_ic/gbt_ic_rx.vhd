@@ -30,9 +30,6 @@ architecture Behavioral of gbt_ic_rx is
 
   signal rx_state : rx_state_t;
 
-  signal frame : std_logic_vector (7 downto 0) := (others => '0');
-  signal valid : std_logic;
-
   signal rsvrd_int              : std_logic_vector (7 downto 0);
   signal chip_adr_int           : std_logic_vector (6 downto 0);
   signal downlink_parity_ok_int : std_logic;
@@ -47,13 +44,6 @@ architecture Behavioral of gbt_ic_rx is
 
 begin
 
-  process (clock_i)
-  begin
-    if (rising_edge(clock_i)) then
-      frame <= frame_i;
-      valid <= valid_i;
-    end if;
-  end process;
 
   process (clock_i)
   begin
@@ -117,7 +107,7 @@ begin
 
         when REG_ADR1 =>
 
-          if (valid = '1') then
+          if (valid_i = '1') then
             reg_adr_int(15 downto 8) <= frame_i;
             parity_int               <= parity_int xor frame_i;
             rx_state                 <= DATA;
@@ -125,7 +115,7 @@ begin
 
         when DATA =>
 
-          if (valid = '1') then
+          if (valid_i = '1') then
             parity_int <= parity_int xor frame_i;
             case data_frame_cnt mod 4 is
               when 0      => data_int (7 downto 0)   <= frame_i;
@@ -144,7 +134,7 @@ begin
 
         when PARITY =>
 
-          if (valid = '1') then
+          if (valid_i = '1') then
             rx_state      <= TRAILER;
             parity_int    <= parity_int;
             parity_rx_int <= frame_i;
