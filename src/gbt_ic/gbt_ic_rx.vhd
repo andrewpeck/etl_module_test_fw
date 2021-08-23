@@ -25,8 +25,8 @@ end gbt_ic_rx;
 
 architecture Behavioral of gbt_ic_rx is
 
-  type rx_state_t is (IDLE, RESERVED, RSVRD, GBT_ADDR, CMD, LENGTH0, LENGTH1,
-                      REG_ADR0, REG_ADR1, DATA, PARITY, TRAILER, OUTPUT, ERR);
+  type rx_state_t is (IDLE, RSVRD, CMD, LENGTH0, LENGTH1, REG_ADR0, REG_ADR1,
+                      DATA, PARITY, TRAILER, OUTPUT, ERR);
 
   signal rx_state : rx_state_t;
 
@@ -39,6 +39,10 @@ architecture Behavioral of gbt_ic_rx is
   signal parity_rx_int          : std_logic_vector (7 downto 0);
   signal rw_bit_int             : std_logic;
   signal data_int               : std_logic_vector (31 downto 0);
+
+  constant watchdog_cnt_max : integer                             := 127;
+  signal watchdog_cnt       : integer range 0 to watchdog_cnt_max := 0;
+  signal watchdog_reset     : std_logic                           := '0';
 
   signal data_frame_cnt : integer range 0 to 2**16-1;
 
@@ -67,7 +71,7 @@ begin
 
     port map (
       clk                 => clock_i,
-      probe0(3 downto 0)  => std_logic_vector(to_unsigned(rx_state_t'POS(rx_state), 4)),
+      probe0(3 downto 0)  => std_logic_vector(to_unsigned(rx_state_t'pos(rx_state), 4)),
       probe1(0)           => valid_i,
       probe2(7 downto 0)  => frame_i,
       probe3(6 downto 0)  => chip_adr_o,
@@ -80,6 +84,34 @@ begin
       probe10(0)          => valid_o
       );
 
+  --------------------------------------------------------------------------------
+  -- watchdog to keep the state machine from getting stuck (e.g. because the
+  --  headder is stripped off, it seems like sometimes it spuriously gets in the
+  --  wrong state)
+  --
+  -- This just waits a reasonably long time then takes the state machine back to
+  -- IDLE
+  --------------------------------------------------------------------------------
+
+  watchdog_reset <= '1' when watchdog_cnt = watchdog_cnt_max else '0';
+
+  process (clock_i) is
+  begin
+    if (rising_edge(clock_i)) then
+      if (rx_state = IDLE) then
+        watchdog_cnt <= 0;
+      else
+        if (watchdog_cnt < watchdog_cnt_max) then
+          watchdog_cnt <= watchdog_cnt + 1;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- state machine
+  --------------------------------------------------------------------------------
+
   process (clock_i)
   begin
     if (rising_edge(clock_i)) then
@@ -88,24 +120,30 @@ begin
 
         when IDLE =>
 
-          if (valid_i = '1' and frame_i = "01111110") then
-            rx_state <= RESERVED;
-          end if;
-
-        when RESERVED =>
-
-          data_frame_cnt <= 0;
+          -- note that the GBT-SC core strips off the header and trailer, so
+          -- what we see from the lpgbt is:
+          --
+          -- i=0, data=0xe7 or 0xe6  -- adr + rw
+          -- i=1, data=0x00          -- rsvrd
+          -- i=2, data=0x01          -- cmd
+          -- i=3, data=0x01          -- nwords [7:0]
+          -- i=4, data=0x00          -- nwords [15:8]
+          -- i=5, data=0xc5          -- adr[7:0]
+          -- i=6, data=0x01          -- adr[15:8]
+          -- i=7, data=0xa5          -- data
+          -- i=8, data=0x61          -- parity
+          --
 
           if (valid_i = '1') then
-            rx_state <= GBT_ADDR;
-          end if;
-
-        when GBT_ADDR =>
-
-          if (valid_i = '1') then
-            rx_state     <= CMD;
+            rx_state     <= RSVRD;
             chip_adr_int <= frame_i(7 downto 1);
             rw_bit_int   <= frame_i(0);
+          end if;
+
+        when RSVRD =>
+
+          if (valid_i = '1') then
+            rx_state <= CMD;
           end if;
 
         when CMD =>
@@ -161,7 +199,7 @@ begin
             end case;
 
             if (std_logic_vector(to_unsigned(data_frame_cnt+1, length_int'length)) = length_int) then
-              rx_state <= PARITY;
+              rx_state <= TRAILER;
             else
               data_frame_cnt <= data_frame_cnt + 1;
             end if;
@@ -170,18 +208,19 @@ begin
         when PARITY =>
 
           if (valid_i = '1') then
-            rx_state      <= TRAILER;
+            rx_state      <= OUTPUT;
             parity_int    <= parity_int;
             parity_rx_int <= frame_i;
           end if;
 
-        when TRAILER =>
+          -- when TRAILER =>
 
-          if (frame_i = "01111110") then
-            rx_state <= OUTPUT;
-          else
-            rx_state <= ERR;
-          end if;
+          --   -- why x"61"? see note above
+          --   if (frame_i = x"61") then
+          --     rx_state <= OUTPUT;
+          --   else
+          --     rx_state <= ERR;
+          --   end if;
 
         when OUTPUT =>
 
@@ -214,7 +253,7 @@ begin
       -- Reset
       --------------------------------------------------------------------------------
 
-      if (rx_state = IDLE or reset_i = '1') then
+      if (rx_state = IDLE or reset_i = '1' or watchdog_reset = '1') then
 
         if (reset_i = '1') then
           rx_state <= IDLE;
