@@ -75,7 +75,9 @@ begin
       probe1(0)           => valid_i,
       probe2(7 downto 0)  => frame_i,
       probe3(6 downto 0)  => chip_adr_o,
-      probe4(31 downto 0) => data_o,
+      probe4(7 downto 0)  => std_logic_vector(to_unsigned(watchdog_cnt, 8)),
+      probe4(8)           => watchdog_reset,
+      probe4(31 downto 9) => data_o(22 downto 0),
       probe5(15 downto 0) => length_o,
       probe6(15 downto 0) => reg_adr_o,
       probe7(0)           => uplink_parity_ok_o,
@@ -255,8 +257,18 @@ begin
 
       if (rx_state = IDLE or reset_i = '1' or watchdog_reset = '1') then
 
-        if (reset_i = '1') then
-          rx_state <= IDLE;
+        if (reset_i = '1' or watchdog_reset = '1') then
+
+          rx_state             <= IDLE;
+          err_o                <= '0';
+          data_o               <= (others => '0');
+          chip_adr_o           <= (others => '0');
+          length_o             <= (others => '0');
+          reg_adr_o            <= (others => '0');
+          data_o               <= (others => '0');
+          downlink_parity_ok_o <= '0';
+          valid_o              <= '0';
+
         end if;
 
         rsvrd_int              <= (others => '0');
@@ -268,7 +280,6 @@ begin
         parity_rx_int          <= (others => '0');
         data_int               <= (others => '0');
         rw_bit_int             <= '0';
-        err_o                  <= '0';
 
       end if;
 
