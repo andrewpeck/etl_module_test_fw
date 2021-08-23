@@ -13,6 +13,14 @@ set_max_delay -datapath_only \
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
+    -to   [get_clocks clk_40_system_clocks] 7
+
+set_max_delay -datapath_only \
+    -from [get_clocks clk_40_system_clocks] \
+    -to   [get_clocks clk125_i] 7
+
+set_max_delay -datapath_only \
+    -from [get_clocks clk125_i] \
     -to   [get_clocks osc_clk125] 7
 
 set_max_delay -datapath_only \
