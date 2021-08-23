@@ -466,20 +466,20 @@ begin
   -- TODO: handle clock crossing here to ipb clock?
 
   uplink_prbs_checkers : for I in 0 to NUM_UPLINKS-1 generate
-    signal prbs_en : std_logic_vector (31 downto 0) := (others => '0');
+    signal prbs_en  : std_logic_vector (31 downto 0) := (others => '0');
     signal upcnt_en : std_logic_vector (31 downto 0) := (others => '0');
   begin
     pat_checker : for J in 0 to NUM_ELINKS-1 generate
       signal data : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
     begin
 
-      g0 : if (I=0) generate
-        prbs_en <= ctrl.lpgbt.pattern_checker.check_prbs_en_0;
+      g0 : if (I = 0) generate
+        prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_0;
         upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_0;
       end generate;
 
-      g1 : if (I=1) generate
-        prbs_en <= ctrl.lpgbt.pattern_checker.check_prbs_en_1;
+      g1 : if (I = 1) generate
+        prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_1;
         upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_1;
       end generate;
 
