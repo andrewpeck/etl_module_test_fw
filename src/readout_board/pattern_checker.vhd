@@ -6,6 +6,7 @@ use ieee.numeric_std.all;
 
 entity pattern_checker is
   generic(
+    DEBUG : boolean := false;
     COUNTER_WIDTH : integer := 32;
     WIDTH : integer := 8
     );
@@ -31,6 +32,8 @@ end pattern_checker;
 architecture behavioral of pattern_checker is
 
   signal prbs_errs : std_logic_vector (WIDTH-1 downto 0);
+  signal prbs_generate : std_logic_vector (WIDTH-1 downto 0);
+
   signal upcnt_err : std_logic;
 
   signal upcnt : integer range 0 to 2**WIDTH-1 := 0;
@@ -45,7 +48,55 @@ architecture behavioral of pattern_checker is
     end loop;
     return result;
   end; -- function reverse_vector
+       --
+  COMPONENT ila_pat_check
+
+    PORT (
+      clk : IN STD_LOGIC;
+      probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+      probe1 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+      probe2 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+      probe3 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+      probe4 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+      probe5 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+      probe6 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+      probe7 : IN STD_LOGIC_VECTOR(7 DOWNTO 0)
+      );
+  END COMPONENT  ;
+
+
 begin
+
+  dbggen : if (DEBUG) generate
+    ila_pat_check_inst : ila_pat_check
+      port map (
+        clk       => clock,
+        probe0(0) => reset,
+        probe1    => data,
+        probe2    => std_logic_vector(to_unsigned(upcnt,8)),
+        probe3(0) => upcnt_err,
+        probe4(0) => check_upcnt,
+        probe5(0) => check_prbs,
+        probe6    => prbs_errs,
+        probe7    => prbs_generate
+        );
+
+  prbs_any_gen : entity work.prbs_any
+    generic map (
+      chk_mode    => false,
+      inv_pattern => false,
+      poly_lenght => 7,
+      poly_tap    => 6,
+      nbits       => 8)
+    port map (
+      rst      => reset or not check_prbs,
+      clk      => clock,
+      data_in  => (others => '0'),
+      en       => '1',
+      data_out => prbs_generate
+      );
+
+  end generate;
 
   --------------------------------------------------------------------------------
   -- upcnt check

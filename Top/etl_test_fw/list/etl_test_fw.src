@@ -25,6 +25,7 @@ src/mgt/xlx_ku_mgt_ip_reset_synchronizer.vhd
 ip/xlx_ku_mgt_ip_10g24/xlx_ku_mgt_ip_10g24.xci
 
 # ilas
+ip/ila_pat_check/ila_pat_check.xci
 ip/ila_ipb/ila_ipb.xci
 ip/ila_sc/ila_sc.xci
 ip/ila_ic/ila_ic.xci
