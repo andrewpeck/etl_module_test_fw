@@ -26,7 +26,7 @@ end gbt_ic_rx;
 architecture Behavioral of gbt_ic_rx is
 
   type rx_state_t is (IDLE, RSVRD, CMD, LENGTH0, LENGTH1, REG_ADR0, REG_ADR1,
-                      DATA, PARITY, TRAILER, OUTPUT, ERR);
+                      DATA, PARITY, OUTPUT, ERR);
 
   signal rx_state : rx_state_t;
 
@@ -201,7 +201,7 @@ begin
             end case;
 
             if (std_logic_vector(to_unsigned(data_frame_cnt+1, length_int'length)) = length_int) then
-              rx_state <= TRAILER;
+              rx_state <= PARITY;
             else
               data_frame_cnt <= data_frame_cnt + 1;
             end if;
@@ -214,15 +214,6 @@ begin
             parity_int    <= parity_int;
             parity_rx_int <= frame_i;
           end if;
-
-          -- when TRAILER =>
-
-          --   -- why x"61"? see note above
-          --   if (frame_i = x"61") then
-          --     rx_state <= OUTPUT;
-          --   else
-          --     rx_state <= ERR;
-          --   end if;
 
         when OUTPUT =>
 
