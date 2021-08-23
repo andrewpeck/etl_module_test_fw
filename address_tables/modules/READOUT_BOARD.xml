@@ -20,4 +20,9 @@
   <!-- LPGBT-FPGA  -->
   <node id="SC"   address="0x200" module="file://GBT_SC.xml"/>
 
+  <node id="FIFO_ELINK_SEL"   address="0x300" mask="0x1f" permission="rw"  description="Choose which e-link the readout fifo connects to (0-27)"/>
+  <node id="FIFO_LPGBT_SEL"   address="0x300" mask="0x100" permission="rw" description="Choose which lpgbt the readout fifo connects to (0-1)"/>
+  <node id="FIFO_FULL"        address="0x300" mask="0x200" permission="r"  description="FIFO is full"/>
+  <node id="FIFO_RESET"       address="0x301" mask="0x1" permission="w"    description="Reset the daq FIFO"/>
+
 </node>

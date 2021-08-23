@@ -12,5 +12,16 @@
   <node id="READOUT_BOARD_6" module="file://modules/READOUT_BOARD.xml" address="0x8000"/>
   <node id="READOUT_BOARD_7" module="file://modules/READOUT_BOARD.xml" address="0x9000"/>
   -->
-  <node id="MGT"             module="file://modules/MGT.xml"           address="0xA000"/>
+
+  <node id="MGT"   module="file://modules/MGT.xml"           address="0xA000"/>
+
+  <node id="DAQ_0"  module="file://modules/DAQ.xml"       address="0x100000" />
+  <!-- <node id="DAQ_1"  module="file://modules/DAQ.xml"       address="0x110000" /> -->
+  <!-- <node id="DAQ_2"  module="file://modules/DAQ.xml"       address="0x120000" /> -->
+  <!-- <node id="DAQ_3"  module="file://modules/DAQ.xml"       address="0x130000" /> -->
+  <!-- <node id="DAQ_4"  module="file://modules/DAQ.xml"       address="0x140000" /> -->
+  <!-- <node id="DAQ_5"  module="file://modules/DAQ.xml"       address="0x150000" /> -->
+  <!-- <node id="DAQ_6"  module="file://modules/DAQ.xml"       address="0x160000" /> -->
+  <!-- <node id="DAQ_7"  module="file://modules/DAQ.xml"       address="0x170000" /> -->
+
 </node>

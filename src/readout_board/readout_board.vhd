@@ -16,6 +16,9 @@ library work;
 use work.types.all;
 use work.lpgbt_pkg.all;
 
+library ipbus;
+use ipbus.ipbus.all;
+
 entity readout_board is
   generic(
     INST            : integer := 0;
@@ -38,6 +41,9 @@ entity readout_board is
     ctrl_clk : in  std_logic;
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
+
+    fifo_wb_in  : in  ipb_wbus;
+    fifo_wb_out : out ipb_rbus;
 
     uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
     uplink_mgt_word_array   : in  std32_array_t (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
@@ -173,7 +179,7 @@ begin
   downlink_reset(0)              <= ctrl.lpgbt.daq.downlink.reset;
   uplink_reset(0)                <= ctrl.lpgbt.daq.uplink.reset;
 
-  trg : if (NUM_LPGBTS_TRIG>0) generate
+  trg : if (NUM_LPGBTS_TRIG > 0) generate
     uplink_reset(NUM_LPGBTS_DAQ) <= ctrl.lpgbt.trigger.uplink.reset;
   end generate;
 
@@ -382,6 +388,73 @@ begin
 
       end generate;
     end generate;
+  end generate;
+
+  --------------------------------------------------------------------------------
+  -- FIFO + Reader
+  --------------------------------------------------------------------------------
+
+  fifo_gen : if (true) generate
+    signal data      : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    signal elink_sel : integer range 0 to 27;
+    signal lpgbt_sel : integer range 0 to 1;
+
+    constant DAQ_FIFO_DEPTH         : positive := 32768;
+    constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
+
+    signal fifo_dout  : std_logic_vector (31 downto 0) := (others => '0');
+    signal fifo_rd_en : std_logic                      := '0';
+    signal fifo_empty : std_logic                      := '0';
+    signal fifo_valid : std_logic                      := '0';
+
+  begin
+
+    -- copy for timing and align to system 40MHz
+    elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel));
+    lpgbt_sel <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel)));  -- vhdl qualify operator
+
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
+        data <= uplink_data_aligned(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+      end if;
+    end process;
+
+    fifo_sync_1 : entity work.fifo_sync
+      generic map (
+        DEPTH               => DAQ_FIFO_DEPTH,
+        USE_ALMOST_FULL     => 1,
+        WR_WIDTH            => 32,
+        RD_WIDTH            => 32,
+        WR_DATA_COUNT_WIDTH => DAQ_FIFO_WORDCNT_WIDTH,
+        USE_WR_DATA_COUNT   => 1
+        )
+      port map (
+        rst           => ctrl.fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+        clk           => clk40,
+        wr_en         => '1',
+        rd_en         => fifo_rd_en,
+        din           => x"000000" & data,
+        dout          => fifo_dout,
+        valid         => fifo_valid,
+        wr_data_count => open,
+        overflow      => open,
+        full          => mon.fifo_full,
+        almost_full   => open,
+        empty         => fifo_empty
+        );
+
+    wishbone_fifo_reader_inst : entity work.wishbone_fifo_reader
+      port map (
+        clk       => clk40,
+        reset     => reset,
+        ipbus_in  => fifo_wb_in,
+        ipbus_out => fifo_wb_out,
+        rd_en     => fifo_rd_en,
+        din       => fifo_dout,
+        valid     => fifo_valid,
+        empty     => fifo_empty
+        );
   end generate;
 
   --------------------------------------------------------------------------------

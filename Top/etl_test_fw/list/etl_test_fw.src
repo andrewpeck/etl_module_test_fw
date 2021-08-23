@@ -6,6 +6,7 @@ src/wrappers/lpgbt_pkg.vhd
 src/utils/cylon.v
 src/utils/prbs_any.vhd
 src/utils/fifo_async.vhd
+src/utils/fifo_sync.vhd
 src/utils/counter.vhd
 src/utils/frame_aligner.vhd
 src/utils/clock_strobe.vhd

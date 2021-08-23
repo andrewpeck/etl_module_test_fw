@@ -26,6 +26,9 @@ entity control is
     reset : in std_logic;
     clock : in std_logic;
 
+    daq_ipb_w_array : out ipb_wbus_array(NUM_RBS - 1 downto 0);
+    daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS - 1 downto 0);
+
     fw_info_mon : in FW_INFO_Mon_t;
 
     readout_board_mon  : in  READOUT_BOARD_Mon_array_t (NUM_RBS-1 downto 0);
@@ -68,6 +71,10 @@ architecture behavioral of control is
 
 begin
 
+  --------------------------------------------------------------------------------
+  -- arbiter to handle requests to/from 2 masters, ethernet and pcie
+  --------------------------------------------------------------------------------
+
   ipbus_arb_inst : entity ipbus.ipbus_arb
     generic map (N_BUS => 2)
     port map (
@@ -84,7 +91,10 @@ begin
       ipb_in       => ipb_r
       );
 
+  --------------------------------------------------------------------------------
   -- Special Loopback register at Adr 0...
+  --------------------------------------------------------------------------------
+
   process (clock) is
   begin
     if (rising_edge(clock)) then
@@ -159,11 +169,15 @@ begin
   --------------------------------------------------------------------------------
 
   rbgen : for I in 0 to NUM_RBS-1 generate
-    constant RB_BASE : integer := N_SLV_READOUT_BOARD_0;
+    constant RB_BASE  : integer := N_SLV_READOUT_BOARD_0;
+    constant DAQ_BASE : integer := N_SLV_DAQ_0;
   begin
     rb_en : if (EN_LPGBTS = 1) generate
 
-      READOUT_BOARD_wb_interface_inst : entity ctrl_lib.READOUT_BOARD_wb_interface
+      daq_ipb_w_array(I)      <= ipb_w_array(DAQ_BASE+I);
+      ipb_r_array(DAQ_BASE+I) <= daq_ipb_r_array(I);
+
+      READOUT_BOARD_wb_map_inst : entity ctrl_lib.READOUT_BOARD_wb_map
         port map (
           clk       => clock,
           reset     => reset,
