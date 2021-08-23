@@ -1,5 +1,6 @@
-# -*- mode: TCL;-*-
-src/readout_board/*.vhd  top=etl_test_fw
+src/readout_board/etl_test_fw.vhd  top=etl_test_fw
+
+src/readout_board/*.vhd
 
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
