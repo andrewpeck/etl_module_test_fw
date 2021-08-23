@@ -109,4 +109,4 @@ set_max_delay -datapath_only \
 
 set_max_delay -datapath_only \
     -from [get_clocks] \
-    -to [get_pins -hierarchical -filter { NAME =~ "*control_inst/FW_INFO_wb_interface/localRdData_reg[*]/D"}] 8
+    -to [get_pins -hierarchical -filter { NAME =~ "*control_inst/FW_INFO_wb_map/localRdData_reg[*]/D"}] 8
