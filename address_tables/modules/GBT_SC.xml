@@ -16,7 +16,9 @@
 
     <!-- IC FIFO -->
     <node id="TX_DATA_TO_GBTX"   address="0x7"  mask="0x000000ff" permission="rw" description="Data to be written into the internal FIFO"/>
-    <node id="RX_DATA_FROM_GBTX" address="0x8"  mask="0xffffffff" permission="r"  description="Data from the FIFO"/>
+    <node id="RX_DATA_FROM_GBTX" address="0x8"  mask="0x000000ff" permission="r"  description="Data from the LPGBT"/>
+    <node id="RX_ADR_FROM_GBTX"  address="0x8"  mask="0x00ffff00" permission="r"  description="Adr from the LPGBT"/>
+    <node id="RX_DATA_VALID"     address="0x8"  mask="0x80000000" permission="r"  description="Data from the LPGBT is valid"/>
     <node id="TX_WR"             address="0x9"  mask="0x1"        permission="w"  description="Request a write operation into the internal FIFO (Data to GBTx)"/><!--ACTION-->
     <!-- <node id="RX_RD"             address="0xa"  mask="0x1"        permission="w"  description="Request a read operation of the internal FIFO (GBTx reply)"/><!-\-ACTION-\-> -->
 

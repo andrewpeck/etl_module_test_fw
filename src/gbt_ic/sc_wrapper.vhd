@@ -36,7 +36,7 @@ entity gbt_controller_wrapper is
     sca0_data_i : in  std_logic_vector (1 downto 0);
     sca0_data_o : out std_logic_vector (1 downto 0);
 
-    clk40   : in std_logic
+    clk40 : in std_logic
     );
 end gbt_controller_wrapper;
 
@@ -228,14 +228,16 @@ begin
       frame_i    => ic_rx_data,
       valid_i    => not ic_rx_empty,
       chip_adr_o => open,
-      data_o     => mon.rx_data_from_gbtx,
+
+      data_o(7 downto 0)  => mon.rx_data_from_gbtx,
+      data_o(31 downto 8) => open,
 
       length_o             => open,
-      reg_adr_o            => open,
+      reg_adr_o            => mon.rx_adr_from_gbtx,
       uplink_parity_ok_o   => open,
       downlink_parity_ok_o => open,
       err_o                => open,
-      valid_o              => open
+      valid_o              => mon.rx_data_valid
       );
 
 end common_controller;

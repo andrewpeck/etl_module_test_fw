@@ -166,7 +166,9 @@ begin  -- architecture behavioral
         when 519 => --0x207
           localRdData( 7 downto  0)  <=  reg_data(519)( 7 downto  0);                 --Data to be written into the internal FIFO
         when 520 => --0x208
-          localRdData(31 downto  0)  <=  Mon.SC.RX_DATA_FROM_GBTX;                    --Data from the FIFO
+          localRdData( 7 downto  0)  <=  Mon.SC.RX_DATA_FROM_GBTX;                    --Data from the LPGBT
+          localRdData(23 downto  8)  <=  Mon.SC.RX_ADR_FROM_GBTX;                     --Adr from the LPGBT
+          localRdData(31)            <=  Mon.SC.RX_DATA_VALID;                        --Data from the LPGBT is valid
         when 523 => --0x20b
           localRdData( 0)            <=  Mon.SC.TX_READY;                             --IC core ready for a transaction
         when 524 => --0x20c

@@ -257,7 +257,9 @@ package READOUT_BOARD_CTRL is
 
 
   type READOUT_BOARD_SC_MON_t is record
-    RX_DATA_FROM_GBTX          :std_logic_vector(31 downto 0);  -- Data from the FIFO
+    RX_DATA_FROM_GBTX          :std_logic_vector( 7 downto 0);  -- Data from the LPGBT
+    RX_ADR_FROM_GBTX           :std_logic_vector(15 downto 0);  -- Adr from the LPGBT
+    RX_DATA_VALID              :std_logic;                      -- Data from the LPGBT is valid
     TX_READY                   :std_logic;                      -- IC core ready for a transaction
     RX_EMPTY                   :std_logic;                      -- Rx FIFO is empty (no reply from GBTx)
     RX                         :READOUT_BOARD_SC_RX_MON_t;    
