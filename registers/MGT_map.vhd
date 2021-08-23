@@ -4,7 +4,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.MGT_Ctrl.all;
-entity MGT_wb_interface is
+entity MGT_wb_map is
   port (
     clk         : in  std_logic;
     reset       : in  std_logic;
@@ -18,8 +18,8 @@ entity MGT_wb_interface is
     mon         : in  MGT_Mon_t;
     ctrl        : out MGT_Ctrl_t
     );
-end entity MGT_wb_interface;
-architecture behavioral of MGT_wb_interface is
+end entity MGT_wb_map;
+architecture behavioral of MGT_wb_map is
   signal strobe_r : std_logic := '0';
   signal strobe_pulse : std_logic := '0';
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
@@ -39,7 +39,6 @@ begin  -- architecture behavioral
       strobe_r <= wb_strobe;
     end if;
   end process;
-
 
   -- acknowledge
   process (clk) is

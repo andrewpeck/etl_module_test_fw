@@ -12,7 +12,7 @@
 	url = https://gitlab.cern.ch/hog/Hog
 [submodule "uHAL_AXI_regmap"]
 	path = regmap
-	url = https://github.com/andrewpeck/uHAL_AXI_regmap
+	url = https://github.com/BU-Tools/uHAL_AXI_regmap
 [submodule "verilog-ethernet"]
 	path = verilog-ethernet
 	url = https://github.com/alexforencich/verilog-ethernet

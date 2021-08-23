@@ -4,7 +4,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.FW_INFO_Ctrl.all;
-entity FW_INFO_wb_interface is
+entity FW_INFO_wb_map is
   port (
     clk         : in  std_logic;
     reset       : in  std_logic;
@@ -17,8 +17,8 @@ entity FW_INFO_wb_interface is
     wb_err      : out std_logic;
     mon         : in  FW_INFO_Mon_t
     );
-end entity FW_INFO_wb_interface;
-architecture behavioral of FW_INFO_wb_interface is
+end entity FW_INFO_wb_map;
+architecture behavioral of FW_INFO_wb_map is
   signal strobe_r : std_logic := '0';
   signal strobe_pulse : std_logic := '0';
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
@@ -38,7 +38,6 @@ begin  -- architecture behavioral
       strobe_r <= wb_strobe;
     end if;
   end process;
-
 
   -- acknowledge
   process (clk) is
