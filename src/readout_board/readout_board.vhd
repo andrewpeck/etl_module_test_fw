@@ -188,10 +188,7 @@ begin
   --------------------------------------------------------------------------------
 
   gbt_controller_wrapper_inst : entity work.gbt_controller_wrapper
-    generic map (
-      g_CLK_FREQ       => 40,
-      g_SCAS_PER_LPGBT => NUM_SCAS
-      )
+    generic map (g_SCAS_PER_LPGBT => NUM_SCAS)
     port map (
 
       reset_i => reset,
@@ -200,9 +197,7 @@ begin
       mon      => mon.sc,
       ctrl     => ctrl.sc,
 
-      clk320  => clk320,
       clk40   => clk40,
-      valid_i => '1',
 
       -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
       ic_data_i => uplink_data(0).ic,

@@ -36,9 +36,7 @@ entity gbt_controller_wrapper is
     sca0_data_i : in  std_logic_vector (1 downto 0);
     sca0_data_o : out std_logic_vector (1 downto 0);
 
-    clk320  : in std_logic;
-    clk40   : in std_logic;
-    valid_i : in std_logic
+    clk40   : in std_logic
     );
 end gbt_controller_wrapper;
 
@@ -137,18 +135,13 @@ begin
     end if;
   end process;
 
+  assert g_CLK_FREQ = 40 report "SC clk frequency must be 40MHz" severity error;
+
   clk40_gen : if (g_CLK_FREQ = 40) generate
     txclk   <= clk40;
     rxclk   <= clk40;
     txvalid <= '1';
     rxvalid <= '1';
-  end generate;
-
-  clk320_gen : if (g_CLK_FREQ = 320) generate
-    txclk   <= clk320;
-    rxclk   <= clk320;
-    txvalid <= valid_i;
-    rxvalid <= valid_i;
   end generate;
 
   --------------------------------------------------------------------------------
@@ -230,7 +223,7 @@ begin
 
   gbt_ic_rx_1 : entity work.gbt_ic_rx
     port map (
-      clock_i    => ctrl_clk,
+      clock_i    => rxclk,
       reset_i    => reset_i,
       frame_i    => ic_rx_data,
       valid_i    => not ic_rx_empty,
