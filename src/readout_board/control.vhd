@@ -131,7 +131,7 @@ begin
   -- MGT Interface
   --------------------------------------------------------------------------------
 
-  MGT_wb_interface : entity ctrl_lib.MGT_wb_interface
+  MGT_wb_map : entity ctrl_lib.MGT_wb_map
     port map (
       clk       => clock,
       reset     => reset,
@@ -150,7 +150,7 @@ begin
   -- FW Info
   --------------------------------------------------------------------------------
 
-  FW_INFO_wb_interface : entity ctrl_lib.FW_INFO_wb_interface
+  FW_INFO_wb_map : entity ctrl_lib.FW_INFO_wb_map
     port map (
       clk       => clock,
       reset     => reset,
