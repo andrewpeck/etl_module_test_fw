@@ -97,7 +97,7 @@ begin
         probe5(1 downto 0)   => ic_data_o_int,
         probe6(1 downto 0)   => sca0_data_i_int,
         probe7(1 downto 0)   => sca0_data_o_int,
-        probe8(0)            => valid_i,
+        probe8(0)            => '1',
         probe9(0)            => '1',
         probe10(0)           => '1',
         probe11(0)           => '1',
