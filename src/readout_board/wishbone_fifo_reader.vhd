@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use ieee.numeric_std.all;
-
 library ipbus;
 use ipbus.ipbus.all;
 
@@ -25,11 +24,8 @@ end wishbone_fifo_reader;
 
 architecture rtl of wishbone_fifo_reader is
 
-  signal words_todo : integer range 0 to 1023 := 0;
-
-  signal wdata_r  : std_logic_vector (31 downto 0) := (others => '0');
-  signal wdata_rr : std_logic_vector (31 downto 0) := (others => '0');
-
+  signal words_todo     : integer range 0 to 255 := 0;
+  signal words_todo_buf : integer range 0 to 255 := 0;
 
   signal strobe_r  : std_logic := '0';
   signal strobe_os : std_logic := '0';
@@ -42,8 +38,8 @@ begin
   -- ack connects directly to the FIFO
   --
   -- Prior to the actual wishbone packet, the previous data frame is e.g.
-  -- 0x20000FF2f, where
-  -- 0x-----FF-- FF is the number of requests, from 0-1023
+  -- 0x20000XX2f, where
+  -- 0x-----XX-- XX is the number of requests, from 0-255
   --
   -- we take this # of requests, called words_todo, and use it to know a-priori
   -- how many reads will be requested
@@ -52,18 +48,19 @@ begin
   --
   -- see transactor_sm.vhd
 
-
   process (clk) is
   begin
     if (rising_edge(clk)) then
 
-      wdata_r  <= ipbus_in.ipb_wdata;
-      wdata_rr <= wdata_r;
+      if (ipbus_in.ipb_wdata(31 downto 24) = x"20"
+          and ipbus_in.ipb_wdata(7 downto 0) = x"2f") then
+        words_todo_buf <= to_integer(unsigned(ipbus_in.ipb_wdata(15 downto 8)));
+      end if;
 
       strobe_r <= ipbus_in.ipb_strobe;
 
       if (strobe_os = '1') then
-        words_todo <= to_integer(unsigned(wdata_rr(15 downto 8)));
+        words_todo <= words_todo_buf;
       elsif (words_todo > 0) then
         words_todo <= words_todo - 1;
       end if;
@@ -71,7 +68,7 @@ begin
     end if;
   end process;
 
-  strobe_os <= '1' when ipbus_in.ipb_strobe='1' and strobe_r='0' else '0';
+  strobe_os <= '1' when ipbus_in.ipb_strobe = '1' and strobe_r = '0' else '0';
 
   rd_en <= '1' when words_todo > 0 else '0';
 
