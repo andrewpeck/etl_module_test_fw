@@ -181,7 +181,16 @@ architecture behavioral of etl_test_fw is
       );
   end component;
 
-  signal cylon : std_logic_vector (7 downto 0);
+  component cylon2 is
+    port (
+      clock : in  std_logic;
+      rate  : in  std_logic_vector (1 downto 0);
+      q     : out std_logic_vector (7 downto 0)
+      );
+  end component;
+
+  signal cylon1_signal : std_logic_vector (7 downto 0);
+  signal cylon2_signal : std_logic_vector (7 downto 0);
 
   component system_clocks is
     port (
@@ -199,12 +208,20 @@ begin
     port map (
       clock => locked and clk40,
       rate  => "00",
-      q     => cylon
+      q     => cylon1_signal
+      );
+
+  cylon2_inst : cylon2
+    port map (
+      clock => locked and clk40,
+      rate  => "00",
+      q     => cylon2_signal
       );
 
   pcie_sys_rst_n <= not pcie_sys_rst;
 
-  leds(7 downto 0) <= cylon (7 downto 0);
+  leds(7 downto 0) <= cylon1_signal (7 downto 0) when readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
+                      else cylon2_signal (7 downto 0);
 
   si570_usrclk_ibuf_inst : IBUFDS
     port map(
