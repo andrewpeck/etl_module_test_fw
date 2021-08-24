@@ -286,9 +286,9 @@ begin
   -- Uplink Frame Aligner
   --------------------------------------------------------------------------------
 
-  -- FIXME: generalize this so the loop doesn't need to be copy pasted for additional lpgbts
-  -- stick the registers into an array by hand that can be indexed, or get the fw_info=array
-  -- feature to work on bare registers
+  -- FIXME: generalize this so the loop doesn't need to be copy pasted for
+  -- additional lpgbts stick the registers into an array by hand that can be
+  -- indexed, or get the fw_info=array feature to work on bare registers
 
   xxx : if (true) generate
     type align_cnt_array is array (27 downto 0) of std_logic_vector(integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
@@ -456,9 +456,9 @@ begin
   -- PRBS
   --------------------------------------------------------------------------------
 
-  -- FIXME: generalize this so the loop doesn't need to be copy pasted for additional lpgbts
-  -- just cat together the data field into n*daq + trig inputs and put it in a loop
-  -- TODO: handle clock crossing here to ipb clock?
+  -- TODO: generalize this so the loop doesn't need to be copy pasted for
+  -- additional lpgbts just cat together the data field into n*daq + trig inputs
+  -- and put it in a loop
 
   uplink_prbs_checkers : for I in 0 to NUM_UPLINKS-1 generate
     signal prbs_en  : std_logic_vector (31 downto 0) := (others => '0');
