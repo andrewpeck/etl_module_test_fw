@@ -55,6 +55,7 @@ architecture common_controller of gbt_controller_wrapper is
   signal ic_rx_data  : std_logic_vector (7 downto 0);
   signal ic_rx_empty : std_logic;
 
+  signal unused_bits : std_logic_vector (23 downto 0);
 
 begin
 
@@ -230,7 +231,7 @@ begin
       chip_adr_o => open,
 
       data_o(7 downto 0)  => mon.rx_data_from_gbtx,
-      data_o(31 downto 8) => open,
+      data_o(31 downto 8) => unused_bits,
 
       length_o             => open,
       reg_adr_o            => mon.rx_adr_from_gbtx,
