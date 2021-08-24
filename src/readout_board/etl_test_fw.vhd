@@ -430,9 +430,21 @@ begin
 
     rbdata : for I in 0 to NUM_GTS-1 generate
     begin
-      rxslide(I)               <= uplink_bitslip(I);
-      uplink_mgt_word_array(I) <= mgt_data_out(I);
-      mgt_data_in(I)           <= downlink_mgt_word_array(I/2);
+
+      process (txclk(I)) is
+      begin
+        if (rising_edge(txclk(I))) then
+          mgt_data_in(I)           <= downlink_mgt_word_array(I/2);
+        end if;
+      end process;
+
+      process (rxclk(I)) is
+      begin
+        if (rising_edge(rxclk(I))) then
+          rxslide(I)               <= uplink_bitslip(I);
+          uplink_mgt_word_array(I) <= mgt_data_out(I);
+        end if;
+      end process;
     end generate;
 
     datagen : for I in 0 to NUM_GTS-1 generate
