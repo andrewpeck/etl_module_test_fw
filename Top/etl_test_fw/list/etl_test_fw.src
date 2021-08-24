@@ -4,7 +4,8 @@ src/readout_board/*.vhd
 
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
-src/utils/cylon.v
+src/utils/cylon1.v
+src/utils/cylon2.v
 src/utils/prbs_any.vhd
 src/utils/fifo_async.vhd
 src/utils/fifo_sync.vhd
