@@ -301,7 +301,8 @@ begin
   -- indexed, or get the fw_info=array feature to work on bare registers
 
   xxx : if (true) generate
-    type align_cnt_array is array (27 downto 0) of std_logic_vector(integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
+    type align_cnt_array is array (27 downto 0) of
+      std_logic_vector(integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
     type align_cnt_array_2d is array (NUM_LPGBTS_DAQ+NUM_LPGBTS_TRIG-1 downto 0) of align_cnt_array;
     signal align_cnts : align_cnt_array_2d;
   begin
@@ -397,9 +398,11 @@ begin
 
   --------------------------------------------------------------------------------
   -- DAQ FIFO + Reader
+  --   Multiplex all elinks into a single FIFO that can be read from the DAQ
   --------------------------------------------------------------------------------
 
   fifo_gen : if (true) generate
+
     signal data      : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
     signal data_r    : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
     signal elink_sel : integer range 0 to 27;
