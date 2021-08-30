@@ -15,6 +15,7 @@ use ctrl_lib.READOUT_BOARD_ctrl.all;
 library work;
 use work.types.all;
 use work.lpgbt_pkg.all;
+use work.components_pkg.all;
 
 library ipbus;
 use ipbus.ipbus.all;
@@ -593,32 +594,6 @@ begin
   --------------------------------------------------------------------------------
 
   debug : if (C_DEBUG) generate
-
-    component ila_lpgbt
-      port (
-        clk     : in std_logic;
-        probe0  : in std_logic_vector(31 downto 0);
-        probe1  : in std_logic_vector(31 downto 0);
-        probe2  : in std_logic_vector(0 downto 0);
-        probe3  : in std_logic_vector(0 downto 0);
-        probe4  : in std_logic_vector(0 downto 0);
-        probe5  : in std_logic_vector(31 downto 0);
-        probe6  : in std_logic_vector(223 downto 0);
-        probe7  : in std_logic_vector(0 downto 0);
-        probe8  : in std_logic_vector(0 downto 0);
-        probe9  : in std_logic_vector(0 downto 0);
-        probe10 : in std_logic_vector(0 downto 0);
-        probe11 : in std_logic_vector(1 downto 0);
-        probe12 : in std_logic_vector(1 downto 0);
-        probe13 : in std_logic_vector(1 downto 0);
-        probe14 : in std_logic_vector(1 downto 0);
-        probe15 : in std_logic_vector(0 downto 0);
-        probe16 : in std_logic_vector(0 downto 0);
-        probe17 : in std_logic_vector(0 downto 0);
-        probe18 : in std_logic_vector(0 downto 0)
-        );
-    end component;
-
   begin
 
     ila_lpgbt_trig_inst : ila_lpgbt
