@@ -81,11 +81,11 @@ package READOUT_BOARD_CTRL is
 
 
   type READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t is record
-    RESET                      :std_logic;     -- Reset this Downlink
-    ALIGN_0                    :std_logic_vector( 2 downto 0);
-    ALIGN_1                    :std_logic_vector( 2 downto 0);
-    ALIGN_2                    :std_logic_vector( 2 downto 0);
-    ALIGN_3                    :std_logic_vector( 2 downto 0);
+    RESET                      :std_logic;     -- Reset this Downlink LpGBT Encoder
+    ALIGN_0                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 0
+    ALIGN_1                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 1
+    ALIGN_2                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 2
+    ALIGN_3                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 3
     DL_SRC                     :std_logic_vector( 2 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=fast command
     FAST_CMD_IDLE              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
     FAST_CMD_DATA              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
@@ -334,6 +334,9 @@ package READOUT_BOARD_CTRL is
     FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
     FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
     FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
+    FIFO_TRIG0_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 0 enable mask
+    FIFO_TRIG1_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
+    FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -345,7 +348,10 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_RESET => '0',
                                                                    FIFO_TRIG0 => (others => '0'),
                                                                    FIFO_TRIG1 => (others => '0'),
-                                                                   FIFO_FORCE_TRIG => '0'
+                                                                   FIFO_FORCE_TRIG => '0',
+                                                                   FIFO_TRIG0_MASK => x"ffffffff",
+                                                                   FIFO_TRIG1_MASK => x"ffffffff",
+                                                                   FIFO_CAPTURE_DEPTH => x"003fff"
                                                                   );
 
 

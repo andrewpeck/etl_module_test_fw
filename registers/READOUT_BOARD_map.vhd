@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 772);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 772) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 775);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 775) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -98,10 +98,10 @@ begin  -- architecture behavioral
         when 17 => --0x11
           localRdData( 0)            <=  Mon.LPGBT.DAQ.DOWNLINK.READY;                --LPGBT Downlink Ready
         when 18 => --0x12
-          localRdData( 2 downto  0)  <=  reg_data(18)( 2 downto  0);                  --
-          localRdData( 6 downto  4)  <=  reg_data(18)( 6 downto  4);                  --
-          localRdData(10 downto  8)  <=  reg_data(18)(10 downto  8);                  --
-          localRdData(14 downto 12)  <=  reg_data(18)(14 downto 12);                  --
+          localRdData( 2 downto  0)  <=  reg_data(18)( 2 downto  0);                  --Downlink bitslip alignment for Group 0
+          localRdData( 6 downto  4)  <=  reg_data(18)( 6 downto  4);                  --Downlink bitslip alignment for Group 1
+          localRdData(10 downto  8)  <=  reg_data(18)(10 downto  8);                  --Downlink bitslip alignment for Group 2
+          localRdData(14 downto 12)  <=  reg_data(18)(14 downto 12);                  --Downlink bitslip alignment for Group 3
         when 19 => --0x13
           localRdData( 2 downto  0)  <=  reg_data(19)( 2 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=fast command
         when 20 => --0x14
@@ -209,6 +209,12 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  reg_data(770)(31 downto  0);                 --FIFO trigger word 0
         when 771 => --0x303
           localRdData(31 downto  0)  <=  reg_data(771)(31 downto  0);                 --FIFO trigger word 0
+        when 773 => --0x305
+          localRdData(31 downto  0)  <=  reg_data(773)(31 downto  0);                 --FIFO trigger word 0 enable mask
+        when 774 => --0x306
+          localRdData(31 downto  0)  <=  reg_data(774)(31 downto  0);                 --FIFO trigger word 1 enable mask
+        when 775 => --0x307
+          localRdData(23 downto  0)  <=  reg_data(775)(23 downto  0);                 --# of words to capture in the fifo
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -302,6 +308,9 @@ begin  -- architecture behavioral
   Ctrl.FIFO_LPGBT_SEL                          <=  reg_data(768)( 8);               
   Ctrl.FIFO_TRIG0                              <=  reg_data(770)(31 downto  0);     
   Ctrl.FIFO_TRIG1                              <=  reg_data(771)(31 downto  0);     
+  Ctrl.FIFO_TRIG0_MASK                         <=  reg_data(773)(31 downto  0);     
+  Ctrl.FIFO_TRIG1_MASK                         <=  reg_data(774)(31 downto  0);     
+  Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(775)(23 downto  0);     
 
 
   -- writes to slave
@@ -370,10 +379,10 @@ begin  -- architecture behavioral
         when 16 => --0x10
           Ctrl.LPGBT.DAQ.DOWNLINK.RESET           <=  localWrData( 0);               
         when 18 => --0x12
-          reg_data(18)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data(18)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data(18)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data(18)(14 downto 12)              <=  localWrData(14 downto 12);      --
+          reg_data(18)( 2 downto  0)              <=  localWrData( 2 downto  0);      --Downlink bitslip alignment for Group 0
+          reg_data(18)( 6 downto  4)              <=  localWrData( 6 downto  4);      --Downlink bitslip alignment for Group 1
+          reg_data(18)(10 downto  8)              <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
+          reg_data(18)(14 downto 12)              <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
         when 19 => --0x13
           reg_data(19)( 2 downto  0)              <=  localWrData( 2 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=fast command
         when 20 => --0x14
@@ -478,6 +487,12 @@ begin  -- architecture behavioral
           reg_data(771)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 772 => --0x304
           Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
+        when 773 => --0x305
+          reg_data(773)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0 enable mask
+        when 774 => --0x306
+          reg_data(774)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+        when 775 => --0x307
+          reg_data(775)(23 downto  0)             <=  localWrData(23 downto  0);      --# of words to capture in the fifo
 
         when others => null;
 
@@ -568,6 +583,9 @@ begin  -- architecture behavioral
       reg_data(768)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL;
       reg_data(770)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0;
       reg_data(771)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1;
+      reg_data(773)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0_MASK;
+      reg_data(774)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1_MASK;
+      reg_data(775)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
 
       end if; -- reset
     end if; -- clk

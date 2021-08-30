@@ -418,26 +418,50 @@ begin
     signal fifo_valid : std_logic                      := '0';
     signal fifo_full  : std_logic                      := '0';
 
-    signal daq_force_trigger, daq_trigger : std_logic := '0';
-    signal daq_armed                      : std_logic := '0';
+    signal daq_force_trigger, daq_trigger : std_logic                           := '0';
+    signal daq_armed                      : std_logic                           := '0';
+    signal daq_rearm                      : std_logic                           := '0';
+    signal fifo_capture_depth             : integer range 0 to DAQ_FIFO_DEPTH-1;
+    signal fifo_words_captured            : integer range 0 to DAQ_FIFO_DEPTH-1 := 0;
 
-    signal trig0, trig1 : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    signal trig0, trig1           : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    signal trig0_mask, trig1_mask : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   begin
 
-    trig0 <= ctrl.fifo_trig0(UPWIDTH-1 downto 0);
-    trig1 <= ctrl.fifo_trig1(UPWIDTH-1 downto 0);
-    mon.fifo_armed <= daq_armed;
-    mon.fifo_full <= fifo_full;
-    mon.fifo_empty <= fifo_empty;
+    trig0              <= ctrl.fifo_trig0(UPWIDTH-1 downto 0);
+    trig1              <= ctrl.fifo_trig1(UPWIDTH-1 downto 0);
+    trig0_mask         <= ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0);
+    trig1_mask         <= ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0);
+    mon.fifo_armed     <= daq_armed;
+    mon.fifo_full      <= fifo_full;
+    mon.fifo_empty     <= fifo_empty;
+    daq_force_trigger  <= ctrl.fifo_force_trig;
+    fifo_capture_depth <= to_integer(unsigned(ctrl.fifo_capture_depth));
 
     process (clk40) is
     begin
       if (rising_edge(clk40)) then
 
-        if ((daq_armed = '1' and data = trig1 and data_r = trig0) or daq_force_trigger = '1') then
-          daq_armed  <= '0';
-          fifo_wr_en <= '1';
+        if (fifo_wr_en = '1') then
+          fifo_words_captured <= fifo_words_captured + 1;
+        end if;
+
+        -- trigger
+        if ((daq_armed = '1' and
+             (trig1_mask and data = trig1_mask and trig1) and
+             (trig0_mask and data_r = trig0_mask and trig0))
+            or daq_force_trigger = '1') then
+          fifo_words_captured <= 0;
+          daq_armed           <= '0';
+          fifo_wr_en          <= '1';
+        end if;
+
+        -- reached fifo # of words
+        if (fifo_capture_depth = fifo_words_captured) then
+          daq_armed           <= '1';
+          fifo_wr_en          <= '0';
+          fifo_words_captured <= 0;
         end if;
 
         -- stop writing when it is full, and wait until it is re-armed
