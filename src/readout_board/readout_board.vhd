@@ -449,8 +449,8 @@ begin
 
         -- trigger
         if ((daq_armed = '1' and
-             (trig1_mask and data = trig1_mask and trig1) and
-             (trig0_mask and data_r = trig0_mask and trig0))
+             ((trig1_mask and data) = (trig1_mask and trig1)) and
+             ((trig0_mask and data_r) = (trig0_mask and trig0)))
             or daq_force_trigger = '1') then
           fifo_words_captured <= 0;
           daq_armed           <= '0';
