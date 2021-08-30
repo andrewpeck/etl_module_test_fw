@@ -97,6 +97,8 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of prbs_ff  : signal is "true";
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
+  signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
+
 begin
 
   --------------------------------------------------------------------------------
@@ -164,10 +166,17 @@ begin
           downlink_data(I).data <= cnt_slv & cnt_slv & cnt_slv & cnt_slv;
         elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 2) then
           downlink_data(I).data <= prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse;
+        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 3) then
+          downlink_data(I).data <= fast_cmd & fast_cmd & fast_cmd & fast_cmd;
         end if;
       end if;
     end process;
   end generate;
+
+  fast_cmd <= ctrl.lpgbt.daq.downlink.fast_cmd_data
+              when
+              ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
+              ctrl.lpgbt.daq.downlink.fast_cmd_idle;
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -197,7 +206,7 @@ begin
       mon      => mon.sc,
       ctrl     => ctrl.sc,
 
-      clk40   => clk40,
+      clk40 => clk40,
 
       -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
       ic_data_i => uplink_data(0).ic,
@@ -386,11 +395,12 @@ begin
   end generate;
 
   --------------------------------------------------------------------------------
-  -- FIFO + Reader
+  -- DAQ FIFO + Reader
   --------------------------------------------------------------------------------
 
   fifo_gen : if (true) generate
     signal data      : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    signal data_r    : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
     signal elink_sel : integer range 0 to 27;
     signal lpgbt_sel : integer range 0 to 1;
 
@@ -399,10 +409,47 @@ begin
 
     signal fifo_dout  : std_logic_vector (31 downto 0) := (others => '0');
     signal fifo_rd_en : std_logic                      := '0';
+    signal fifo_wr_en : std_logic                      := '0';
     signal fifo_empty : std_logic                      := '0';
     signal fifo_valid : std_logic                      := '0';
+    signal fifo_full  : std_logic                      := '0';
+
+    signal daq_force_trigger, daq_trigger : std_logic := '0';
+    signal daq_armed                      : std_logic := '0';
+
+    signal trig0, trig1 : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   begin
+
+    trig0 <= ctrl.fifo_trig0(UPWIDTH-1 downto 0);
+    trig1 <= ctrl.fifo_trig1(UPWIDTH-1 downto 0);
+    mon.fifo_armed <= daq_armed;
+    mon.fifo_full <= fifo_full;
+    mon.fifo_empty <= fifo_empty;
+
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
+
+        if ((daq_armed = '1' and data = trig1 and data_r = trig0) or daq_force_trigger = '1') then
+          daq_armed  <= '0';
+          fifo_wr_en <= '1';
+        end if;
+
+        -- stop writing when it is full, and wait until it is re-armed
+        if (fifo_full = '1') then
+          daq_armed  <= '0';
+          fifo_wr_en <= '0';
+        end if;
+
+        -- reset
+        if (ctrl.fifo_reset = '1') then
+          daq_armed  <= '1';
+          fifo_wr_en <= '0';
+        end if;
+
+      end if;
+    end process;
 
     -- copy for timing and align to system 40MHz
     elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel));
@@ -411,7 +458,8 @@ begin
     process (clk40) is
     begin
       if (rising_edge(clk40)) then
-        data <= uplink_data_aligned(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+        data   <= uplink_data_aligned(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+        data_r <= data;
       end if;
     end process;
 
@@ -427,14 +475,14 @@ begin
       port map (
         rst           => ctrl.fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
         clk           => clk40,
-        wr_en         => '1',
+        wr_en         => fifo_wr_en,
         rd_en         => fifo_rd_en,
         din           => x"000000" & data,
         dout          => fifo_dout,
         valid         => fifo_valid,
         wr_data_count => open,
         overflow      => open,
-        full          => mon.fifo_full,
+        full          => fifo_full,
         almost_full   => open,
         empty         => fifo_empty
         );

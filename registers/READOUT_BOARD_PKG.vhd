@@ -86,7 +86,10 @@ package READOUT_BOARD_CTRL is
     ALIGN_1                    :std_logic_vector( 2 downto 0);
     ALIGN_2                    :std_logic_vector( 2 downto 0);
     ALIGN_3                    :std_logic_vector( 2 downto 0);
-    DL_SRC                     :std_logic_vector( 2 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs
+    DL_SRC                     :std_logic_vector( 2 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=fast command
+    FAST_CMD_IDLE              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
+    FAST_CMD_DATA              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
+    FAST_CMD_PULSE             :std_logic;                      -- Write 1 to pulse fast_cmd
   end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
 
 
@@ -96,7 +99,10 @@ package READOUT_BOARD_CTRL is
                                                                                                          ALIGN_1 => (others => '0'),
                                                                                                          ALIGN_2 => (others => '0'),
                                                                                                          ALIGN_3 => (others => '0'),
-                                                                                                         DL_SRC => (others => '0')
+                                                                                                         DL_SRC => (others => '0'),
+                                                                                                         FAST_CMD_IDLE => x"f0",
+                                                                                                         FAST_CMD_DATA => (others => '0'),
+                                                                                                         FAST_CMD_PULSE => '0'
                                                                                                         );
   type READOUT_BOARD_LPGBT_DAQ_MON_t is record
     UPLINK                     :READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t;
@@ -314,6 +320,8 @@ package READOUT_BOARD_CTRL is
     LPGBT                      :READOUT_BOARD_LPGBT_MON_t;
     SC                         :READOUT_BOARD_SC_MON_t;   
     FIFO_FULL                  :std_logic;                  -- FIFO is full
+    FIFO_ARMED                 :std_logic;                  -- FIFO armed
+    FIFO_EMPTY                 :std_logic;                  -- FIFO empty
   end record READOUT_BOARD_MON_t;
 
 
@@ -323,6 +331,9 @@ package READOUT_BOARD_CTRL is
     FIFO_ELINK_SEL             :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL             :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
+    FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
+    FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
+    FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -331,7 +342,10 @@ package READOUT_BOARD_CTRL is
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL => (others => '0'),
                                                                    FIFO_LPGBT_SEL => '0',
-                                                                   FIFO_RESET => '0'
+                                                                   FIFO_RESET => '0',
+                                                                   FIFO_TRIG0 => (others => '0'),
+                                                                   FIFO_TRIG1 => (others => '0'),
+                                                                   FIFO_FORCE_TRIG => '0'
                                                                   );
 
 
