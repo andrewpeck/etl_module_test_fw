@@ -15,7 +15,7 @@ use ctrl_lib.READOUT_BOARD_ctrl.all;
 library work;
 use work.types.all;
 use work.lpgbt_pkg.all;
-use work.components_pkg.all;
+use work.components.all;
 
 library ipbus;
 use ipbus.ipbus.all;
