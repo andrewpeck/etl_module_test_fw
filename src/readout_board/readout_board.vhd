@@ -576,6 +576,7 @@ begin
     wishbone_fifo_reader_inst : entity work.wishbone_fifo_reader
       port map (
         clk       => clk40,
+        sel       => '1',
         reset     => reset,
         ipbus_in  => fifo_wb_in,
         ipbus_out => fifo_wb_out,

@@ -174,8 +174,15 @@ begin
   begin
     rb_en : if (EN_LPGBTS = 1) generate
 
-      daq_ipb_w_array(I)      <= ipb_w_array(DAQ_BASE+I);
-      ipb_r_array(DAQ_BASE+I) <= daq_ipb_r_array(I);
+      daq_ipb_w_array(I) <= ipb_w_array(DAQ_BASE+I);
+
+      ipb_r_array(DAQ_BASE+I).ipb_rdata <= daq_ipb_r_array(I).ipb_rdata;
+      ipb_r_array(DAQ_BASE+I).ipb_ack   <= daq_ipb_r_array(I).ipb_ack
+                                         when
+                                         to_integer(unsigned(ipbus_sel_etl_test_fw(ipb_w.ipb_addr)))
+                                           = DAQ_BASE+I
+                                         else '0';
+      ipb_r_array(DAQ_BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
 
       READOUT_BOARD_wb_map_inst : entity ctrl_lib.READOUT_BOARD_wb_map
         port map (

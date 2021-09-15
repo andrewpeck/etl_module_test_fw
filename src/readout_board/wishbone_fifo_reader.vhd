@@ -9,6 +9,13 @@ entity wishbone_fifo_reader is
     clk   : in std_logic;
     reset : in std_logic;
 
+    -- set to 1 when module is selected by wishbone to prevent bus contention
+    --
+    -- if your wishbone mux can deal with one slave keeping ack asserted then
+    -- this doesn't matter, but that is not how the ipbus wishbone arbiter works
+    --
+    sel : in std_logic;
+
     -- wishbone
     ipbus_in  : in  ipb_wbus;
     ipbus_out : out ipb_rbus;
@@ -73,7 +80,17 @@ begin
   rd_en <= '1' when words_todo > 0 else '0';
 
   ipbus_out.ipb_rdata <= din;
-  ipbus_out.ipb_ack   <= (valid or empty);
+
+  -- ack on valid or empty so we don't make a bus error from an empty FIFO
+  --
+  -- this however keeps ack high if the FIFO is empty which creates some kind of
+  -- bus contention.
+  --
+  -- for this reason the SEL input is provided so you can specify when
+  -- this module's address range is selected
+  --
+
+  ipbus_out.ipb_ack   <= (valid or empty) when sel = '1' else '0';
 
   ipbus_out.ipb_err <= '0';
 
