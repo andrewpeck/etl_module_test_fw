@@ -123,6 +123,9 @@ begin
 
   --------------------------------------------------------------------------------
   -- Downlink Data Generation
+  --
+  -- TODO: move this into its own block
+  --
   --------------------------------------------------------------------------------
 
   -- up counter
@@ -160,8 +163,13 @@ begin
 
   prbs_gen_reverse <= reverse_vector(prbs_gen);
 
-  -- lpgbt downlink muiltiplexing
-  -- when some ttc data format is available, add it here
+  -- lpgbt downlink multiplexing
+  --
+  -- Choose between different data sources
+  --
+  --  + up count
+  --  + prbs-7 generation
+  --  + programmable fast command
 
   dl_assign : for I in 0 to NUM_DOWNLINKS-1 generate
   begin
@@ -183,6 +191,10 @@ begin
     end process;
   end generate;
 
+  -- Fast command pulse
+  --  + make it so that the fast commands are just one pulse wide
+  --    (gated by the strobe)
+
   fast_cmd <= ctrl.lpgbt.daq.downlink.fast_cmd_data
               when
               ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
@@ -190,6 +202,9 @@ begin
 
   --------------------------------------------------------------------------------
   -- Record mapping
+  --
+  --   + dumb mapping to/from records and internal signals
+  --
   --------------------------------------------------------------------------------
 
   mon.lpgbt.daq.uplink.ready     <= uplink_ready(0);
@@ -282,15 +297,20 @@ begin
 
   --------------------------------------------------------------------------------
   -- Downlink Frame Aligner
+  --
+  -- TODO: move this into its own block
+  --
   --------------------------------------------------------------------------------
 
   dlvalid : for I in 0 to NUM_DOWNLINKS-1 generate
   begin
+
     downlink_data_aligned(I).valid <= valid;
   end generate;
 
   downlink_aligners : for IBYTE in 0 to 3 generate
-    signal align_cnt                 : std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
+    signal align_cnt                 :
+      std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
     -- don't care about bus coherence here..
     -- switching doesn't need to be glitchless
     attribute ASYNC_REG              : string;
@@ -325,6 +345,9 @@ begin
 
   --------------------------------------------------------------------------------
   -- Uplink Frame Aligner
+  --
+  -- TODO: move this into its own block
+  --
   --------------------------------------------------------------------------------
 
   -- FIXME: generalize this so the loop doesn't need to be copy pasted for
@@ -429,7 +452,11 @@ begin
 
   --------------------------------------------------------------------------------
   -- DAQ FIFO + Reader
-  --   Multiplex all elinks into a single FIFO that can be read from the DAQ
+  --
+  -- Multiplex all elinks into a single FIFO that can be read from the DAQ
+  --
+  -- TODO: move this into its own block
+  --
   --------------------------------------------------------------------------------
 
   fifo_gen : if (true) generate
@@ -560,7 +587,11 @@ begin
   end generate;
 
   --------------------------------------------------------------------------------
-  -- PRBS
+  -- PRBS/Upcnt Pattern Checking
+  --
+  -- Look at data coming from the LPGBT, see it it matches expected prbs /
+  -- upcount patterns
+  --
   --------------------------------------------------------------------------------
 
   -- TODO: generalize this so the loop doesn't need to be copy pasted for
@@ -648,7 +679,7 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- DEBUG
+  -- DEBUG ILAS
   --------------------------------------------------------------------------------
 
   debug : if (C_DEBUG) generate
