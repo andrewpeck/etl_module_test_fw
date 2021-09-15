@@ -279,14 +279,14 @@ begin
   --------------------------------------------------------------------------------
 
   mon.lpgbt.daq.uplink.fec_err_cnt  <= uplink_fec_err_cnt(0);
-  mon.lpgbt.trig.uplink.fec_err_cnt <= uplink_fec_err_cnt(1);
+  mon.lpgbt.trigger.uplink.fec_err_cnt <= uplink_fec_err_cnt(1);
 
   ulfeccnt : for I in 0 to NUM_UPLINKS-1 generate
   begin
     uplink_fec_counter : entity work.counter
       generic map (width => 16)
       port map (
-        clk    => uplink_clk,
+        clk    => clk40,
         reset  => reset,
         enable => '1',
         event  => uplink_fec_err(I),
