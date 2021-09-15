@@ -66,6 +66,15 @@ architecture behavioral of readout_board is
   signal valid : std_logic;
 
   --------------------------------------------------------------------------------
+  -- FEC Error Counters
+  --------------------------------------------------------------------------------
+
+  constant COUNTER_WIDTH    : integer := 16;
+  type counter_array_t is array (integer range <>) of std_logic_vector(COUNTER_WIDTH-1 downto 0);
+  -- counters
+  signal uplink_fec_err_cnt : counter_array_t(NUM_UPLINKS-1 downto 0);
+
+  --------------------------------------------------------------------------------
   -- LPGBT Glue
   --------------------------------------------------------------------------------
 
@@ -248,6 +257,28 @@ begin
       uplink_bitslip_o => uplink_bitslip,
       uplink_fec_err_o => uplink_fec_err
       );
+
+
+  --------------------------------------------------------------------------------
+  -- FEC Counters
+  --------------------------------------------------------------------------------
+
+  mon.lpgbt.daq.uplink.fec_err_cnt  <= uplink_fec_err_cnt(0);
+  mon.lpgbt.trig.uplink.fec_err_cnt <= uplink_fec_err_cnt(1);
+
+  ulfeccnt : for I in 0 to NUM_UPLINKS-1 generate
+  begin
+    uplink_fec_counter : entity work.counter
+      generic map (width => 16)
+      port map (
+        clk    => uplink_clk,
+        reset  => reset,
+        enable => '1',
+        event  => uplink_fec_err(I),
+        count  => uplink_fec_err_cnt(I),
+        at_max => open
+        );
+  end generate;
 
   --------------------------------------------------------------------------------
   -- Downlink Frame Aligner
