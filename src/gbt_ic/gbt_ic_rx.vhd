@@ -202,6 +202,7 @@ begin
 
             if (std_logic_vector(to_unsigned(data_frame_cnt+1, length_int'length)) = length_int) then
               rx_state <= PARITY;
+              data_frame_cnt <= 0;
             else
               data_frame_cnt <= data_frame_cnt + 1;
             end if;
@@ -262,6 +263,7 @@ begin
 
         end if;
 
+        data_frame_cnt         <= 0;
         rsvrd_int              <= (others => '0');
         chip_adr_int           <= (others => '0');
         downlink_parity_ok_int <= '0';
