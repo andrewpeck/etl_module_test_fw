@@ -346,109 +346,21 @@ begin
   --------------------------------------------------------------------------------
   -- Uplink Frame Aligner
   --
-  -- TODO: move this into its own block
-  --
   --------------------------------------------------------------------------------
 
-  -- FIXME: generalize this so the loop doesn't need to be copy pasted for
-  -- additional lpgbts stick the registers into an array by hand that can be
-  -- indexed, or get the fw_info=array feature to work on bare registers
-
-  xxx : if (true) generate
-    type align_cnt_array is array (27 downto 0) of
-      std_logic_vector(integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
-    type align_cnt_array_2d is array (NUM_LPGBTS_DAQ+NUM_LPGBTS_TRIG-1 downto 0) of align_cnt_array;
-    signal align_cnts : align_cnt_array_2d;
-  begin
-
-    align_cnts(0)(0)  <= ctrl.lpgbt.daq.uplink.align_0;
-    align_cnts(0)(1)  <= ctrl.lpgbt.daq.uplink.align_1;
-    align_cnts(0)(2)  <= ctrl.lpgbt.daq.uplink.align_2;
-    align_cnts(0)(3)  <= ctrl.lpgbt.daq.uplink.align_3;
-    align_cnts(0)(4)  <= ctrl.lpgbt.daq.uplink.align_4;
-    align_cnts(0)(5)  <= ctrl.lpgbt.daq.uplink.align_5;
-    align_cnts(0)(6)  <= ctrl.lpgbt.daq.uplink.align_6;
-    align_cnts(0)(7)  <= ctrl.lpgbt.daq.uplink.align_7;
-    align_cnts(0)(8)  <= ctrl.lpgbt.daq.uplink.align_8;
-    align_cnts(0)(9)  <= ctrl.lpgbt.daq.uplink.align_9;
-    align_cnts(0)(10) <= ctrl.lpgbt.daq.uplink.align_10;
-    align_cnts(0)(11) <= ctrl.lpgbt.daq.uplink.align_11;
-    align_cnts(0)(12) <= ctrl.lpgbt.daq.uplink.align_12;
-    align_cnts(0)(13) <= ctrl.lpgbt.daq.uplink.align_13;
-    align_cnts(0)(14) <= ctrl.lpgbt.daq.uplink.align_14;
-    align_cnts(0)(15) <= ctrl.lpgbt.daq.uplink.align_15;
-    align_cnts(0)(16) <= ctrl.lpgbt.daq.uplink.align_16;
-    align_cnts(0)(17) <= ctrl.lpgbt.daq.uplink.align_17;
-    align_cnts(0)(18) <= ctrl.lpgbt.daq.uplink.align_18;
-    align_cnts(0)(19) <= ctrl.lpgbt.daq.uplink.align_19;
-    align_cnts(0)(20) <= ctrl.lpgbt.daq.uplink.align_20;
-    align_cnts(0)(21) <= ctrl.lpgbt.daq.uplink.align_21;
-    align_cnts(0)(22) <= ctrl.lpgbt.daq.uplink.align_22;
-    align_cnts(0)(23) <= ctrl.lpgbt.daq.uplink.align_23;
-    align_cnts(0)(24) <= ctrl.lpgbt.daq.uplink.align_24;
-    align_cnts(0)(25) <= ctrl.lpgbt.daq.uplink.align_25;
-    align_cnts(0)(26) <= ctrl.lpgbt.daq.uplink.align_26;
-    align_cnts(0)(27) <= ctrl.lpgbt.daq.uplink.align_27;
-
-    align_cnts(1)(0)  <= ctrl.lpgbt.trigger.uplink.align_0;
-    align_cnts(1)(1)  <= ctrl.lpgbt.trigger.uplink.align_1;
-    align_cnts(1)(2)  <= ctrl.lpgbt.trigger.uplink.align_2;
-    align_cnts(1)(3)  <= ctrl.lpgbt.trigger.uplink.align_3;
-    align_cnts(1)(4)  <= ctrl.lpgbt.trigger.uplink.align_4;
-    align_cnts(1)(5)  <= ctrl.lpgbt.trigger.uplink.align_5;
-    align_cnts(1)(6)  <= ctrl.lpgbt.trigger.uplink.align_6;
-    align_cnts(1)(7)  <= ctrl.lpgbt.trigger.uplink.align_7;
-    align_cnts(1)(8)  <= ctrl.lpgbt.trigger.uplink.align_8;
-    align_cnts(1)(9)  <= ctrl.lpgbt.trigger.uplink.align_9;
-    align_cnts(1)(10) <= ctrl.lpgbt.trigger.uplink.align_10;
-    align_cnts(1)(11) <= ctrl.lpgbt.trigger.uplink.align_11;
-    align_cnts(1)(12) <= ctrl.lpgbt.trigger.uplink.align_12;
-    align_cnts(1)(13) <= ctrl.lpgbt.trigger.uplink.align_13;
-    align_cnts(1)(14) <= ctrl.lpgbt.trigger.uplink.align_14;
-    align_cnts(1)(15) <= ctrl.lpgbt.trigger.uplink.align_15;
-    align_cnts(1)(16) <= ctrl.lpgbt.trigger.uplink.align_16;
-    align_cnts(1)(17) <= ctrl.lpgbt.trigger.uplink.align_17;
-    align_cnts(1)(18) <= ctrl.lpgbt.trigger.uplink.align_18;
-    align_cnts(1)(19) <= ctrl.lpgbt.trigger.uplink.align_19;
-    align_cnts(1)(20) <= ctrl.lpgbt.trigger.uplink.align_20;
-    align_cnts(1)(21) <= ctrl.lpgbt.trigger.uplink.align_21;
-    align_cnts(1)(22) <= ctrl.lpgbt.trigger.uplink.align_22;
-    align_cnts(1)(23) <= ctrl.lpgbt.trigger.uplink.align_23;
-    align_cnts(1)(24) <= ctrl.lpgbt.trigger.uplink.align_24;
-    align_cnts(1)(25) <= ctrl.lpgbt.trigger.uplink.align_25;
-    align_cnts(1)(26) <= ctrl.lpgbt.trigger.uplink.align_26;
-    align_cnts(1)(27) <= ctrl.lpgbt.trigger.uplink.align_27;
-
-    uplink_aligners_lpgbtloop : for I in 0 to NUM_UPLINKS-1 generate
-      uplink_aligners_linkloop : for J in 0 to NUM_ELINKS-1 generate
-        signal align_cnt : std_logic_vector (integer(ceil(log2(real(UPWIDTH))))-1 downto 0);
-
-        -- don't care about bus coherence here..
-        -- switching doesn't need to be glitchless
-        attribute ASYNC_REG              : string;
-        attribute ASYNC_REG of align_cnt : signal is "true";
-
-      begin
-
-        process (clk40) is
-        begin
-          if (rising_edge(clk40)) then
-            align_cnt <= align_cnts (I)(J);
-          end if;
-        end process;
-
-        frame_aligner_inst : entity work.frame_aligner
-          generic map (WIDTH => UPWIDTH)
-          port map (
-            clock => clk40,
-            cnt   => align_cnt,
-            din   => uplink_data(I).data(UPWIDTH*(J+1)-1 downto UPWIDTH*J),
-            dout  => uplink_data_aligned(I).data(UPWIDTH*(J+1)-1 downto UPWIDTH*J)
-            );
-
-      end generate;
-    end generate;
-  end generate;
+  uplink_aligner_inst : entity work.uplink_aligner
+    generic map (
+      UPWIDTH     => UPWIDTH,
+      NUM_UPLINKS => NUM_UPLINKS,
+      NUM_ELINKS  => NUM_ELINKS
+      )
+    port map (
+      clk40            => clk40,
+      daq_uplink_ctrl  => ctrl.lpgbt.daq.uplink,
+      trig_uplink_ctrl => ctrl.lpgbt.trigger.uplink,
+      data_i           => uplink_data,
+      data_o           => uplink_data_aligned
+      );
 
   --------------------------------------------------------------------------------
   -- DAQ FIFO + Reader
