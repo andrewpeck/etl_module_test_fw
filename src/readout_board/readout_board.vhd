@@ -69,7 +69,7 @@ architecture behavioral of readout_board is
   -- FEC Error Counters
   --------------------------------------------------------------------------------
 
-  constant COUNTER_WIDTH    : integer := 16;
+  constant COUNTER_WIDTH : integer := 16;
   type counter_array_t is array (integer range <>)
     of std_logic_vector(COUNTER_WIDTH-1 downto 0);
 
@@ -377,10 +377,24 @@ begin
       NUM_UPLINKS => NUM_UPLINKS
       )
     port map (
-      clk40       => clk40,
-      reset       => reset,
-      ctrl        => ctrl,
-      mon         => mon,
+      clk40      => clk40,
+      reset      => reset,
+      fifo_reset => ctrl.fifo_reset,
+
+      trig0              => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
+      trig1              => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
+      trig0_mask         => ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0),
+      trig1_mask         => ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0),
+      fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
+      force_trig         => ctrl.fifo_force_trig,
+
+      elink_sel => to_integer(unsigned(ctrl.fifo_elink_sel)),
+      lpgbt_sel => to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel))),  -- vhdl qualify operator
+
+      armed => mon.fifo_armed,
+      full  => mon.fifo_full,
+      empty => mon.fifo_empty,
+
       data_i      => uplink_data_aligned,
       fifo_wb_in  => fifo_wb_in,
       fifo_wb_out => fifo_wb_out

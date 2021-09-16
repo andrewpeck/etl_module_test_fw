@@ -4,9 +4,6 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-library ctrl_lib;
-use ctrl_lib.READOUT_BOARD_ctrl.all;
-
 library work;
 use work.types.all;
 use work.lpgbt_pkg.all;
@@ -17,15 +14,30 @@ use ipbus.ipbus.all;
 
 entity elink_daq is
   generic(
-    UPWIDTH     : natural := 8;
-    NUM_UPLINKS : natural := 2
+    UPWIDTH        : natural  := 8;
+    NUM_UPLINKS    : natural  := 2;
+    DAQ_FIFO_DEPTH : positive := 2*32768
     );
   port(
-    clk40  : in  std_logic;
-    reset  : in  std_logic;
-    ctrl   : in  READOUT_BOARD_CTRL_t;
-    mon    : out READOUT_BOARD_MON_t;
-    data_i : in  lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
+    clk40      : in std_logic;
+    reset      : in std_logic;
+    fifo_reset : in std_logic;
+
+    trig0, trig1           : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0_mask, trig1_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+
+    force_trig : in std_logic;
+
+    armed : out std_logic;
+    full  : out std_logic;
+    empty : out std_logic;
+
+    fifo_capture_depth : in integer range 0 to DAQ_FIFO_DEPTH-1;
+
+    data_i : in lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
+
+    elink_sel : in integer range 0 to 27;
+    lpgbt_sel : in integer range 0 to 1;
 
     fifo_wb_in  : in  ipb_wbus;
     fifo_wb_out : out ipb_rbus
@@ -37,10 +49,6 @@ architecture behavioral of elink_daq is
   signal data   : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
   signal data_r : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
-  signal elink_sel : integer range 0 to 27;
-  signal lpgbt_sel : integer range 0 to 1;
-
-  constant DAQ_FIFO_DEPTH         : positive := 2*32768;
   constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
 
   signal fifo_dout  : std_logic_vector (31 downto 0) := (others => '0');
@@ -50,26 +58,14 @@ architecture behavioral of elink_daq is
   signal fifo_valid : std_logic                      := '0';
   signal fifo_full  : std_logic                      := '0';
 
-  signal daq_force_trigger, daq_trigger : std_logic                           := '0';
-  signal daq_armed                      : std_logic                           := '0';
-  signal daq_rearm                      : std_logic                           := '0';
-  signal fifo_capture_depth             : integer range 0 to DAQ_FIFO_DEPTH-1;
-  signal fifo_words_captured            : integer range 0 to DAQ_FIFO_DEPTH-1 := 0;
-
-  signal trig0, trig1           : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
-  signal trig0_mask, trig1_mask : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+  signal daq_armed           : std_logic                           := '0';
+  signal fifo_words_captured : integer range 0 to DAQ_FIFO_DEPTH-1 := 0;
 
 begin
 
-  trig0              <= ctrl.fifo_trig0(UPWIDTH-1 downto 0);
-  trig1              <= ctrl.fifo_trig1(UPWIDTH-1 downto 0);
-  trig0_mask         <= ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0);
-  trig1_mask         <= ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0);
-  mon.fifo_armed     <= daq_armed;
-  mon.fifo_full      <= fifo_full;
-  mon.fifo_empty     <= fifo_empty;
-  daq_force_trigger  <= ctrl.fifo_force_trig;
-  fifo_capture_depth <= to_integer(unsigned(ctrl.fifo_capture_depth));
+  armed <= daq_armed;
+  full  <= fifo_full;
+  empty <= fifo_empty;
 
   process (clk40) is
   begin
@@ -83,7 +79,7 @@ begin
       if ((daq_armed = '1' and
            ((trig1_mask and data) = (trig1_mask and trig1)) and
            ((trig0_mask and data_r) = (trig0_mask and trig0)))
-          or daq_force_trigger = '1') then
+          or force_trig = '1') then
         fifo_words_captured <= 0;
         daq_armed           <= '0';
         fifo_wr_en          <= '1';
@@ -103,17 +99,13 @@ begin
       end if;
 
       -- reset
-      if (ctrl.fifo_reset = '1') then
+      if (fifo_reset = '1') then
         daq_armed  <= '1';
         fifo_wr_en <= '0';
       end if;
 
     end if;
   end process;
-
-  -- copy for timing and align to system 40MHz
-  elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel));
-  lpgbt_sel <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel)));  -- vhdl qualify operator
 
   process (clk40) is
   begin
@@ -123,7 +115,7 @@ begin
     end if;
   end process;
 
-  fifo_sync_1 : entity work.fifo_sync
+  fifo_sync_inst : entity work.fifo_sync
     generic map (
       DEPTH               => DAQ_FIFO_DEPTH,
       USE_ALMOST_FULL     => 1,
@@ -133,7 +125,7 @@ begin
       USE_WR_DATA_COUNT   => 1
       )
     port map (
-      rst           => ctrl.fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+      rst           => fifo_reset,      -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
