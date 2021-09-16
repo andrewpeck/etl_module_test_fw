@@ -70,7 +70,9 @@ architecture behavioral of readout_board is
   --------------------------------------------------------------------------------
 
   constant COUNTER_WIDTH    : integer := 16;
-  type counter_array_t is array (integer range <>) of std_logic_vector(COUNTER_WIDTH-1 downto 0);
+  type counter_array_t is array (integer range <>)
+    of std_logic_vector(COUNTER_WIDTH-1 downto 0);
+
   -- counters
   signal uplink_fec_err_cnt : counter_array_t(NUM_UPLINKS-1 downto 0);
 
@@ -278,7 +280,7 @@ begin
   -- FEC Counters
   --------------------------------------------------------------------------------
 
-  mon.lpgbt.daq.uplink.fec_err_cnt  <= uplink_fec_err_cnt(0);
+  mon.lpgbt.daq.uplink.fec_err_cnt     <= uplink_fec_err_cnt(0);
   mon.lpgbt.trigger.uplink.fec_err_cnt <= uplink_fec_err_cnt(1);
 
   ulfeccnt : for I in 0 to NUM_UPLINKS-1 generate
@@ -309,7 +311,7 @@ begin
   end generate;
 
   downlink_aligners : for IBYTE in 0 to 3 generate
-    signal align_cnt                 :
+    signal align_cnt :
       std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
     -- don't care about bus coherence here..
     -- switching doesn't need to be glitchless
