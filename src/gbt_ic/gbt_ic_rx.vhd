@@ -201,7 +201,7 @@ begin
             end case;
 
             if (std_logic_vector(to_unsigned(data_frame_cnt+1, length_int'length)) = length_int) then
-              rx_state <= PARITY;
+              rx_state       <= PARITY;
               data_frame_cnt <= 0;
             else
               data_frame_cnt <= data_frame_cnt + 1;
