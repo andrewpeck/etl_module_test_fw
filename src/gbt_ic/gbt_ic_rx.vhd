@@ -35,6 +35,11 @@
 --  If only single byte transactions are needed, then you only need to pay
 --  attention to the least significant 8 bits of the word.
 --
+-- Notes:
+--
+--   TODO: Add a (optional) FIFO to allow reading packets longer than 4 bytes
+--   TODO: Look at differences between LPGBT v0 and LPGBT v1
+--
 ----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -78,55 +83,18 @@ architecture Behavioral of gbt_ic_rx is
   signal rw_bit_int             : std_logic                      := '0';
   signal data_int               : std_logic_vector (31 downto 0) := (others => '0');
 
+  -- watchdog counter
   constant watchdog_cnt_max : integer                             := 127;
   signal watchdog_cnt       : integer range 0 to watchdog_cnt_max := 0;
   signal watchdog_reset     : std_logic                           := '0';
 
   signal data_frame_cnt : integer range 0 to 2**16-1;
 
-  -- component ila_ic
-
-  --   port (
-  --     clk : in std_logic;
-
-  --     probe0  : in std_logic_vector(3 downto 0);
-  --     probe1  : in std_logic_vector(0 downto 0);
-  --     probe2  : in std_logic_vector(7 downto 0);
-  --     probe3  : in std_logic_vector(6 downto 0);
-  --     probe4  : in std_logic_vector(31 downto 0);
-  --     probe5  : in std_logic_vector(15 downto 0);
-  --     probe6  : in std_logic_vector(15 downto 0);
-  --     probe7  : in std_logic_vector(0 downto 0);
-  --     probe8  : in std_logic_vector(0 downto 0);
-  --     probe9  : in std_logic_vector(0 downto 0);
-  --     probe10 : in std_logic_vector(0 downto 0)
-  --     );
-  -- end component;
-
 begin
 
-  -- ila_ic_inst : ila_ic
-  -- port map (
-  --   clk                 => clock_i,
-  --   probe0(3 downto 0)  => std_logic_vector(to_unsigned(rx_state_t'pos(rx_state), 4)),
-  --   probe1(0)           => valid_i,
-  --   probe2(7 downto 0)  => frame_i,
-  --   probe3(6 downto 0)  => chip_adr_o,
-  --   probe4(7 downto 0)  => std_logic_vector(to_unsigned(watchdog_cnt, 8)),
-  --   probe4(8)           => watchdog_reset,
-  --   probe4(31 downto 9) => data_o(22 downto 0),
-  --   probe5(15 downto 0) => length_o,
-  --   probe6(15 downto 0) => reg_adr_o,
-  --   probe7(0)           => uplink_parity_ok_o,
-  --   probe8(0)           => downlink_parity_ok_o,
-  --   probe9(0)           => err_o,
-  --   probe10(0)          => valid_o
-  --   );
-
   --------------------------------------------------------------------------------
-  -- watchdog to keep the state machine from getting stuck (e.g. because the
-  --  headder is stripped off, it seems like sometimes it spuriously gets in the
-  --  wrong state)
+  --
+  -- watchdog to keep the state machine from getting stuck
   --
   -- This just waits a reasonably long time then takes the state machine back to
   -- IDLE
