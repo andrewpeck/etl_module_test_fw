@@ -60,9 +60,33 @@ Details of the XDMA setup and installationcan be read at  [[file:doc/XDMA.org][X
 *** Ethernet
 
 A gigabit ethernet port may also be used for control.
+
+The ethernet interface on your computer can be configured, e.g. with the command:
 #+begin_src bash
 sudo /sbin/ifconfig eth0 192.168.0.130 netmask 255.255.255.0 broadcast 192.168.0.255
-sudo /sbin/ifconfig eth0 192.168.0.130 netmask 255.255.0.0 broadcast 192.168.0.255
-sudo /sbin/route add -net 192.168.0.10 netmask 255.255.255.255 dev eth0
 #+end_src
 
+** Notes :noexport:
+
+From: https://www.xilinx.com/support/documentation/user_guides/ug575-ultrascale-pkg-pinout.pdf
+#+attr_org: :width 700px
+[[file:images/screenshots/2020-11-17_19-54-28_screenshot.png]]
+
+
+|-----+-----------------+------+----------+--------|
+| Pin | Firmware Signal | Bank | QUAD LOC | CH LOC |
+|-----+-----------------+------+----------+--------|
+| U4  | sfp_tx_p[0]     |  226 | X0Y2     | X0Y10  |
+| W4  | sfp_tx_p[1]     |  226 | X0Y2     | X0Y9   |
+| N4  | fmc_tx_p[0]     |  227 | X0Y3     | X0Y12  |
+| L4  | fmc_tx_p[1]     |  227 | X0Y3     | X0Y13  |
+| J4  | fmc_tx_p[2]     |  227 | X0Y3     | X0Y14  |
+| G4  | fmc_tx_p[3]     |  227 | X0Y3     | X0Y15  |
+| F6  | fmc_tx_p[4]     |  228 | X0Y4     | X0Y16  |
+| D6  | fmc_tx_p[5]     |  228 | X0Y4     | X0Y17  |
+| C4  | fmc_tx_p[6]     |  228 | X0Y4     | X0Y18  |
+| B6  | fmc_tx_p[7]     |  228 | X0Y4     | X0Y19  |
+|-----+-----------------+------+----------+--------|
+| T2  | sfp_rx_p[0]     |  226 |          |        |
+| V2  | sfp_rx_p[1]     |  226 |          |        |
+|-----+-----------------+------+----------+--------|
