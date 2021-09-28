@@ -46,45 +46,44 @@ architecture Behavioral of gbt_ic_rx is
 
   signal data_frame_cnt : integer range 0 to 2**16-1;
 
-  component ila_ic
+  -- component ila_ic
 
-    port (
-      clk : in std_logic;
+  --   port (
+  --     clk : in std_logic;
 
-      probe0  : in std_logic_vector(3 downto 0);
-      probe1  : in std_logic_vector(0 downto 0);
-      probe2  : in std_logic_vector(7 downto 0);
-      probe3  : in std_logic_vector(6 downto 0);
-      probe4  : in std_logic_vector(31 downto 0);
-      probe5  : in std_logic_vector(15 downto 0);
-      probe6  : in std_logic_vector(15 downto 0);
-      probe7  : in std_logic_vector(0 downto 0);
-      probe8  : in std_logic_vector(0 downto 0);
-      probe9  : in std_logic_vector(0 downto 0);
-      probe10 : in std_logic_vector(0 downto 0)
-      );
-  end component;
+  --     probe0  : in std_logic_vector(3 downto 0);
+  --     probe1  : in std_logic_vector(0 downto 0);
+  --     probe2  : in std_logic_vector(7 downto 0);
+  --     probe3  : in std_logic_vector(6 downto 0);
+  --     probe4  : in std_logic_vector(31 downto 0);
+  --     probe5  : in std_logic_vector(15 downto 0);
+  --     probe6  : in std_logic_vector(15 downto 0);
+  --     probe7  : in std_logic_vector(0 downto 0);
+  --     probe8  : in std_logic_vector(0 downto 0);
+  --     probe9  : in std_logic_vector(0 downto 0);
+  --     probe10 : in std_logic_vector(0 downto 0)
+  --     );
+  -- end component;
 
 begin
 
-  ila_ic_inst : ila_ic
-
-    port map (
-      clk                 => clock_i,
-      probe0(3 downto 0)  => std_logic_vector(to_unsigned(rx_state_t'pos(rx_state), 4)),
-      probe1(0)           => valid_i,
-      probe2(7 downto 0)  => frame_i,
-      probe3(6 downto 0)  => chip_adr_o,
-      probe4(7 downto 0)  => std_logic_vector(to_unsigned(watchdog_cnt, 8)),
-      probe4(8)           => watchdog_reset,
-      probe4(31 downto 9) => data_o(22 downto 0),
-      probe5(15 downto 0) => length_o,
-      probe6(15 downto 0) => reg_adr_o,
-      probe7(0)           => uplink_parity_ok_o,
-      probe8(0)           => downlink_parity_ok_o,
-      probe9(0)           => err_o,
-      probe10(0)          => valid_o
-      );
+  -- ila_ic_inst : ila_ic
+  -- port map (
+  --   clk                 => clock_i,
+  --   probe0(3 downto 0)  => std_logic_vector(to_unsigned(rx_state_t'pos(rx_state), 4)),
+  --   probe1(0)           => valid_i,
+  --   probe2(7 downto 0)  => frame_i,
+  --   probe3(6 downto 0)  => chip_adr_o,
+  --   probe4(7 downto 0)  => std_logic_vector(to_unsigned(watchdog_cnt, 8)),
+  --   probe4(8)           => watchdog_reset,
+  --   probe4(31 downto 9) => data_o(22 downto 0),
+  --   probe5(15 downto 0) => length_o,
+  --   probe6(15 downto 0) => reg_adr_o,
+  --   probe7(0)           => uplink_parity_ok_o,
+  --   probe8(0)           => downlink_parity_ok_o,
+  --   probe9(0)           => err_o,
+  --   probe10(0)          => valid_o
+  --   );
 
   --------------------------------------------------------------------------------
   -- watchdog to keep the state machine from getting stuck (e.g. because the
