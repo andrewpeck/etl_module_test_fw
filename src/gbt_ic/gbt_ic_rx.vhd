@@ -1,3 +1,41 @@
+----------------------------------------------------------------------------------
+-- CMS Endcap Timing Layer
+-- Module Test Firmware
+-- A. Peck
+----------------------------------------------------------------------------------
+--
+-- Description:
+--
+--   This module has a simple state machine that decodes the LpGBT data coming
+--   from the CERN gbt-sc firmware:
+--          https://gitlab.cern.ch/gbtsc-fpga-support/gbt-sc/
+--
+--   It expects to receive data in the same format that the gbt-sc core delivers
+--
+--   i.e.
+--
+--   The GBT-SC core strips off the header and trailer, so
+--   what we see from the lpgbt is:
+--
+--   i=0, data=0xX0 or X1    -- chip adr + rw
+--   i=1, data=0x00          -- rsvrd
+--   i=2, data=0x01          -- cmd
+--   i=3, data=0x01          -- nwords [7:0]
+--   i=4, data=0x00          -- nwords [15:8]
+--   i=5, data=0xc5          -- reg adr[7:0]
+--   i=6, data=0x01          -- reg adr[15:8]
+--   i=7, data=0xa5          -- data
+--   i=8, data=0x61          -- parity
+--
+--  Note that the IC core inherently supports reading many registers at once
+--
+--  Right now there is a limitation that, for simplicity, only 4 bytes may be
+--  read in a given transaction. They are packed into a single 32 bit data word.
+--
+--  If only single byte transactions are needed, then you only need to pay
+--  attention to the least significant 8 bits of the word.
+--
+----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -13,13 +51,13 @@ entity gbt_ic_rx is
 
     -- Control
     chip_adr_o           : out std_logic_vector (6 downto 0) := (others => '0');  -- lpgbt chip address
-    data_o               : out std_logic_vector(31 downto 0) := (others => '0');
-    length_o             : out std_logic_vector(15 downto 0) := (others => '0');
-    reg_adr_o            : out std_logic_vector(15 downto 0) := (others => '0');
-    uplink_parity_ok_o   : out std_logic                     := '0';
-    downlink_parity_ok_o : out std_logic                     := '0';
-    err_o                : out std_logic                     := '0';
-    valid_o              : out std_logic                     := '0'
+    data_o               : out std_logic_vector(31 downto 0) := (others => '0');  -- data output, up to 4 bytes
+    length_o             : out std_logic_vector(15 downto 0) := (others => '0');  -- # of bytes received.. if it is more than 4 you are in trouble
+    reg_adr_o            : out std_logic_vector(15 downto 0) := (others => '0');  -- lpgbt register data received from
+    uplink_parity_ok_o   : out std_logic                     := '0';              -- this module says its (uplink) parity check was ok
+    downlink_parity_ok_o : out std_logic                     := '0';              -- lpgbt says its (downlink) parity check was ok
+    err_o                : out std_logic                     := '0';              -- something went wrong
+    valid_o              : out std_logic                     := '0'               -- output data is valid
     );
 end gbt_ic_rx;
 
@@ -120,20 +158,6 @@ begin
       case rx_state is
 
         when IDLE =>
-
-          -- note that the GBT-SC core strips off the header and trailer, so
-          -- what we see from the lpgbt is:
-          --
-          -- i=0, data=0xe7 or 0xe6  -- adr + rw
-          -- i=1, data=0x00          -- rsvrd
-          -- i=2, data=0x01          -- cmd
-          -- i=3, data=0x01          -- nwords [7:0]
-          -- i=4, data=0x00          -- nwords [15:8]
-          -- i=5, data=0xc5          -- adr[7:0]
-          -- i=6, data=0x01          -- adr[15:8]
-          -- i=7, data=0xa5          -- data
-          -- i=8, data=0x61          -- parity
-          --
 
           if (valid_i = '1') then
             rx_state     <= RSVRD;
