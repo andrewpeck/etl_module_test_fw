@@ -263,16 +263,7 @@ begin
 
         end if;
 
-        data_frame_cnt         <= 0;
-        rsvrd_int              <= (others => '0');
-        chip_adr_int           <= (others => '0');
-        downlink_parity_ok_int <= '0';
-        length_int             <= (others => '0');
-        reg_adr_int            <= (others => '0');
-        parity_int             <= (others => '0');
-        parity_rx_int          <= (others => '0');
-        data_int               <= (others => '0');
-        rw_bit_int             <= '0';
+        data_frame_cnt <= 0;
 
       end if;
 
