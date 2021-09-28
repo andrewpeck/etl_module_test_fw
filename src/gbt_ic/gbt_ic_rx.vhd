@@ -28,17 +28,17 @@ architecture Behavioral of gbt_ic_rx is
   type rx_state_t is (IDLE, RSVRD, CMD, LENGTH0, LENGTH1, REG_ADR0, REG_ADR1,
                       DATA, PARITY, OUTPUT, ERR);
 
-  signal rx_state : rx_state_t;
+  signal rx_state : rx_state_t := IDLE;
 
-  signal rsvrd_int              : std_logic_vector (7 downto 0);
-  signal chip_adr_int           : std_logic_vector (6 downto 0);
-  signal downlink_parity_ok_int : std_logic;
-  signal length_int             : std_logic_vector (15 downto 0);
-  signal reg_adr_int            : std_logic_vector (15 downto 0);
-  signal parity_int             : std_logic_vector (7 downto 0);
-  signal parity_rx_int          : std_logic_vector (7 downto 0);
-  signal rw_bit_int             : std_logic;
-  signal data_int               : std_logic_vector (31 downto 0);
+  signal rsvrd_int              : std_logic_vector (7 downto 0)  := (others => '0');
+  signal chip_adr_int           : std_logic_vector (6 downto 0)  := (others => '0');
+  signal downlink_parity_ok_int : std_logic                      := '0';
+  signal length_int             : std_logic_vector (15 downto 0) := (others => '0');
+  signal reg_adr_int            : std_logic_vector (15 downto 0) := (others => '0');
+  signal parity_int             : std_logic_vector (7 downto 0)  := (others => '0');
+  signal parity_rx_int          : std_logic_vector (7 downto 0)  := (others => '0');
+  signal rw_bit_int             : std_logic                      := '0';
+  signal data_int               : std_logic_vector (31 downto 0) := (others => '0');
 
   constant watchdog_cnt_max : integer                             := 127;
   signal watchdog_cnt       : integer range 0 to watchdog_cnt_max := 0;
