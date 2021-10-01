@@ -11,17 +11,16 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
 
-async def send_gbt_ic_transaction(dut, chip_adr, wr_bit, nwords, reg_adr, wr_data):
+async def send_gbt_ic_transaction(dut, chip_adr, lpgbt_version, wr_bit, nwords, reg_adr, wr_data):
     ""
-
-    data_frames = [
-        chip_adr << 1 | (0 if wr_bit else 1),
-        0x0,  # reserved
-        0x0,  # command
-        (nwords >> 0) & 0xff,
-        (nwords >> 8) & 0xff,
-        (reg_adr >> 0) & 0xff,
-        (reg_adr >> 8) & 0xff] + wr_data
+    data_frames = \
+        [chip_adr << 1 | (0 if wr_bit else 1)] + \
+        ([0x0] if lpgbt_version == 0 else []) + \
+        [0x0,  # command
+         (nwords >> 0) & 0xff,
+         (nwords >> 8) & 0xff,
+         (reg_adr >> 0) & 0xff,
+         (reg_adr >> 8) & 0xff] + wr_data
 
     parity = functools.reduce(lambda x, y: x ^ y, data_frames)
     data_frames.append(parity)
@@ -31,6 +30,7 @@ async def send_gbt_ic_transaction(dut, chip_adr, wr_bit, nwords, reg_adr, wr_dat
     for frame in data_frames:
         dut.frame_i = frame
         await RisingEdge(dut.clock_i)
+
     dut.valid_i = 0
 
 
@@ -46,32 +46,39 @@ async def gbt_ic_rx_test(dut):
 
     await RisingEdge(dut.clock_i)
 
-    for wr_bit in [0, 1]:
-        for nwords in [1, 2, 3, 4]:
-            for _ in range(1000):
+    for lpgbt_version in [0, 1]:
 
-                # generate inputs
-                chip_adr = random.randint(0, 127)
-                reg_adr = random.randint(0, 255)
-                wr_data = [random.randint(0, 255)] * nwords
+        dut.lpgbt_version = lpgbt_version
+        await RisingEdge(dut.clock_i)
 
-                await RisingEdge(dut.clock_i)
+        for wr_bit in [0, 1]:
+            for nwords in [1, 2, 3, 4]:
+                print("Testing with lpgbt_v%d wr=%d nwords=%d" % (lpgbt_version, wr_bit, nwords))
+                for _ in range(250):
 
-                # send the transaction
-                await send_gbt_ic_transaction(dut, chip_adr, wr_bit, nwords, reg_adr, wr_data)
+                    # generate inputs
+                    chip_adr = random.randint(0, 127)
+                    reg_adr = random.randint(0, 255)
+                    wr_data = [random.randint(0, 255)] * nwords
 
-                # wait for data to come out
-                await RisingEdge(dut.clock_i)
-                await RisingEdge(dut.clock_i)
+                    await RisingEdge(dut.clock_i)
 
-                # ASSERT outputs
-                assert dut.chip_adr_o.value == chip_adr
-                assert dut.reg_adr_o.value == reg_adr
-                assert dut.valid_o.value == 1
-                assert dut.err_o.value == 0
-                assert dut.length_o.value == nwords
-                for i, databyte in enumerate(wr_data):
-                    assert (dut.data_o.value >> 8 * i) & 0xff == databyte
+                    # send the transaction
+                    await send_gbt_ic_transaction(dut, chip_adr, lpgbt_version,
+                                                  wr_bit, nwords, reg_adr, wr_data)
+
+                    # wait for data to come out
+                    await RisingEdge(dut.clock_i)
+                    await RisingEdge(dut.clock_i)
+
+                    # ASSERT outputs
+                    assert dut.chip_adr_o.value == chip_adr
+                    assert dut.reg_adr_o.value == reg_adr
+                    assert dut.valid_o.value == 1
+                    assert dut.err_o.value == 0
+                    assert dut.length_o.value == nwords
+                    for i, databyte in enumerate(wr_data):
+                        assert (dut.data_o.value >> 8 * i) & 0xff == databyte
 
 
 def test_gbt_ic_rx():
@@ -80,13 +87,11 @@ def test_gbt_ic_rx():
     tests_dir = os.path.abspath(os.path.dirname(__file__))
     module = os.path.splitext(os.path.basename(__file__))[0]
 
-    vhdl_sources = [
-        os.path.join(tests_dir, "gbt_ic_rx.vhd")
-    ]
+    vhdl_sources = [os.path.join(tests_dir, "gbt_ic_rx.vhd")]
 
     parameters = {}
 
-    os.environ["SIM"] = "questa"
+    os.environ["SIM"] = "ghdl"
 
     run(
         verilog_sources=[],
@@ -95,8 +100,6 @@ def test_gbt_ic_rx():
         toplevel="gbt_ic_rx",
         toplevel_lang="vhdl",
         parameters=parameters,
-        # sim_args = ["do cluster_packer_wave.do"],
-        # extra_env = {"SIM": "questa"},
         gui=0
     )
 
