@@ -240,6 +240,7 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_CTRL_t is record
     DAQ                        :READOUT_BOARD_LPGBT_DAQ_CTRL_t;
+    FEC_ERR_RESET              :std_logic;                       -- Write 1 to reset FEC error counter
     TRIGGER                    :READOUT_BOARD_LPGBT_TRIGGER_CTRL_t;
     PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t;
   end record READOUT_BOARD_LPGBT_CTRL_t;
@@ -247,6 +248,7 @@ package READOUT_BOARD_CTRL is
 
   constant DEFAULT_READOUT_BOARD_LPGBT_CTRL_t : READOUT_BOARD_LPGBT_CTRL_t := (
                                                                                DAQ => DEFAULT_READOUT_BOARD_LPGBT_DAQ_CTRL_t,
+                                                                               FEC_ERR_RESET => '0',
                                                                                TRIGGER => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t,
                                                                                PATTERN_CHECKER => DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t
                                                                               );

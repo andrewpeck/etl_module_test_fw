@@ -322,6 +322,7 @@ begin  -- architecture behavioral
       Ctrl.LPGBT.DAQ.UPLINK.RESET <= '0';
       Ctrl.LPGBT.DAQ.DOWNLINK.RESET <= '0';
       Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE <= '0';
+      Ctrl.LPGBT.FEC_ERR_RESET <= '0';
       Ctrl.LPGBT.TRIGGER.UPLINK.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.CNT_RESET <= '0';
@@ -390,6 +391,8 @@ begin  -- architecture behavioral
           reg_data(20)(23 downto 16)              <=  localWrData(23 downto 16);      --Data to send on fast_cmd
         when 21 => --0x15
           Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE  <=  localWrData( 0);               
+        when 31 => --0x1f
+          Ctrl.LPGBT.FEC_ERR_RESET                <=  localWrData( 0);               
         when 32 => --0x20
           Ctrl.LPGBT.TRIGGER.UPLINK.RESET         <=  localWrData( 0);               
         when 34 => --0x22

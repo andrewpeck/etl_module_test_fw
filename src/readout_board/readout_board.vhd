@@ -289,7 +289,7 @@ begin
       generic map (width => 16)
       port map (
         clk    => clk40,
-        reset  => reset,
+        reset  => reset or ctrl.lpgbt.fec_err_reset,
         enable => '1',
         event  => uplink_fec_err(I),
         count  => uplink_fec_err_cnt(I),

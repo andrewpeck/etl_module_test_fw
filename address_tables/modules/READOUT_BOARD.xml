@@ -9,6 +9,8 @@
       <node id="DOWNLINK"  address="0x10" module="file://LPGBT_DOWNLINK.xml"/>
     </node>
 
+    <node id="FEC_ERR_RESET" address="0x1f" mask="0x1" permission="w" description="Write 1 to reset FEC error counter"/>
+
     <node id="TRIGGER"  address="0x20">
       <node id="UPLINK" address="0x00" module="file://LPGBT_UPLINK.xml"/>
     </node>
