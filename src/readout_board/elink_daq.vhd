@@ -23,8 +23,8 @@ entity elink_daq is
     reset      : in std_logic;
     fifo_reset : in std_logic;
 
-    trig0, trig1           : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
-    trig0_mask, trig1_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0, trig1, trig2, trig3                     : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0_mask, trig1_mask, trig2_mask, trig3_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
     force_trig : in std_logic;
 
@@ -46,8 +46,8 @@ end elink_daq;
 
 architecture behavioral of elink_daq is
 
-  signal data   : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
-  signal data_r : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+  signal data, data_r0, data_r1, data_r2, data_r3 :
+    std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
 
@@ -76,10 +76,12 @@ begin
       end if;
 
       -- trigger
-      if ((daq_armed = '1' and
-           ((trig1_mask and data) = (trig1_mask and trig1)) and
-           ((trig0_mask and data_r) = (trig0_mask and trig0)))
-          or force_trig = '1') then
+      if (force_trig = '1' or
+          (daq_armed = '1' and
+           (((trig3_mask and data   ) = (trig3_mask and trig3)) and
+            ((trig2_mask and data_r0) = (trig2_mask and trig2)) and
+            ((trig1_mask and data_r1) = (trig1_mask and trig1)) and
+            ((trig0_mask and data_r2) = (trig0_mask and trig0))))) then
         fifo_words_captured <= 0;
         daq_armed           <= '0';
         fifo_wr_en          <= '1';
@@ -110,8 +112,11 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      data   <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
-      data_r <= data;
+      data    <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+      data_r0 <= data;
+      data_r1 <= data_r0;
+      data_r2 <= data_r1;
+      data_r3 <= data_r2;
     end if;
   end process;
 
@@ -129,7 +134,7 @@ begin
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & data,
+      din           => x"000000" & data_r3,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,

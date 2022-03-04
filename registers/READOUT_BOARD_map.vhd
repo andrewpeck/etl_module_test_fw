@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 775);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 775) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 779);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 779) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -209,12 +209,20 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  reg_data(770)(31 downto  0);                 --FIFO trigger word 0
         when 771 => --0x303
           localRdData(31 downto  0)  <=  reg_data(771)(31 downto  0);                 --FIFO trigger word 0
+        when 772 => --0x304
+          localRdData(31 downto  0)  <=  reg_data(772)(31 downto  0);                 --FIFO trigger word 0
         when 773 => --0x305
-          localRdData(31 downto  0)  <=  reg_data(773)(31 downto  0);                 --FIFO trigger word 0 enable mask
+          localRdData(31 downto  0)  <=  reg_data(773)(31 downto  0);                 --FIFO trigger word 0
         when 774 => --0x306
-          localRdData(31 downto  0)  <=  reg_data(774)(31 downto  0);                 --FIFO trigger word 1 enable mask
+          localRdData(31 downto  0)  <=  reg_data(774)(31 downto  0);                 --FIFO trigger word 0 enable mask
         when 775 => --0x307
-          localRdData(23 downto  0)  <=  reg_data(775)(23 downto  0);                 --# of words to capture in the fifo
+          localRdData(31 downto  0)  <=  reg_data(775)(31 downto  0);                 --FIFO trigger word 1 enable mask
+        when 776 => --0x308
+          localRdData(31 downto  0)  <=  reg_data(776)(31 downto  0);                 --FIFO trigger word 1 enable mask
+        when 777 => --0x309
+          localRdData(31 downto  0)  <=  reg_data(777)(31 downto  0);                 --FIFO trigger word 1 enable mask
+        when 779 => --0x30b
+          localRdData(23 downto  0)  <=  reg_data(779)(23 downto  0);                 --# of words to capture in the fifo
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -308,9 +316,13 @@ begin  -- architecture behavioral
   Ctrl.FIFO_LPGBT_SEL                          <=  reg_data(768)( 8);               
   Ctrl.FIFO_TRIG0                              <=  reg_data(770)(31 downto  0);     
   Ctrl.FIFO_TRIG1                              <=  reg_data(771)(31 downto  0);     
-  Ctrl.FIFO_TRIG0_MASK                         <=  reg_data(773)(31 downto  0);     
-  Ctrl.FIFO_TRIG1_MASK                         <=  reg_data(774)(31 downto  0);     
-  Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(775)(23 downto  0);     
+  Ctrl.FIFO_TRIG2                              <=  reg_data(772)(31 downto  0);     
+  Ctrl.FIFO_TRIG3                              <=  reg_data(773)(31 downto  0);     
+  Ctrl.FIFO_TRIG0_MASK                         <=  reg_data(774)(31 downto  0);     
+  Ctrl.FIFO_TRIG1_MASK                         <=  reg_data(775)(31 downto  0);     
+  Ctrl.FIFO_TRIG2_MASK                         <=  reg_data(776)(31 downto  0);     
+  Ctrl.FIFO_TRIG3_MASK                         <=  reg_data(777)(31 downto  0);     
+  Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(779)(23 downto  0);     
 
 
   -- writes to slave
@@ -489,13 +501,21 @@ begin  -- architecture behavioral
         when 771 => --0x303
           reg_data(771)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 772 => --0x304
-          Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
+          reg_data(772)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 773 => --0x305
-          reg_data(773)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0 enable mask
+          reg_data(773)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 774 => --0x306
-          reg_data(774)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+          reg_data(774)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 0 enable mask
         when 775 => --0x307
-          reg_data(775)(23 downto  0)             <=  localWrData(23 downto  0);      --# of words to capture in the fifo
+          reg_data(775)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+        when 776 => --0x308
+          reg_data(776)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+        when 777 => --0x309
+          reg_data(777)(31 downto  0)             <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+        when 778 => --0x30a
+          Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
+        when 779 => --0x30b
+          reg_data(779)(23 downto  0)             <=  localWrData(23 downto  0);      --# of words to capture in the fifo
 
         when others => null;
 
@@ -586,9 +606,13 @@ begin  -- architecture behavioral
       reg_data(768)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL;
       reg_data(770)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0;
       reg_data(771)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1;
-      reg_data(773)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0_MASK;
-      reg_data(774)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1_MASK;
-      reg_data(775)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
+      reg_data(772)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2;
+      reg_data(773)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3;
+      reg_data(774)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0_MASK;
+      reg_data(775)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1_MASK;
+      reg_data(776)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2_MASK;
+      reg_data(777)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3_MASK;
+      reg_data(779)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
 
       end if; -- reset
     end if; -- clk

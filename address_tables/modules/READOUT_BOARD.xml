@@ -30,9 +30,13 @@
   <node id="FIFO_RESET"          address="0x301" mask="0x1"          permission="w"  description="Reset the daq FIFO"/>
   <node id="FIFO_TRIG0"          address="0x302" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
   <node id="FIFO_TRIG1"          address="0x303" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_FORCE_TRIG"     address="0x304" mask="0x1"          permission="w"  description="Force trigger"/>
-  <node id="FIFO_TRIG0_MASK"     address="0x305" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_TRIG1_MASK"     address="0x306" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_CAPTURE_DEPTH"  address="0x307" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
+  <node id="FIFO_TRIG2"          address="0x304" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
+  <node id="FIFO_TRIG3"          address="0x305" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
+  <node id="FIFO_TRIG0_MASK"     address="0x306" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG1_MASK"     address="0x307" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG2_MASK"     address="0x308" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG3_MASK"     address="0x309" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_FORCE_TRIG"     address="0x30A" mask="0x1"          permission="w"  description="Force trigger"/>
+  <node id="FIFO_CAPTURE_DEPTH"  address="0x30B" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
 
 </node>

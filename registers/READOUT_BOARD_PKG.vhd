@@ -335,9 +335,13 @@ package READOUT_BOARD_CTRL is
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
     FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
+    FIFO_TRIG2                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
+    FIFO_TRIG3                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
     FIFO_TRIG0_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 0 enable mask
     FIFO_TRIG1_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
+    FIFO_TRIG2_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
+    FIFO_TRIG3_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
+    FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
     FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
   end record READOUT_BOARD_CTRL_t;
 
@@ -350,9 +354,13 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_RESET => '0',
                                                                    FIFO_TRIG0 => (others => '0'),
                                                                    FIFO_TRIG1 => (others => '0'),
-                                                                   FIFO_FORCE_TRIG => '0',
+                                                                   FIFO_TRIG2 => (others => '0'),
+                                                                   FIFO_TRIG3 => (others => '0'),
                                                                    FIFO_TRIG0_MASK => x"ffffffff",
                                                                    FIFO_TRIG1_MASK => x"ffffffff",
+                                                                   FIFO_TRIG2_MASK => x"ffffffff",
+                                                                   FIFO_TRIG3_MASK => x"ffffffff",
+                                                                   FIFO_FORCE_TRIG => '0',
                                                                    FIFO_CAPTURE_DEPTH => x"003fff"
                                                                   );
 
