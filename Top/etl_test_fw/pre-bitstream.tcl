@@ -1,1 +1,1 @@
-set_property config_mode SPIx4 [current_design]
+set_property config_mode SPIx8 [current_design]
