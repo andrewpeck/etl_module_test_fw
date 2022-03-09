@@ -23,6 +23,8 @@ entity etl_test_fw is
 
     USE_SYSTEM_IBERT : boolean := true;
 
+    USE_EXT_REF : boolean := false;
+
     MAC_ADDR_BASE : std_logic_vector (47 downto 0) := x"00_08_20_83_53_00";
     IP_ADDR_BASE  : ip_addr_t                      := (192, 168, 0, 10);
 
@@ -76,8 +78,8 @@ entity etl_test_fw is
     si570_usrclk_p : in std_logic;
     si570_usrclk_n : in std_logic;
 
-    --sma_refclk_p : in std_logic;
-    --sma_refclk_n : in std_logic;
+    sma_refclk_p : in std_logic;
+    sma_refclk_n : in std_logic;
 
     tx_p : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
     tx_n : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
@@ -354,19 +356,38 @@ begin
 
       );
 
-  refclk_ibufds : ibufds_gte3
-    generic map(
-      REFCLK_EN_TX_PATH  => '0',
-      REFCLK_HROW_CK_SEL => (others => '0'),
-      REFCLK_ICNTL_RX    => (others => '0')
-      )
-    port map (
-      O     => refclk,
-      ODIV2 => refclk_mirror,
-      CEB   => '0',
-      I     => si570_refclk_p,
-      IB    => si570_refclk_n
-      );
+
+  SI570_REF_GEN : if (not USE_EXT_REF) generate
+    refclk_ibufds : ibufds_gte3
+      generic map(
+        REFCLK_EN_TX_PATH  => '0',
+        REFCLK_HROW_CK_SEL => (others => '0'),
+        REFCLK_ICNTL_RX    => (others => '0')
+        )
+      port map (
+        O     => refclk,
+        ODIV2 => refclk_mirror,
+        CEB   => '0',
+        I     => si570_refclk_p,
+        IB    => si570_refclk_n
+        );
+  end generate;
+
+  EXT_REF_GEN : if (USE_EXT_REF) generate
+    refclk_ibufds : ibufds_gte3
+      generic map(
+        REFCLK_EN_TX_PATH  => '0',
+        REFCLK_HROW_CK_SEL => (others => '0'),
+        REFCLK_ICNTL_RX    => (others => '0')
+        )
+      port map (
+        O     => refclk,
+        ODIV2 => refclk_mirror,
+        CEB   => '0',
+        I     => sma_refclk_p,
+        IB    => sma_refclk_n
+        );
+  end generate;
 
   mgtclk_img_bufg : BUFG_GT
     port map(

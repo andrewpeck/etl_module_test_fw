@@ -47,9 +47,8 @@ set_property IOSTANDARD LVDS [get_ports osc_clk125_p]  ;
 set_property PACKAGE_PIN G10 [get_ports osc_clk125_p] ; # 125mhz
 set_property PACKAGE_PIN F10 [get_ports osc_clk125_n] ; # 125mhz
 
-
-#set_property PACKAGE_PIN V6 [get_ports {sma_refclk_p}]; # bank 226 REFCLK0
-#set_property PACKAGE_PIN V5 [get_ports {sma_refclk_n}]; # bank 226 REFCLK0
+set_property PACKAGE_PIN V6 [get_ports {sma_refclk_p}]; # bank 226 REFCLK0
+set_property PACKAGE_PIN V5 [get_ports {sma_refclk_n}]; # bank 226 REFCLK0
 
 set_property PACKAGE_PIN F12 [get_ports si570_clk_sel_ls]
 set_property IOSTANDARD LVCMOS18 [get_ports si570_clk_sel_ls]
