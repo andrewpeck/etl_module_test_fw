@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 781);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 781) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 782);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 782) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -227,6 +227,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  reg_data(779)(31 downto  0);                 --FIFO trigger word 1 enable mask
         when 781 => --0x30d
           localRdData(23 downto  0)  <=  reg_data(781)(23 downto  0);                 --# of words to capture in the fifo
+        when 782 => --0x30e
+          localRdData(-1 downto  0)  <=  reg_data(782)(-1 downto  0);                 --Reverse the bits going into the FIFO
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -329,6 +331,7 @@ begin  -- architecture behavioral
   Ctrl.FIFO_TRIG3_MASK                         <=  reg_data(778)(31 downto  0);     
   Ctrl.FIFO_TRIG4_MASK                         <=  reg_data(779)(31 downto  0);     
   Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(781)(23 downto  0);     
+  Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(782)(-1 downto  0);     
 
 
   -- writes to slave
@@ -526,6 +529,8 @@ begin  -- architecture behavioral
           Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
         when 781 => --0x30d
           reg_data(781)(23 downto  0)             <=  localWrData(23 downto  0);      --# of words to capture in the fifo
+        when 782 => --0x30e
+          reg_data(782)(-1 downto  0)             <=  localWrData(-1 downto  0);      --Reverse the bits going into the FIFO
 
         when others => null;
 
@@ -625,6 +630,7 @@ begin  -- architecture behavioral
       reg_data(778)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3_MASK;
       reg_data(779)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4_MASK;
       reg_data(781)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
+      reg_data(782)(-1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
 
       end if; -- reset
     end if; -- clk

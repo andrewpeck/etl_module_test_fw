@@ -36,6 +36,8 @@ entity elink_daq is
 
     data_i : in lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
 
+    reverse_bits : in std_logic;
+
     elink_sel : in integer range 0 to 27;
     lpgbt_sel : in integer range 0 to 1;
 
@@ -46,7 +48,18 @@ end elink_daq;
 
 architecture behavioral of elink_daq is
 
-  signal data, data_r0, data_r1, data_r2, data_r3 :
+  function reverse_vector (a: std_logic_vector)
+    return std_logic_vector is
+    variable result: std_logic_vector(a'RANGE);
+    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+  begin
+    for i in aa'RANGE loop
+      result(i) := aa(i);
+    end loop;
+    return result;
+  end; -- function reverse_vector
+
+  signal data_norev, data_rev, data, data_r0, data_r1, data_r2, data_r3, data_r4:
     std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
@@ -66,6 +79,9 @@ begin
   armed <= daq_armed;
   full  <= fifo_full;
   empty <= fifo_empty;
+
+  data_rev <= reverse_vector(data_rev);
+  data_norev <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
 
   process (clk40) is
   begin
@@ -113,7 +129,13 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      data    <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+
+      if (reverse_bits = '1') then
+        data    <= data_rev;
+      else
+        data    <= data_norev;
+      end if;
+
       data_r0 <= data;
       data_r1 <= data_r0;
       data_r2 <= data_r1;

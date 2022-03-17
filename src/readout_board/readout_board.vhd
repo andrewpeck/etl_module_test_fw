@@ -393,6 +393,7 @@ begin
       trig4_mask         => ctrl.fifo_trig4_mask(UPWIDTH-1 downto 0),
       fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
       force_trig         => ctrl.fifo_force_trig,
+      reverse_bits       => ctrl.fifo_reverse_bits,
 
       elink_sel => to_integer(unsigned(ctrl.fifo_elink_sel)),
       lpgbt_sel => to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel))),  -- vhdl qualify operator
