@@ -80,7 +80,7 @@ begin
   full  <= fifo_full;
   empty <= fifo_empty;
 
-  data_rev <= reverse_vector(data_rev);
+  data_rev   <= reverse_vector(data_norev);
   data_norev <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
 
   process (clk40) is
