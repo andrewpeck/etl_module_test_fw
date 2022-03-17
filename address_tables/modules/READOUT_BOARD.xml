@@ -40,6 +40,6 @@
   <node id="FIFO_TRIG4_MASK"     address="0x30B" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
   <node id="FIFO_FORCE_TRIG"     address="0x30C" mask="0x1"          permission="w"  description="Force trigger"/>
   <node id="FIFO_CAPTURE_DEPTH"  address="0x30D" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
-  <node id="FIFO_REVERSE_BITS"   address="0x30E" mask="0x00000000"   permission="rw" description="Reverse the bits going into the FIFO" parameters="default=0x1"/>
+  <node id="FIFO_REVERSE_BITS"   address="0x30E" mask="0x00000001"   permission="rw" description="Reverse the bits going into the FIFO" parameters="default=0x1"/>
 
 </node>

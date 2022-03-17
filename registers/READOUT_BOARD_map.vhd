@@ -228,7 +228,7 @@ begin  -- architecture behavioral
         when 781 => --0x30d
           localRdData(23 downto  0)  <=  reg_data(781)(23 downto  0);                 --# of words to capture in the fifo
         when 782 => --0x30e
-          localRdData(-1 downto  0)  <=  reg_data(782)(-1 downto  0);                 --Reverse the bits going into the FIFO
+          localRdData( 0)            <=  reg_data(782)( 0);                           --Reverse the bits going into the FIFO
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -331,7 +331,7 @@ begin  -- architecture behavioral
   Ctrl.FIFO_TRIG3_MASK                         <=  reg_data(778)(31 downto  0);     
   Ctrl.FIFO_TRIG4_MASK                         <=  reg_data(779)(31 downto  0);     
   Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(781)(23 downto  0);     
-  Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(782)(-1 downto  0);     
+  Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(782)( 0);               
 
 
   -- writes to slave
@@ -530,7 +530,7 @@ begin  -- architecture behavioral
         when 781 => --0x30d
           reg_data(781)(23 downto  0)             <=  localWrData(23 downto  0);      --# of words to capture in the fifo
         when 782 => --0x30e
-          reg_data(782)(-1 downto  0)             <=  localWrData(-1 downto  0);      --Reverse the bits going into the FIFO
+          reg_data(782)( 0)                       <=  localWrData( 0);                --Reverse the bits going into the FIFO
 
         when others => null;
 
@@ -630,7 +630,7 @@ begin  -- architecture behavioral
       reg_data(778)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3_MASK;
       reg_data(779)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4_MASK;
       reg_data(781)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
-      reg_data(782)(-1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
+      reg_data(782)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
 
       end if; -- reset
     end if; -- clk

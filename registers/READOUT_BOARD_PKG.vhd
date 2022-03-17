@@ -345,7 +345,7 @@ package READOUT_BOARD_CTRL is
     FIFO_TRIG4_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
     FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
     FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
-    FIFO_REVERSE_BITS          :std_logic_vector(-1 downto 0);  -- Reverse the bits going into the FIFO
+    FIFO_REVERSE_BITS          :std_logic;                      -- Reverse the bits going into the FIFO
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -367,7 +367,7 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_TRIG4_MASK => x"ffffffff",
                                                                    FIFO_FORCE_TRIG => '0',
                                                                    FIFO_CAPTURE_DEPTH => x"003fff",
-                                                                   FIFO_REVERSE_BITS => x"1"
+                                                                   FIFO_REVERSE_BITS => '1'
                                                                   );
 
 
