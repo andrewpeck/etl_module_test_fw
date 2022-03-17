@@ -385,10 +385,12 @@ begin
       trig1              => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
       trig2              => ctrl.fifo_trig2(UPWIDTH-1 downto 0),
       trig3              => ctrl.fifo_trig3(UPWIDTH-1 downto 0),
+      trig4              => ctrl.fifo_trig4(UPWIDTH-1 downto 0),
       trig0_mask         => ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0),
       trig1_mask         => ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0),
       trig2_mask         => ctrl.fifo_trig2_mask(UPWIDTH-1 downto 0),
       trig3_mask         => ctrl.fifo_trig3_mask(UPWIDTH-1 downto 0),
+      trig4_mask         => ctrl.fifo_trig4_mask(UPWIDTH-1 downto 0),
       fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
       force_trig         => ctrl.fifo_force_trig,
 

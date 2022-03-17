@@ -23,8 +23,8 @@ entity elink_daq is
     reset      : in std_logic;
     fifo_reset : in std_logic;
 
-    trig0, trig1, trig2, trig3                     : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
-    trig0_mask, trig1_mask, trig2_mask, trig3_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0, trig1, trig2, trig3, trig4                          : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0_mask, trig1_mask, trig2_mask, trig3_mask, trig4_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
     force_trig : in std_logic;
 
@@ -78,10 +78,11 @@ begin
       -- trigger
       if (force_trig = '1' or
           (daq_armed = '1' and
-           (((trig3_mask and data   ) = (trig3_mask and trig3)) and
-            ((trig2_mask and data_r0) = (trig2_mask and trig2)) and
-            ((trig1_mask and data_r1) = (trig1_mask and trig1)) and
-            ((trig0_mask and data_r2) = (trig0_mask and trig0))))) then
+           (((trig4_mask and data   ) = (trig4_mask and trig4)) and
+            ((trig3_mask and data_r0) = (trig3_mask and trig3)) and
+            ((trig2_mask and data_r1) = (trig2_mask and trig2)) and
+            ((trig1_mask and data_r2) = (trig1_mask and trig1)) and
+            ((trig0_mask and data_r3) = (trig0_mask and trig0))))) then
         fifo_words_captured <= 0;
         daq_armed           <= '0';
         fifo_wr_en          <= '1';
@@ -117,6 +118,7 @@ begin
       data_r1 <= data_r0;
       data_r2 <= data_r1;
       data_r3 <= data_r2;
+      data_r4 <= data_r3;
     end if;
   end process;
 
@@ -134,7 +136,7 @@ begin
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & data_r3,
+      din           => x"000000" & data_r4,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,
