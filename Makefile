@@ -62,7 +62,7 @@ regmap : $(MAP_OBJS)
 # Update the XML2VHDL register map
 %_map.vhd %_PKG.vhd : %.xml
 	@python3 regmap/build_vhdl_packages.py \
-			-s True \
+			-s False \
 			-x address_tables/modules/$(basename $(notdir $<)).xml \
 			-o  $(dir $<) \
 			--mapTemplate templates/wishbone/template_map.vhd \
