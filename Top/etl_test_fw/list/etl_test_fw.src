@@ -33,6 +33,7 @@ ip/ila_sc/ila_sc.xci
 ip/ila_ic/ila_ic.xci
 ip/ila_sca/ila_sca.xci
 ip/ila_lpgbt/ila_lpgbt.xci
+ip/ila_elink_daq/ila_elink_daq.xci
 ip/vio_lpgbt/vio_lpgbt.xci
 ip/vio_mgt/vio_mgt.xci
 ip/system_ibert/system_ibert.xci
