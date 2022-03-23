@@ -87,4 +87,12 @@ package components is
       );
   end component;
 
+  component ila_elink_daq
+    port (
+      clk     : in std_logic;
+      probe0  : in std_logic_vector(7 downto 0);
+      probe1  : in std_logic;
+      );
+  end component;
+
 end package components;

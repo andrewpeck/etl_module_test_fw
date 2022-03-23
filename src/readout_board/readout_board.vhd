@@ -43,8 +43,8 @@ entity readout_board is
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
 
-    fifo_wb_in  : in  ipb_wbus;
-    fifo_wb_out : out ipb_rbus;
+    fifo_wb_in  : in ipb_wbus_array(1 downto 0);
+    fifo_wb_out : out ipb_rbus_array(1 downto 0);
 
     uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
     uplink_mgt_word_array   : in  std32_array_t (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
@@ -110,6 +110,19 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
   signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
+
+  --------------------------------------------------------------------------------
+  -- FIFO
+  --------------------------------------------------------------------------------
+
+  signal fifo_full : std_logic_vector (1 downto 0) := (others => '0');
+  signal fifo_empty : std_logic_vector (1 downto 0) := (others => '0');
+  signal fifo_armed : std_logic_vector (1 downto 0) := (others => '0');
+
+  type int_array_t is array (integer range <>) of integer;
+
+  signal elink_sel : int_array_t (1 downto 0);
+  signal lpgbt_sel : int_array_t (1 downto 0);
 
 begin
 
@@ -371,41 +384,57 @@ begin
   --
   --------------------------------------------------------------------------------
 
-  elink_daq_inst : entity work.elink_daq
-    generic map (
-      UPWIDTH     => UPWIDTH,
-      NUM_UPLINKS => NUM_UPLINKS
-      )
-    port map (
-      clk40      => clk40,
-      reset      => reset,
-      fifo_reset => ctrl.fifo_reset,
+  elink_sel(0) <= to_integer(unsigned(ctrl.fifo_elink_sel0));
+  lpgbt_sel(0) <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel0)));  -- vhdl qualify operator
+  elink_sel(1) <= to_integer(unsigned(ctrl.fifo_elink_sel1));
+  lpgbt_sel(1) <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel1)));  -- vhdl qualify operator
 
-      trig0              => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
-      trig1              => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
-      trig2              => ctrl.fifo_trig2(UPWIDTH-1 downto 0),
-      trig3              => ctrl.fifo_trig3(UPWIDTH-1 downto 0),
-      trig4              => ctrl.fifo_trig4(UPWIDTH-1 downto 0),
-      trig0_mask         => ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0),
-      trig1_mask         => ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0),
-      trig2_mask         => ctrl.fifo_trig2_mask(UPWIDTH-1 downto 0),
-      trig3_mask         => ctrl.fifo_trig3_mask(UPWIDTH-1 downto 0),
-      trig4_mask         => ctrl.fifo_trig4_mask(UPWIDTH-1 downto 0),
-      fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
-      force_trig         => ctrl.fifo_force_trig,
-      reverse_bits       => ctrl.fifo_reverse_bits,
+  mon.fifo_full0  <= fifo_full(0);
+  mon.fifo_full1  <= fifo_full(1);
+  mon.fifo_armed0 <= fifo_armed(0);
+  mon.fifo_armed1 <= fifo_armed(1);
+  mon.fifo_empty0 <= fifo_empty(0);
+  mon.fifo_empty1 <= fifo_empty(1);
 
-      elink_sel => to_integer(unsigned(ctrl.fifo_elink_sel)),
-      lpgbt_sel => to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel))),  -- vhdl qualify operator
+  daq_gen : for I in 0 to 1 generate
+  begin
 
-      armed => mon.fifo_armed,
-      full  => mon.fifo_full,
-      empty => mon.fifo_empty,
+    elink_daq_inst : entity work.elink_daq
+      generic map (
+        UPWIDTH     => UPWIDTH,
+        NUM_UPLINKS => NUM_UPLINKS
+        )
+      port map (
+        clk40      => clk40,
+        reset      => reset,
+        fifo_reset => ctrl.fifo_reset,
 
-      data_i      => uplink_data_aligned,
-      fifo_wb_in  => fifo_wb_in,
-      fifo_wb_out => fifo_wb_out
-      );
+        trig0              => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
+        trig1              => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
+        trig2              => ctrl.fifo_trig2(UPWIDTH-1 downto 0),
+        trig3              => ctrl.fifo_trig3(UPWIDTH-1 downto 0),
+        trig4              => ctrl.fifo_trig4(UPWIDTH-1 downto 0),
+        trig0_mask         => ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0),
+        trig1_mask         => ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0),
+        trig2_mask         => ctrl.fifo_trig2_mask(UPWIDTH-1 downto 0),
+        trig3_mask         => ctrl.fifo_trig3_mask(UPWIDTH-1 downto 0),
+        trig4_mask         => ctrl.fifo_trig4_mask(UPWIDTH-1 downto 0),
+        fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
+        force_trig         => ctrl.fifo_force_trig,
+        reverse_bits       => ctrl.fifo_reverse_bits,
+
+        elink_sel => elink_sel(I),
+        lpgbt_sel => lpgbt_sel(I),
+
+        armed => fifo_armed(I),
+        full  => fifo_full(I),
+        empty => fifo_empty(I),
+
+        data_i      => uplink_data_aligned,
+        fifo_wb_in  => fifo_wb_in(I),
+        fifo_wb_out => fifo_wb_out(I)
+        );
+  end generate;
 
   --------------------------------------------------------------------------------
   -- PRBS/Upcnt Pattern Checking

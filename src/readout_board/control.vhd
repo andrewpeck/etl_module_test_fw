@@ -26,8 +26,8 @@ entity control is
     reset : in std_logic;
     clock : in std_logic;
 
-    daq_ipb_w_array : out ipb_wbus_array(NUM_RBS - 1 downto 0);
-    daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS - 1 downto 0);
+    daq_ipb_w_array : out ipb_wbus_array(NUM_RBS*2 - 1 downto 0);
+    daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS*2 - 1 downto 0);
 
     fw_info_mon : in FW_INFO_Mon_t;
 
@@ -168,21 +168,24 @@ begin
   -- Readout Board
   --------------------------------------------------------------------------------
 
-  rbgen : for I in 0 to NUM_RBS-1 generate
-    constant RB_BASE  : integer := N_SLV_READOUT_BOARD_0;
+  daqgen : for I in 0 to 2*NUM_RBS-1 generate
     constant DAQ_BASE : integer := N_SLV_DAQ_0;
   begin
-    rb_en : if (EN_LPGBTS = 1) generate
+    daq_ipb_w_array(I) <= ipb_w_array(DAQ_BASE+I);
 
-      daq_ipb_w_array(I) <= ipb_w_array(DAQ_BASE+I);
-
-      ipb_r_array(DAQ_BASE+I).ipb_rdata <= daq_ipb_r_array(I).ipb_rdata;
-      ipb_r_array(DAQ_BASE+I).ipb_ack   <= daq_ipb_r_array(I).ipb_ack
+    ipb_r_array(DAQ_BASE+I).ipb_rdata <= daq_ipb_r_array(I).ipb_rdata;
+    ipb_r_array(DAQ_BASE+I).ipb_ack   <= daq_ipb_r_array(I).ipb_ack
                                          when
                                          to_integer(unsigned(ipbus_sel_etl_test_fw(ipb_w.ipb_addr)))
-                                           = DAQ_BASE+I
+                                         = DAQ_BASE+I
                                          else '0';
-      ipb_r_array(DAQ_BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
+    ipb_r_array(DAQ_BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
+  end generate;
+
+  rbgen : for I in 0 to NUM_RBS-1 generate
+    constant RB_BASE  : integer := N_SLV_READOUT_BOARD_0;
+  begin
+    rb_en : if (EN_LPGBTS = 1) generate
 
       READOUT_BOARD_wb_map_inst : entity ctrl_lib.READOUT_BOARD_wb_map
         port map (

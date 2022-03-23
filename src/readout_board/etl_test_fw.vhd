@@ -166,8 +166,8 @@ architecture behavioral of etl_test_fw is
   signal readout_board_mon  : READOUT_BOARD_Mon_array_t (NUM_RBS-1 downto 0);
   signal readout_board_ctrl : READOUT_BOARD_Ctrl_array_t (NUM_RBS-1 downto 0);
 
-  signal fifo_ipb_w_array : ipb_wbus_array(NUM_RBS - 1 downto 0);
-  signal fifo_ipb_r_array : ipb_rbus_array(NUM_RBS - 1 downto 0);
+  signal fifo_ipb_w_array : ipb_wbus_array(2*NUM_RBS - 1 downto 0);
+  signal fifo_ipb_r_array : ipb_rbus_array(2*NUM_RBS - 1 downto 0);
 
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
@@ -421,8 +421,8 @@ begin
           --daq_rxready  => rx_ready(I*2),
           --trig_rxready => rx_ready(I*2+1),
 
-          fifo_wb_in => fifo_ipb_w_array(I),
-          fifo_wb_out => fifo_ipb_r_array(I),
+          fifo_wb_in => fifo_ipb_w_array(I*2+1 downto I*2),
+          fifo_wb_out => fifo_ipb_r_array(I*2+1 downto I*2),
 
           clk40  => clk40,
           clk320 => clk320,

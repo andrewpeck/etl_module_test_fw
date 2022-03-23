@@ -48,18 +48,18 @@ end elink_daq;
 
 architecture behavioral of elink_daq is
 
-  function reverse_vector (a: std_logic_vector)
+  function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
-    variable result: std_logic_vector(a'RANGE);
-    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+    variable result : std_logic_vector(a'range);
+    alias aa        : std_logic_vector(a'REVERSe_range) is a;
   begin
-    for i in aa'RANGE loop
+    for i in aa'range loop
       result(i) := aa(i);
     end loop;
     return result;
-  end; -- function reverse_vector
+  end;  -- function reverse_vector
 
-  signal data_norev, data_rev, data, data_r0, data_r1, data_r2, data_r3, data_r4:
+  signal data_norev, data_rev, data, data_r0, data_r1, data_r2, data_r3, data_r4 :
     std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
@@ -74,6 +74,8 @@ architecture behavioral of elink_daq is
   signal daq_armed           : std_logic                           := '0';
   signal fifo_words_captured : integer range 0 to DAQ_FIFO_DEPTH-1 := 0;
 
+  signal trigger : std_logic;
+
 begin
 
   armed <= daq_armed;
@@ -82,6 +84,14 @@ begin
 
   data_rev   <= reverse_vector(data_norev);
   data_norev <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
+
+  trigger <= '1' when (force_trig = '1' or
+                       (daq_armed = '1' and
+                        (((trig4_mask and data) = (trig4_mask and trig4)) and
+                         ((trig3_mask and data_r0) = (trig3_mask and trig3)) and
+                         ((trig2_mask and data_r1) = (trig2_mask and trig2)) and
+                         ((trig1_mask and data_r2) = (trig1_mask and trig1)) and
+                         ((trig0_mask and data_r3) = (trig0_mask and trig0))))) else '0';
 
   process (clk40) is
   begin
@@ -92,13 +102,7 @@ begin
       end if;
 
       -- trigger
-      if (force_trig = '1' or
-          (daq_armed = '1' and
-           (((trig4_mask and data   ) = (trig4_mask and trig4)) and
-            ((trig3_mask and data_r0) = (trig3_mask and trig3)) and
-            ((trig2_mask and data_r1) = (trig2_mask and trig2)) and
-            ((trig1_mask and data_r2) = (trig1_mask and trig1)) and
-            ((trig0_mask and data_r3) = (trig0_mask and trig0))))) then
+      if (trigger = '1') then
         fifo_words_captured <= 0;
         daq_armed           <= '0';
         fifo_wr_en          <= '1';
@@ -131,9 +135,9 @@ begin
     if (rising_edge(clk40)) then
 
       if (reverse_bits = '1') then
-        data    <= data_rev;
+        data <= data_rev;
       else
-        data    <= data_norev;
+        data <= data_norev;
       end if;
 
       data_r0 <= data;
@@ -179,6 +183,13 @@ begin
       din       => fifo_dout,
       valid     => fifo_valid,
       empty     => fifo_empty
+      );
+
+  ila_elink_daq_inst : ila_elink_daq
+    port map (
+      clk                => clk40,
+      probe0(7 downto 0) => data,
+      probe1             => trigger
       );
 
 end behavioral;

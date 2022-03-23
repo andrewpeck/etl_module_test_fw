@@ -321,17 +321,22 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_MON_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_MON_t;
     SC                         :READOUT_BOARD_SC_MON_t;   
-    FIFO_FULL                  :std_logic;                  -- FIFO is full
-    FIFO_ARMED                 :std_logic;                  -- FIFO armed
-    FIFO_EMPTY                 :std_logic;                  -- FIFO empty
+    FIFO_FULL0                 :std_logic;                  -- FIFO is full
+    FIFO_ARMED0                :std_logic;                  -- FIFO armed
+    FIFO_EMPTY0                :std_logic;                  -- FIFO empty
+    FIFO_FULL1                 :std_logic;                  -- FIFO is full
+    FIFO_ARMED1                :std_logic;                  -- FIFO armed
+    FIFO_EMPTY1                :std_logic;                  -- FIFO empty
   end record READOUT_BOARD_MON_t;
 
 
   type READOUT_BOARD_CTRL_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_CTRL_t;
     SC                         :READOUT_BOARD_SC_CTRL_t;   
-    FIFO_ELINK_SEL             :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
-    FIFO_LPGBT_SEL             :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
+    FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
+    FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
+    FIFO_ELINK_SEL1            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
+    FIFO_LPGBT_SEL1            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
     FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
@@ -352,8 +357,10 @@ package READOUT_BOARD_CTRL is
   constant DEFAULT_READOUT_BOARD_CTRL_t : READOUT_BOARD_CTRL_t := (
                                                                    LPGBT => DEFAULT_READOUT_BOARD_LPGBT_CTRL_t,
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
-                                                                   FIFO_ELINK_SEL => (others => '0'),
-                                                                   FIFO_LPGBT_SEL => '0',
+                                                                   FIFO_ELINK_SEL0 => (others => '0'),
+                                                                   FIFO_LPGBT_SEL0 => '0',
+                                                                   FIFO_ELINK_SEL1 => (others => '0'),
+                                                                   FIFO_LPGBT_SEL1 => '0',
                                                                    FIFO_RESET => '0',
                                                                    FIFO_TRIG0 => (others => '0'),
                                                                    FIFO_TRIG1 => (others => '0'),
