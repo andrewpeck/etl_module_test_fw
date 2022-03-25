@@ -6,11 +6,8 @@
   <node id="ALIGN_1"        address="0x2" mask="0x00000070" permission="rw" description="Downlink bitslip alignment for Group 1"/>
   <node id="ALIGN_2"        address="0x2" mask="0x00000700" permission="rw" description="Downlink bitslip alignment for Group 2"/>
   <node id="ALIGN_3"        address="0x2" mask="0x00007000" permission="rw" description="Downlink bitslip alignment for Group 3"/>
-  <node id="DL_SRC"         address="0x3" mask="0x0000000f" permission="rw" description="0=etroc, 1=upcnt, 2=prbs, 3=sw fast command, 4=fw fast command"/>
+  <node id="DL_SRC"         address="0x3" mask="0x0000000f" permission="rw" description="0=etroc, 1=upcnt, 2=prbs, 3=sw fast command"/>
   <node id="FAST_CMD_IDLE"  address="0x4" mask="0x0000ff00" permission="rw" description="Data to send on fast_cmd" parameters="default=0xF0"/>
   <node id="FAST_CMD_DATA"  address="0x4" mask="0x00ff0000" permission="rw" description="Data to send on fast_cmd"/>
   <node id="FAST_CMD_PULSE" address="0x5" mask="0x00000001" permission="w"  description="Write 1 to pulse fast_cmd"/>
-  <node id="L1A_PULSE" address="0x6" mask="0x00000001" permission="w"  description="Write 1 to pulse L1A"/>
-  <node id="LINK_RESET_PULSE" address="0x7" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
-  <node id="L1A_RATE" address="0x8" mask="0xffffffff" permission="w" description="Rate of generated triggers f_trig =(2^32-1) * clk_period * rate" />
 </node>

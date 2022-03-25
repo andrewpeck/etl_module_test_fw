@@ -13,6 +13,7 @@ src/utils/counter.vhd
 src/utils/frame_aligner.vhd
 src/utils/clock_strobe.vhd
 src/utils/frequency_counter.vhd
+src/utils/rate_counter.vhd
 src/trig_gen/trig_gen.vhd
 src/trig_gen/urand_inf.vhd
 

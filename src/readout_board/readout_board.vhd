@@ -20,6 +20,8 @@ use work.components.all;
 library ipbus;
 use ipbus.ipbus.all;
 
+library etroc;
+
 entity readout_board is
   generic(
     INST            : integer := 0;
@@ -43,7 +45,7 @@ entity readout_board is
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
 
-    fifo_wb_in  : in ipb_wbus_array(1 downto 0);
+    fifo_wb_in  : in  ipb_wbus_array(1 downto 0);
     fifo_wb_out : out ipb_rbus_array(1 downto 0);
 
     uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
@@ -96,7 +98,9 @@ architecture behavioral of readout_board is
   signal prbs_err_counters  : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
   signal upcnt_err_counters : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
 
-  signal counter          : integer range 0 to 255                  := 0;
+  signal counter : integer range 0 to 255        := 0;
+  signal cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
+
   signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
   signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
 
@@ -115,7 +119,7 @@ architecture behavioral of readout_board is
   -- FIFO
   --------------------------------------------------------------------------------
 
-  signal fifo_full : std_logic_vector (1 downto 0) := (others => '0');
+  signal fifo_full  : std_logic_vector (1 downto 0) := (others => '0');
   signal fifo_empty : std_logic_vector (1 downto 0) := (others => '0');
   signal fifo_armed : std_logic_vector (1 downto 0) := (others => '0');
 
@@ -128,11 +132,13 @@ architecture behavioral of readout_board is
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal l1a_gen : std_logic := '0';
-  signal l1a : std_logic := '0';
-  signal bc0 : std_logic := '0';
-  signal link_reset : std_logic := '0';
-  signal bxn : natural range 0 to 3563 := 0;
+  signal trigger_rate : std_logic_vector (31 downto 0);
+
+  signal l1a_gen    : std_logic               := '0';
+  signal l1a        : std_logic               := '0';
+  signal bc0        : std_logic               := '0';
+  signal link_reset : std_logic               := '0';
+  signal bxn        : natural range 0 to 3563 := 0;
 
 begin
 
@@ -155,6 +161,7 @@ begin
 
   -- up counter
 
+  cnt_slv <= std_logic_vector (to_unsigned(counter, cnt_slv'length));
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -186,9 +193,10 @@ begin
 
   -- need to reverse the prbs vector to match lpgbt
 
-  prbs_gen_reverse <= reverse_vector(prbs_gen);
 
+  --------------------------------------------------------------------------------
   -- lpgbt downlink multiplexing
+  --------------------------------------------------------------------------------
   --
   -- Choose between different data sources
   --
@@ -197,23 +205,37 @@ begin
   --  + programmable fast command
 
   dl_assign : for I in 0 to NUM_DOWNLINKS-1 generate
-  begin
-    process (clk40) is
-      variable cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
+
+    function repeat_byte (x : std_logic_vector) return std_logic_vector is
+      variable result : std_logic_vector(x'length*4-1 downto 0);
     begin
-      cnt_slv := std_logic_vector (to_unsigned(counter, cnt_slv'length));
+      result := x & x & x & x;
+      return result;
+    end;
+
+    signal dl_src : integer;
+
+  begin
+
+    dl_src <= to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src));
+
+    process (clk40) is
+    begin
       if (rising_edge(clk40)) then
-        if (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 0) then
-          downlink_data(I).data <= cnt_slv & cnt_slv & cnt_slv & cnt_slv;
-        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 1) then
-          downlink_data(I).data <= cnt_slv & cnt_slv & cnt_slv & cnt_slv;
-        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 2) then
-          downlink_data(I).data <= prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse;
-        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 3) then
-          downlink_data(I).data <= fast_cmd_sw & fast_cmd_sw & fast_cmd_sw & fast_cmd_sw;
-        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 4) then
-          downlink_data(I).data <= fast_cmd_fw & fast_cmd_fw & fast_cmd_fw & fast_cmd_fw;
-        end if;
+        case dl_src is
+
+          when 0 =>
+            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
+          when 1 =>
+            downlink_data(I).data <= repeat_byte(cnt_slv);
+          when 2 =>
+            downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
+          when 3 =>
+            downlink_data(I).data <= repeat_byte(fast_cmd_sw);
+          when others =>
+            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
+
+        end case;
       end if;
     end process;
   end generate;
@@ -223,9 +245,9 @@ begin
   --    (gated by the strobe)
 
   fast_cmd_sw <= ctrl.lpgbt.daq.downlink.fast_cmd_data
-              when
-              ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
-              ctrl.lpgbt.daq.downlink.fast_cmd_idle;
+                 when
+                 ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
+                 ctrl.lpgbt.daq.downlink.fast_cmd_idle;
 
   etroc_tx_inst : entity etroc.etroc_tx
     port map (
@@ -242,26 +264,40 @@ begin
       sys_clk    => clk40,
       sys_rst    => reset,
       sys_bx_stb => '1',
-      rate       => ctrl.lpgbt.daq.downlink.l1a_rate,
+      rate       => ctrl.l1a_rate,
       trig       => l1a_gen
       );
 
 
   bc0 <= '1' when bxn = 0 else '0';
 
-  l1a        <= ctrl.lpgbt.daq.downlink.l1a_pulse or l1a_gen;
-  link_reset <= ctrl.lpgbt.daq.downlink.link_reset_pulse;
+  l1a        <= ctrl.l1a_pulse or l1a_gen;
+  link_reset <= ctrl.link_reset_pulse;
 
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      if (bxn=3563) then
+      if (bxn = 3563) then
         bxn <= 0;
       else
         bxn <= bxn + 1;
       end if;
     end if;
   end process;
+
+  rate_counter_inst : entity work.rate_counter
+    generic map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => 32
+      )
+    port map (
+      clk_i   => clk40,
+      reset_i => reset,
+      en_i    => l1a,
+      rate_o  => trigger_rate
+      );
+
+  mon.l1a_rate_cnt <= trigger_rate;
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -588,6 +624,38 @@ begin
       at_max              => open
       );
 
+  --------------------------------------------------------------------------------
+  -- Data Decoder
+  --------------------------------------------------------------------------------
+
+  -- etroc_rx_1: entity work.etroc_rx
+  --   generic map (
+  --     MAX_ELINK_WIDTH => MAX_ELINK_WIDTH,
+  --     FRAME_WIDTH     => FRAME_WIDTH)
+  --   port map (
+  --     clock           => clock,
+  --     reset           => reset,
+  --     data_i          => data_i,
+  --     bitslip_i       => bitslip_i,
+  --     bcid_o          => open,
+  --     type_o          => open,
+  --     event_cnt_o     => open,
+  --     cal_o           => open,
+  --     tot_o           => open,
+  --     toa_o           => open,
+  --     col_o           => open,
+  --     row_o           => open,
+  --     ea_o            => open,
+  --     data_en_o       => open,
+  --     stat_o          => open,
+  --     hitcnt_o        => open,
+  --     crc_o           => open,
+  --     chip_id_o       => open,
+  --     end_of_packet_o => open,
+  --     err_o           => open,
+  --     busy_o          => open,
+  --     idle_o          => open
+  --     );
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
   --------------------------------------------------------------------------------

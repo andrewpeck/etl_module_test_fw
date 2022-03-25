@@ -6,7 +6,9 @@ use ieee.numeric_std.all;
 use work.fast_commands_pkg.all;
 
 entity etroc_tx is
-  generic(ELINK_WIDTH : positive := 8);
+  generic(
+    ELINK_WIDTH : positive := 8
+    );
   port(
 
     clock : in std_logic;
