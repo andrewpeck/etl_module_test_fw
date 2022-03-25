@@ -339,15 +339,25 @@ package READOUT_BOARD_CTRL is
     FIFO_LPGBT_SEL1            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_TRIG2                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_TRIG3                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_TRIG4                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
+    FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 1
+    FIFO_TRIG2                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 2
+    FIFO_TRIG3                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 3
+    FIFO_TRIG4                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 4
+    FIFO_TRIG5                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 5
+    FIFO_TRIG6                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 6
+    FIFO_TRIG7                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 7
+    FIFO_TRIG8                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 8
+    FIFO_TRIG9                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 9
     FIFO_TRIG0_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 0 enable mask
     FIFO_TRIG1_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
-    FIFO_TRIG2_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
-    FIFO_TRIG3_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
-    FIFO_TRIG4_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
+    FIFO_TRIG2_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 2 enable mask
+    FIFO_TRIG3_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 3 enable mask
+    FIFO_TRIG4_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 4 enable mask
+    FIFO_TRIG5_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 5 enable mask
+    FIFO_TRIG6_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 6 enable mask
+    FIFO_TRIG7_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 7 enable mask
+    FIFO_TRIG8_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 8 enable mask
+    FIFO_TRIG9_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 9 enable mask
     FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
     FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
     FIFO_REVERSE_BITS          :std_logic;                      -- Reverse the bits going into the FIFO
@@ -367,11 +377,21 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_TRIG2 => (others => '0'),
                                                                    FIFO_TRIG3 => (others => '0'),
                                                                    FIFO_TRIG4 => (others => '0'),
+                                                                   FIFO_TRIG5 => (others => '0'),
+                                                                   FIFO_TRIG6 => (others => '0'),
+                                                                   FIFO_TRIG7 => (others => '0'),
+                                                                   FIFO_TRIG8 => (others => '0'),
+                                                                   FIFO_TRIG9 => (others => '0'),
                                                                    FIFO_TRIG0_MASK => x"ffffffff",
                                                                    FIFO_TRIG1_MASK => x"ffffffff",
                                                                    FIFO_TRIG2_MASK => x"ffffffff",
                                                                    FIFO_TRIG3_MASK => x"ffffffff",
                                                                    FIFO_TRIG4_MASK => x"ffffffff",
+                                                                   FIFO_TRIG5_MASK => x"ffffffff",
+                                                                   FIFO_TRIG6_MASK => x"ffffffff",
+                                                                   FIFO_TRIG7_MASK => x"ffffffff",
+                                                                   FIFO_TRIG8_MASK => x"ffffffff",
+                                                                   FIFO_TRIG9_MASK => x"ffffffff",
                                                                    FIFO_FORCE_TRIG => '0',
                                                                    FIFO_CAPTURE_DEPTH => x"003fff",
                                                                    FIFO_REVERSE_BITS => '1'

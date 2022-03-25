@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1038);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1038) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1049);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1049) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -211,30 +211,50 @@ begin  -- architecture behavioral
           localRdData( 9)            <=  Mon.FIFO_FULL1;                              --FIFO is full
           localRdData(10)            <=  Mon.FIFO_ARMED1;                             --FIFO armed
           localRdData(12)            <=  Mon.FIFO_EMPTY1;                             --FIFO empty
-        when 1026 => --0x402
-          localRdData(31 downto  0)  <=  reg_data(1026)(31 downto  0);                --FIFO trigger word 0
         when 1027 => --0x403
           localRdData(31 downto  0)  <=  reg_data(1027)(31 downto  0);                --FIFO trigger word 0
         when 1028 => --0x404
-          localRdData(31 downto  0)  <=  reg_data(1028)(31 downto  0);                --FIFO trigger word 0
+          localRdData(31 downto  0)  <=  reg_data(1028)(31 downto  0);                --FIFO trigger word 1
         when 1029 => --0x405
-          localRdData(31 downto  0)  <=  reg_data(1029)(31 downto  0);                --FIFO trigger word 0
+          localRdData(31 downto  0)  <=  reg_data(1029)(31 downto  0);                --FIFO trigger word 2
         when 1030 => --0x406
-          localRdData(31 downto  0)  <=  reg_data(1030)(31 downto  0);                --FIFO trigger word 0
+          localRdData(31 downto  0)  <=  reg_data(1030)(31 downto  0);                --FIFO trigger word 3
         when 1031 => --0x407
-          localRdData(31 downto  0)  <=  reg_data(1031)(31 downto  0);                --FIFO trigger word 0 enable mask
+          localRdData(31 downto  0)  <=  reg_data(1031)(31 downto  0);                --FIFO trigger word 4
         when 1032 => --0x408
-          localRdData(31 downto  0)  <=  reg_data(1032)(31 downto  0);                --FIFO trigger word 1 enable mask
+          localRdData(31 downto  0)  <=  reg_data(1032)(31 downto  0);                --FIFO trigger word 5
         when 1033 => --0x409
-          localRdData(31 downto  0)  <=  reg_data(1033)(31 downto  0);                --FIFO trigger word 1 enable mask
+          localRdData(31 downto  0)  <=  reg_data(1033)(31 downto  0);                --FIFO trigger word 6
         when 1034 => --0x40a
-          localRdData(31 downto  0)  <=  reg_data(1034)(31 downto  0);                --FIFO trigger word 1 enable mask
+          localRdData(31 downto  0)  <=  reg_data(1034)(31 downto  0);                --FIFO trigger word 7
         when 1035 => --0x40b
-          localRdData(31 downto  0)  <=  reg_data(1035)(31 downto  0);                --FIFO trigger word 1 enable mask
+          localRdData(31 downto  0)  <=  reg_data(1035)(31 downto  0);                --FIFO trigger word 8
+        when 1036 => --0x40c
+          localRdData(31 downto  0)  <=  reg_data(1036)(31 downto  0);                --FIFO trigger word 9
         when 1037 => --0x40d
-          localRdData(23 downto  0)  <=  reg_data(1037)(23 downto  0);                --# of words to capture in the fifo
+          localRdData(31 downto  0)  <=  reg_data(1037)(31 downto  0);                --FIFO trigger word 0 enable mask
         when 1038 => --0x40e
-          localRdData( 0)            <=  reg_data(1038)( 0);                          --Reverse the bits going into the FIFO
+          localRdData(31 downto  0)  <=  reg_data(1038)(31 downto  0);                --FIFO trigger word 1 enable mask
+        when 1039 => --0x40f
+          localRdData(31 downto  0)  <=  reg_data(1039)(31 downto  0);                --FIFO trigger word 2 enable mask
+        when 1040 => --0x410
+          localRdData(31 downto  0)  <=  reg_data(1040)(31 downto  0);                --FIFO trigger word 3 enable mask
+        when 1041 => --0x411
+          localRdData(31 downto  0)  <=  reg_data(1041)(31 downto  0);                --FIFO trigger word 4 enable mask
+        when 1042 => --0x412
+          localRdData(31 downto  0)  <=  reg_data(1042)(31 downto  0);                --FIFO trigger word 5 enable mask
+        when 1043 => --0x413
+          localRdData(31 downto  0)  <=  reg_data(1043)(31 downto  0);                --FIFO trigger word 6 enable mask
+        when 1044 => --0x414
+          localRdData(31 downto  0)  <=  reg_data(1044)(31 downto  0);                --FIFO trigger word 7 enable mask
+        when 1045 => --0x415
+          localRdData(31 downto  0)  <=  reg_data(1045)(31 downto  0);                --FIFO trigger word 8 enable mask
+        when 1046 => --0x416
+          localRdData(31 downto  0)  <=  reg_data(1046)(31 downto  0);                --FIFO trigger word 9 enable mask
+        when 1048 => --0x418
+          localRdData(23 downto  0)  <=  reg_data(1048)(23 downto  0);                --# of words to capture in the fifo
+        when 1049 => --0x419
+          localRdData( 0)            <=  reg_data(1049)( 0);                          --Reverse the bits going into the FIFO
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -328,18 +348,28 @@ begin  -- architecture behavioral
   Ctrl.FIFO_LPGBT_SEL0                         <=  reg_data(768)( 8);                
   Ctrl.FIFO_ELINK_SEL1                         <=  reg_data(784)( 4 downto  0);      
   Ctrl.FIFO_LPGBT_SEL1                         <=  reg_data(784)( 8);                
-  Ctrl.FIFO_TRIG0                              <=  reg_data(1026)(31 downto  0);     
-  Ctrl.FIFO_TRIG1                              <=  reg_data(1027)(31 downto  0);     
-  Ctrl.FIFO_TRIG2                              <=  reg_data(1028)(31 downto  0);     
-  Ctrl.FIFO_TRIG3                              <=  reg_data(1029)(31 downto  0);     
-  Ctrl.FIFO_TRIG4                              <=  reg_data(1030)(31 downto  0);     
-  Ctrl.FIFO_TRIG0_MASK                         <=  reg_data(1031)(31 downto  0);     
-  Ctrl.FIFO_TRIG1_MASK                         <=  reg_data(1032)(31 downto  0);     
-  Ctrl.FIFO_TRIG2_MASK                         <=  reg_data(1033)(31 downto  0);     
-  Ctrl.FIFO_TRIG3_MASK                         <=  reg_data(1034)(31 downto  0);     
-  Ctrl.FIFO_TRIG4_MASK                         <=  reg_data(1035)(31 downto  0);     
-  Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(1037)(23 downto  0);     
-  Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(1038)( 0);               
+  Ctrl.FIFO_TRIG0                              <=  reg_data(1027)(31 downto  0);     
+  Ctrl.FIFO_TRIG1                              <=  reg_data(1028)(31 downto  0);     
+  Ctrl.FIFO_TRIG2                              <=  reg_data(1029)(31 downto  0);     
+  Ctrl.FIFO_TRIG3                              <=  reg_data(1030)(31 downto  0);     
+  Ctrl.FIFO_TRIG4                              <=  reg_data(1031)(31 downto  0);     
+  Ctrl.FIFO_TRIG5                              <=  reg_data(1032)(31 downto  0);     
+  Ctrl.FIFO_TRIG6                              <=  reg_data(1033)(31 downto  0);     
+  Ctrl.FIFO_TRIG7                              <=  reg_data(1034)(31 downto  0);     
+  Ctrl.FIFO_TRIG8                              <=  reg_data(1035)(31 downto  0);     
+  Ctrl.FIFO_TRIG9                              <=  reg_data(1036)(31 downto  0);     
+  Ctrl.FIFO_TRIG0_MASK                         <=  reg_data(1037)(31 downto  0);     
+  Ctrl.FIFO_TRIG1_MASK                         <=  reg_data(1038)(31 downto  0);     
+  Ctrl.FIFO_TRIG2_MASK                         <=  reg_data(1039)(31 downto  0);     
+  Ctrl.FIFO_TRIG3_MASK                         <=  reg_data(1040)(31 downto  0);     
+  Ctrl.FIFO_TRIG4_MASK                         <=  reg_data(1041)(31 downto  0);     
+  Ctrl.FIFO_TRIG5_MASK                         <=  reg_data(1042)(31 downto  0);     
+  Ctrl.FIFO_TRIG6_MASK                         <=  reg_data(1043)(31 downto  0);     
+  Ctrl.FIFO_TRIG7_MASK                         <=  reg_data(1044)(31 downto  0);     
+  Ctrl.FIFO_TRIG8_MASK                         <=  reg_data(1045)(31 downto  0);     
+  Ctrl.FIFO_TRIG9_MASK                         <=  reg_data(1046)(31 downto  0);     
+  Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(1048)(23 downto  0);     
+  Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(1049)( 0);               
 
 
   -- writes to slave
@@ -516,32 +546,52 @@ begin  -- architecture behavioral
           reg_data(784)( 8)                       <=  localWrData( 8);                --Choose which lpgbt the readout fifo connects to (0-1)
         when 785 => --0x311
           Ctrl.FIFO_RESET                         <=  localWrData( 0);               
-        when 1026 => --0x402
-          reg_data(1026)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 1027 => --0x403
           reg_data(1027)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0
         when 1028 => --0x404
-          reg_data(1028)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0
+          reg_data(1028)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1
         when 1029 => --0x405
-          reg_data(1029)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0
+          reg_data(1029)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 2
         when 1030 => --0x406
-          reg_data(1030)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0
+          reg_data(1030)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 3
         when 1031 => --0x407
-          reg_data(1031)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0 enable mask
+          reg_data(1031)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 4
         when 1032 => --0x408
-          reg_data(1032)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+          reg_data(1032)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 5
         when 1033 => --0x409
-          reg_data(1033)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+          reg_data(1033)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 6
         when 1034 => --0x40a
-          reg_data(1034)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+          reg_data(1034)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 7
         when 1035 => --0x40b
-          reg_data(1035)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+          reg_data(1035)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 8
         when 1036 => --0x40c
-          Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
+          reg_data(1036)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 9
         when 1037 => --0x40d
-          reg_data(1037)(23 downto  0)            <=  localWrData(23 downto  0);      --# of words to capture in the fifo
+          reg_data(1037)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 0 enable mask
         when 1038 => --0x40e
-          reg_data(1038)( 0)                      <=  localWrData( 0);                --Reverse the bits going into the FIFO
+          reg_data(1038)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 1 enable mask
+        when 1039 => --0x40f
+          reg_data(1039)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 2 enable mask
+        when 1040 => --0x410
+          reg_data(1040)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 3 enable mask
+        when 1041 => --0x411
+          reg_data(1041)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 4 enable mask
+        when 1042 => --0x412
+          reg_data(1042)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 5 enable mask
+        when 1043 => --0x413
+          reg_data(1043)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 6 enable mask
+        when 1044 => --0x414
+          reg_data(1044)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 7 enable mask
+        when 1045 => --0x415
+          reg_data(1045)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 8 enable mask
+        when 1046 => --0x416
+          reg_data(1046)(31 downto  0)            <=  localWrData(31 downto  0);      --FIFO trigger word 9 enable mask
+        when 1047 => --0x417
+          Ctrl.FIFO_FORCE_TRIG                    <=  localWrData( 0);               
+        when 1048 => --0x418
+          reg_data(1048)(23 downto  0)            <=  localWrData(23 downto  0);      --# of words to capture in the fifo
+        when 1049 => --0x419
+          reg_data(1049)( 0)                      <=  localWrData( 0);                --Reverse the bits going into the FIFO
 
         when others => null;
 
@@ -632,18 +682,28 @@ begin  -- architecture behavioral
       reg_data(768)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL0;
       reg_data(784)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_ELINK_SEL1;
       reg_data(784)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL1;
-      reg_data(1026)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0;
-      reg_data(1027)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1;
-      reg_data(1028)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2;
-      reg_data(1029)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3;
-      reg_data(1030)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4;
-      reg_data(1031)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0_MASK;
-      reg_data(1032)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1_MASK;
-      reg_data(1033)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2_MASK;
-      reg_data(1034)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3_MASK;
-      reg_data(1035)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4_MASK;
-      reg_data(1037)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
-      reg_data(1038)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
+      reg_data(1027)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0;
+      reg_data(1028)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1;
+      reg_data(1029)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2;
+      reg_data(1030)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3;
+      reg_data(1031)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4;
+      reg_data(1032)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG5;
+      reg_data(1033)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG6;
+      reg_data(1034)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG7;
+      reg_data(1035)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG8;
+      reg_data(1036)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG9;
+      reg_data(1037)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0_MASK;
+      reg_data(1038)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1_MASK;
+      reg_data(1039)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2_MASK;
+      reg_data(1040)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG3_MASK;
+      reg_data(1041)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG4_MASK;
+      reg_data(1042)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG5_MASK;
+      reg_data(1043)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG6_MASK;
+      reg_data(1044)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG7_MASK;
+      reg_data(1045)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG8_MASK;
+      reg_data(1046)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG9_MASK;
+      reg_data(1048)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
+      reg_data(1049)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
 
       end if; -- reset
     end if; -- clk

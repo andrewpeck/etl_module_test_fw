@@ -23,8 +23,10 @@ entity elink_daq is
     reset      : in std_logic;
     fifo_reset : in std_logic;
 
-    trig0, trig1, trig2, trig3, trig4                          : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
-    trig0_mask, trig1_mask, trig2_mask, trig3_mask, trig4_mask : in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    trig0, trig1, trig2, trig3, trig4, trig5, trig6, trig7, trig8, trig9 :
+        in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+    mask0, mask1, mask2, mask3, mask4, mask5, mask6, mask7, mask8, mask9 :
+        in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
     force_trig : in std_logic;
 
@@ -51,7 +53,7 @@ architecture behavioral of elink_daq is
   function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
     variable result : std_logic_vector(a'range);
-    alias aa        : std_logic_vector(a'REVERSe_range) is a;
+    alias aa        : std_logic_vector(a'REVERse_range) is a;
   begin
     for i in aa'range loop
       result(i) := aa(i);
@@ -59,7 +61,9 @@ architecture behavioral of elink_daq is
     return result;
   end;  -- function reverse_vector
 
-  signal data_norev, data_rev, data, data_r0, data_r1, data_r2, data_r3, data_r4 :
+  signal data_norev, data_rev, data,
+    data_r0, data_r1, data_r2, data_r3, data_r4,
+    data_r5, data_r6, data_r7, data_r8, data_r9 :
     std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
 
   constant DAQ_FIFO_WORDCNT_WIDTH : positive := integer(ceil(log2(real(DAQ_FIFO_DEPTH))));
@@ -74,7 +78,8 @@ architecture behavioral of elink_daq is
   signal daq_armed           : std_logic                           := '0';
   signal fifo_words_captured : integer range 0 to DAQ_FIFO_DEPTH-1 := 0;
 
-  signal trigger : std_logic;
+  signal trigger    : std_logic;
+  signal trig_match : boolean;
 
 begin
 
@@ -85,13 +90,20 @@ begin
   data_rev   <= reverse_vector(data_norev);
   data_norev <= data_i(lpgbt_sel).data(8*(elink_sel+1)-1 downto 8*elink_sel);
 
+  trig_match <=
+    ((mask9 and data_r0) = (mask9 and trig9)) and
+    ((mask8 and data_r1) = (mask8 and trig8)) and
+    ((mask7 and data_r2) = (mask7 and trig7)) and
+    ((mask6 and data_r3) = (mask6 and trig6)) and
+    ((mask5 and data_r4) = (mask5 and trig5)) and
+    ((mask4 and data_r5) = (mask4 and trig4)) and
+    ((mask3 and data_r6) = (mask3 and trig3)) and
+    ((mask2 and data_r7) = (mask2 and trig2)) and
+    ((mask1 and data_r8) = (mask1 and trig1)) and
+    ((mask0 and data_r9) = (mask0 and trig0));
+
   trigger <= '1' when (force_trig = '1' or
-                       (daq_armed = '1' and
-                        (((trig4_mask and data) = (trig4_mask and trig4)) and
-                         ((trig3_mask and data_r0) = (trig3_mask and trig3)) and
-                         ((trig2_mask and data_r1) = (trig2_mask and trig2)) and
-                         ((trig1_mask and data_r2) = (trig1_mask and trig1)) and
-                         ((trig0_mask and data_r3) = (trig0_mask and trig0))))) else '0';
+                       (daq_armed = '1' and trig_match)) else '0';
 
   process (clk40) is
   begin
@@ -145,6 +157,12 @@ begin
       data_r2 <= data_r1;
       data_r3 <= data_r2;
       data_r4 <= data_r3;
+      data_r5 <= data_r4;
+      data_r6 <= data_r5;
+      data_r7 <= data_r6;
+      data_r8 <= data_r7;
+      data_r9 <= data_r8;
+
     end if;
   end process;
 
@@ -162,7 +180,7 @@ begin
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & data_r4,
+      din           => x"000000" & data_r9,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,

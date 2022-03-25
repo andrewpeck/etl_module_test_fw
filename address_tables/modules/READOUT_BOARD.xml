@@ -36,18 +36,28 @@
 
   <node id="FIFO_RESET"          address="0x311" mask="0x1"          permission="w"  description="Reset the daq FIFO"/>
 
-  <node id="FIFO_TRIG0"          address="0x402" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_TRIG1"          address="0x403" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_TRIG2"          address="0x404" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_TRIG3"          address="0x405" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_TRIG4"          address="0x406" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
-  <node id="FIFO_TRIG0_MASK"     address="0x407" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_TRIG1_MASK"     address="0x408" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_TRIG2_MASK"     address="0x409" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_TRIG3_MASK"     address="0x40A" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_TRIG4_MASK"     address="0x40B" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
-  <node id="FIFO_FORCE_TRIG"     address="0x40C" mask="0x1"          permission="w"  description="Force trigger"/>
-  <node id="FIFO_CAPTURE_DEPTH"  address="0x40D" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
-  <node id="FIFO_REVERSE_BITS"   address="0x40E" mask="0x00000001"   permission="rw" description="Reverse the bits going into the FIFO" parameters="default=0x1"/>
+  <node id="FIFO_TRIG0"          address="0x403" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0"/>
+  <node id="FIFO_TRIG1"          address="0x404" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1"/>
+  <node id="FIFO_TRIG2"          address="0x405" mask="0xffffffff"   permission="rw" description="FIFO trigger word 2"/>
+  <node id="FIFO_TRIG3"          address="0x406" mask="0xffffffff"   permission="rw" description="FIFO trigger word 3"/>
+  <node id="FIFO_TRIG4"          address="0x407" mask="0xffffffff"   permission="rw" description="FIFO trigger word 4"/>
+  <node id="FIFO_TRIG5"          address="0x408" mask="0xffffffff"   permission="rw" description="FIFO trigger word 5"/>
+  <node id="FIFO_TRIG6"          address="0x409" mask="0xffffffff"   permission="rw" description="FIFO trigger word 6"/>
+  <node id="FIFO_TRIG7"          address="0x40a" mask="0xffffffff"   permission="rw" description="FIFO trigger word 7"/>
+  <node id="FIFO_TRIG8"          address="0x40b" mask="0xffffffff"   permission="rw" description="FIFO trigger word 8"/>
+  <node id="FIFO_TRIG9"          address="0x40c" mask="0xffffffff"   permission="rw" description="FIFO trigger word 9"/>
+  <node id="FIFO_TRIG0_MASK"     address="0x40d" mask="0xffffffff"   permission="rw" description="FIFO trigger word 0 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG1_MASK"     address="0x40e" mask="0xffffffff"   permission="rw" description="FIFO trigger word 1 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG2_MASK"     address="0x40f" mask="0xffffffff"   permission="rw" description="FIFO trigger word 2 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG3_MASK"     address="0x410" mask="0xffffffff"   permission="rw" description="FIFO trigger word 3 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG4_MASK"     address="0x411" mask="0xffffffff"   permission="rw" description="FIFO trigger word 4 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG5_MASK"     address="0x412" mask="0xffffffff"   permission="rw" description="FIFO trigger word 5 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG6_MASK"     address="0x413" mask="0xffffffff"   permission="rw" description="FIFO trigger word 6 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG7_MASK"     address="0x414" mask="0xffffffff"   permission="rw" description="FIFO trigger word 7 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG8_MASK"     address="0x415" mask="0xffffffff"   permission="rw" description="FIFO trigger word 8 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_TRIG9_MASK"     address="0x416" mask="0xffffffff"   permission="rw" description="FIFO trigger word 9 enable mask" parameters="default=0xffffffff"/>
+  <node id="FIFO_FORCE_TRIG"     address="0x417" mask="0x1"          permission="w"  description="Force trigger"/>
+  <node id="FIFO_CAPTURE_DEPTH"  address="0x418" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
+  <node id="FIFO_REVERSE_BITS"   address="0x419" mask="0x00000001"   permission="rw" description="Reverse the bits going into the FIFO" parameters="default=0x1"/>
 
 </node>
