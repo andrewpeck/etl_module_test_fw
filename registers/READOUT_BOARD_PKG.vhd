@@ -86,10 +86,13 @@ package READOUT_BOARD_CTRL is
     ALIGN_1                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 1
     ALIGN_2                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 2
     ALIGN_3                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 3
-    DL_SRC                     :std_logic_vector( 2 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=fast command
+    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=sw fast command, 4=fw fast command
     FAST_CMD_IDLE              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
     FAST_CMD_DATA              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
     FAST_CMD_PULSE             :std_logic;                      -- Write 1 to pulse fast_cmd
+    L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
+    LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
+    L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
   end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
 
 
@@ -102,7 +105,10 @@ package READOUT_BOARD_CTRL is
                                                                                                          DL_SRC => (others => '0'),
                                                                                                          FAST_CMD_IDLE => x"f0",
                                                                                                          FAST_CMD_DATA => (others => '0'),
-                                                                                                         FAST_CMD_PULSE => '0'
+                                                                                                         FAST_CMD_PULSE => '0',
+                                                                                                         L1A_PULSE => '0',
+                                                                                                         LINK_RESET_PULSE => '0',
+                                                                                                         L1A_RATE => (others => '0')
                                                                                                         );
   type READOUT_BOARD_LPGBT_DAQ_MON_t is record
     UPLINK                     :READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t;
