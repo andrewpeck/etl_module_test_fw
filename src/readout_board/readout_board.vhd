@@ -109,7 +109,7 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of prbs_ff  : signal is "true";
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
-  signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
+  signal fast_cmd_fw, fast_cmd_sw : std_logic_vector (7 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- FIFO
@@ -123,6 +123,16 @@ architecture behavioral of readout_board is
 
   signal elink_sel : int_array_t (1 downto 0);
   signal lpgbt_sel : int_array_t (1 downto 0);
+
+  --------------------------------------------------------------------------------
+  -- TTC
+  --------------------------------------------------------------------------------
+
+  signal l1a_gen : std_logic := '0';
+  signal l1a : std_logic := '0';
+  signal bc0 : std_logic := '0';
+  signal link_reset : std_logic := '0';
+  signal bxn : natural range 0 to 3563 := 0;
 
 begin
 
@@ -200,7 +210,9 @@ begin
         elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 2) then
           downlink_data(I).data <= prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse & prbs_gen_reverse;
         elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 3) then
-          downlink_data(I).data <= fast_cmd & fast_cmd & fast_cmd & fast_cmd;
+          downlink_data(I).data <= fast_cmd_sw & fast_cmd_sw & fast_cmd_sw & fast_cmd_sw;
+        elsif (to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src)) = 4) then
+          downlink_data(I).data <= fast_cmd_fw & fast_cmd_fw & fast_cmd_fw & fast_cmd_fw;
         end if;
       end if;
     end process;
@@ -210,10 +222,46 @@ begin
   --  + make it so that the fast commands are just one pulse wide
   --    (gated by the strobe)
 
-  fast_cmd <= ctrl.lpgbt.daq.downlink.fast_cmd_data
+  fast_cmd_sw <= ctrl.lpgbt.daq.downlink.fast_cmd_data
               when
               ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
               ctrl.lpgbt.daq.downlink.fast_cmd_idle;
+
+  etroc_tx_inst : entity etroc.etroc_tx
+    port map (
+      clock      => clk40,
+      reset      => reset,
+      l1a        => l1a,
+      bc0        => bc0,
+      link_reset => link_reset,
+      data_o     => fast_cmd_fw
+      );
+
+  trig_gen_inst : entity work.trig_gen
+    port map (
+      sys_clk    => clk40,
+      sys_rst    => reset,
+      sys_bx_stb => '1',
+      rate       => ctrl.lpgbt.daq.downlink.l1a_rate,
+      trig       => l1a_gen
+      );
+
+
+  bc0 <= '1' when bxn = 0 else '0';
+
+  l1a        <= ctrl.lpgbt.daq.downlink.l1a_pulse or l1a_gen;
+  link_reset <= ctrl.lpgbt.daq.downlink.link_reset_pulse;
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (bxn=3563) then
+        bxn <= 0;
+      else
+        bxn <= bxn + 1;
+      end if;
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- Record mapping
