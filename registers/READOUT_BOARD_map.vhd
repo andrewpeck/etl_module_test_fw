@@ -160,6 +160,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.UPCNT_ERRORS;      --Errors on Upcnt
         when 58 => --0x3a
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.PRBS_ERRORS;       --Errors on Prbs
+        when 259 => --0x103
+          localRdData( 1 downto  0)  <=  reg_data(259)( 1 downto  0);                 --Select which LPGBT is connected to the ILA
         when 516 => --0x204
           localRdData(15 downto  8)  <=  reg_data(516)(15 downto  8);                 --I2C address of the GBTx
         when 517 => --0x205
@@ -338,6 +340,7 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1   <=  reg_data(52)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1  <=  reg_data(53)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.SEL               <=  reg_data(56)(31 downto 16);       
+  Ctrl.ILA_SEL                                 <=  reg_data(259)( 1 downto  0);      
   Ctrl.SC.TX_GBTX_ADDR                         <=  reg_data(516)(15 downto  8);      
   Ctrl.SC.TX_REGISTER_ADDR                     <=  reg_data(517)(15 downto  0);      
   Ctrl.SC.TX_NUM_BYTES_TO_READ                 <=  reg_data(518)(15 downto  0);      
@@ -507,6 +510,8 @@ begin  -- architecture behavioral
           reg_data(53)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 56 => --0x38
           reg_data(56)(31 downto 16)              <=  localWrData(31 downto 16);      --Channel to select for error counting
+        when 259 => --0x103
+          reg_data(259)( 1 downto  0)             <=  localWrData( 1 downto  0);      --Select which LPGBT is connected to the ILA
         when 512 => --0x200
           Ctrl.SC.TX_RESET                        <=  localWrData( 0);               
         when 513 => --0x201
@@ -681,6 +686,7 @@ begin  -- architecture behavioral
       reg_data(52)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1;
       reg_data(53)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1;
       reg_data(56)(31 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.SEL;
+      reg_data(259)( 1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ILA_SEL;
       reg_data(516)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_GBTX_ADDR;
       reg_data(517)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_REGISTER_ADDR;
       reg_data(518)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_NUM_BYTES_TO_READ;

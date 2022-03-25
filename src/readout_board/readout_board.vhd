@@ -140,6 +140,12 @@ architecture behavioral of readout_board is
   signal link_reset : std_logic               := '0';
   signal bxn        : natural range 0 to 3563 := 0;
 
+  --------------------------------------------------------------------------------
+  -- ILA
+  --------------------------------------------------------------------------------
+
+  signal ila_sel : integer := 0;
+
 begin
 
   --------------------------------------------------------------------------------
@@ -663,6 +669,8 @@ begin
   debug : if (C_DEBUG) generate
   begin
 
+    ila_sel <= to_integer(unsigned(ctrl.ila_sel));
+
     ila_lpgbt_trig_inst : ila_lpgbt
       port map (
         clk                 => clk40,
@@ -672,39 +680,15 @@ begin
         probe3(0)           => '0',
         probe4(0)           => '0',
         probe5(31 downto 0) => (others => '0'),
-        probe6              => uplink_data_aligned(1).data,
-        probe7(0)           => uplink_data_aligned(1).valid,
-        probe8(0)           => uplink_ready(1),
-        probe9(0)           => uplink_reset(1),
-        probe10(0)          => uplink_fec_err(1),
-        probe11             => uplink_data(1).ic,
+        probe6              => uplink_data_aligned(ila_sel).data,
+        probe7(0)           => uplink_data_aligned(ila_sel).valid,
+        probe8(0)           => uplink_ready(ila_sel),
+        probe9(0)           => uplink_reset(ila_sel),
+        probe10(0)          => uplink_fec_err(ila_sel),
+        probe11             => uplink_data(ila_sel).ic,
         probe12             => "00",
-        probe13             => uplink_data(1).ec,
+        probe13             => uplink_data(ila_sel).ec,
         probe14             => "00",
-        probe15(0)          => '1',
-        probe16(0)          => '1',
-        probe17(0)          => '1',
-        probe18(0)          => '1'
-        );
-
-    ila_lpgbt_inst : ila_lpgbt
-      port map (
-        clk                 => clk40,
-        probe0(31 downto 0) => (others => '0'),
-        probe1              => downlink_data_aligned(0).data,
-        probe2(0)           => downlink_data_aligned(0).valid,
-        probe3(0)           => downlink_ready(0),
-        probe4(0)           => downlink_reset(0),
-        probe5(31 downto 0) => prbs_ff,
-        probe6              => uplink_data_aligned(0).data,
-        probe7(0)           => uplink_data_aligned(0).valid,
-        probe8(0)           => uplink_ready(0),
-        probe9(0)           => uplink_reset(0),
-        probe10(0)          => uplink_fec_err(0),
-        probe11             => uplink_data(0).ic,
-        probe12             => downlink_data_aligned(0).ic,
-        probe13             => uplink_data(0).ec,
-        probe14             => downlink_data_aligned(0).ec,
         probe15(0)          => '1',
         probe16(0)          => '1',
         probe17(0)          => '1',
