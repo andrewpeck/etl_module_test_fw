@@ -334,6 +334,7 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_CTRL_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_CTRL_t;
     ILA_SEL                    :std_logic_vector( 1 downto 0);  -- Select which LPGBT is connected to the ILA
+    ETROC_BITSLIP              :std_logic_vector(31 downto 0);  -- 1 to bitslip an ETROC
     SC                         :READOUT_BOARD_SC_CTRL_t;      
     FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
@@ -372,6 +373,7 @@ package READOUT_BOARD_CTRL is
   constant DEFAULT_READOUT_BOARD_CTRL_t : READOUT_BOARD_CTRL_t := (
                                                                    LPGBT => DEFAULT_READOUT_BOARD_LPGBT_CTRL_t,
                                                                    ILA_SEL => (others => '0'),
+                                                                   ETROC_BITSLIP => (others => '0'),
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL0 => (others => '0'),
                                                                    FIFO_LPGBT_SEL0 => '0',

@@ -9,21 +9,21 @@ use ieee.numeric_std.all;
 use work.dataformat_pkg.all;
 
 package constants_pkg is
-  constant CRCB    : positive := CRC_RANGE'high - CRC_RANGE'low;
-  constant CHIPIDB : positive := CHIPID_RANGE'high - CHIPID_RANGE'low;
-  constant HITCNTB : positive := HITS_RANGE'high - HITS_RANGE'low;
-  constant STATB   : positive := STATUS_RANGE'high - STATUS_RANGE'low;
+  constant CRCB    : positive := 1 + CRC_RANGE'high - CRC_RANGE'low;
+  constant CHIPIDB : positive := 1 + CHIPID_RANGE'high - CHIPID_RANGE'low;
+  constant HITCNTB : positive := 1 + HITS_RANGE'high - HITS_RANGE'low;
+  constant STATB   : positive := 1 + STATUS_RANGE'high - STATUS_RANGE'low;
 
-  constant CALB : positive := CAL_RANGE'high - CAL_RANGE'low;
-  constant TOTB : positive := TOT_RANGE'high - TOT_RANGE'low;
-  constant TOAB : positive := TOA_RANGE'high - TOA_RANGE'low;
-  constant ROWB : positive := ROW_RANGE'high - ROW_RANGE'low;
-  constant COLB : positive := COL_RANGE'high - COL_RANGE'low;
-  constant EAB  : positive := EA_RANGE'high - EA_RANGE'low;
+  constant CALB : positive := 1 + CAL_RANGE'high - CAL_RANGE'low;
+  constant TOTB : positive := 1 + TOT_RANGE'high - TOT_RANGE'low;
+  constant TOAB : positive := 1 + TOA_RANGE'high - TOA_RANGE'low;
+  constant ROWB : positive := 1 + ROW_RANGE'high - ROW_RANGE'low;
+  constant COLB : positive := 1 + COL_RANGE'high - COL_RANGE'low;
+  constant EAB  : positive := 1 + EA_RANGE'high - EA_RANGE'low;
 
-  constant BXB       : positive := BCID_RANGE'high - BCID_RANGE'low;
-  constant TYPEB     : positive := TYPE_RANGE'high - TYPE_RANGE'low;
-  constant EVENTCNTB : positive := EVENTCNT_RANGE'high - EVENTCNT_RANGE'low;
+  constant BXB       : positive := 1 + BCID_RANGE'high - BCID_RANGE'low;
+  constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
+  constant EVENTCNTB : positive := 1 + EVENTCNT_RANGE'high - EVENTCNT_RANGE'low;
 end package constants_pkg;
 
 --------------------------------------------------------------------------------
@@ -36,6 +36,7 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 use work.dataformat_pkg.all;
+use work.constants_pkg.all;
 
 entity etroc_rx is
   generic(
@@ -50,13 +51,23 @@ entity etroc_rx is
 
     data_i : in std_logic_vector (MAX_ELINK_WIDTH-1 downto 0);
 
+    -- expose a raw copy of the 40 bit word for debugging
+    frame_mon_o : out std_logic_vector (FRAME_WIDTH-1 downto 0);
+
+    -- expose a fifo write port interface with fillers removed
+    -- can be connected to a daq fifo
+    -- 40 bits so need an asymmetric fifo (e.g. 2:1 with padding)
+    fifo_data_o  : out std_logic_vector (FRAME_WIDTH-1 downto 0);
+    fifo_wr_en_o : out std_logic;
+
     bitslip_i : in std_logic;
 
     elinkwidth : in std_logic_vector(2 downto 0) := "010";  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
 
-    bcid_o      : out std_logic_vector (BXB-1 downto 0);
-    type_o      : out std_logic_vector (TYPEB-1 downto 0);
-    event_cnt_o : out std_logic_vector (EVENTCNTB-1 downto 0);
+    bcid_o            : out std_logic_vector (BXB-1 downto 0);
+    type_o            : out std_logic_vector (TYPEB-1 downto 0);
+    event_cnt_o       : out std_logic_vector (EVENTCNTB-1 downto 0);
+    start_of_packet_o : out std_logic;  -- start of packet
 
     cal_o     : out std_logic_vector (CALB -1 downto 0);
     tot_o     : out std_logic_vector (TOTB -1 downto 0);
@@ -104,27 +115,26 @@ architecture behavioral of etroc_rx is
   signal next_data_is_filler : boolean;
   signal special_bit         : std_logic := '0';
 
-  function zsh (a: std_logic_vector)
+  function zsh (a : std_logic_vector)
     return std_logic_vector is
-    variable result: std_logic_vector(a'RANGE);
-    alias aa: std_logic_vector(a'high - a'low downto 0) is a;
+    variable result : std_logic_vector(a'high - a'low downto 0);
   begin
-    for i in aa'RANGE loop
-      result(i) := aa(i+a'low);
+    for i in 0 to result'length-1 loop
+      result(i) := a(i+a'low);
     end loop;
     return result;
-  end; -- function reverse_vector
+  end;  -- function reverse_vector
 
-  function reverse_vector (a: std_logic_vector)
+  function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
-    variable result: std_logic_vector(a'RANGE);
-    alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+    variable result : std_logic_vector(a'range);
+    alias aa        : std_logic_vector(a'reverse_range) is a;
   begin
-    for i in aa'RANGE loop
+    for i in aa'range loop
       result(i) := aa(i);
     end loop;
     return result;
-  end; -- function reverse_vector
+  end;  -- function reverse_vector
 
 begin
 
@@ -149,7 +159,7 @@ begin
       MAX_INPUT      => MAX_ELINK_WIDTH,
       MAX_OUTPUT     => 40,
       SUPPORT_INPUT  => "11100",
-      SUPPORT_OUTPUT => "01000" -- 66, 4x10, 2x10, 10, 8
+      SUPPORT_OUTPUT => "01000"         -- 66, 4x10, 2x10, 10, 8
       )
     port map (
       reset            => reset,
@@ -161,7 +171,7 @@ begin
       reverseinputbits => '0',
       dataout          => next_frame_raw,
       dataoutvalid     => next_frame_en,
-      outputwidth      => "011",         -- 11 = 40
+      outputwidth      => "011",        -- 11 = 40
       bitslip          => bitslip
       );
 
@@ -174,13 +184,19 @@ begin
     end if;
   end process;
 
+  frame_mon_o <= frame;
+
   --
   process (clock)
   begin
     if (rising_edge(clock)) then
 
-      data_en_o       <= '0';
-      end_of_packet_o <= '0';
+      data_en_o         <= '0';
+      end_of_packet_o   <= '0';
+      start_of_packet_o <= '0';
+
+      fifo_data_o  <= (others => '0');
+      fifo_wr_en_o <= '0';
 
       case state is
 
@@ -200,16 +216,30 @@ begin
 
         when HEADER_state =>
 
+          -- state
           state <= data_state;
 
+          -- processed outputs
           bcid_o      <= zsh(frame(BCID_RANGE));
           type_o      <= zsh(frame(TYPE_RANGE));
           event_cnt_o <= zsh(frame(EVENTCNT_RANGE));
+
+          start_of_packet_o <= '1';
+
+          -- fifo output
+          fifo_data_o  <= frame;
+          fifo_wr_en_o <= '1';
 
         when DATA_state =>
 
           if (frame_en = '1') then
 
+            -- state
+            if (special_bit = TRAILER_SPECIAL_BIT_VALUE) then
+              state <= TRAILER_state;
+            end if;
+
+            -- processed outputs
             cal_o <= zsh(frame(CAL_RANGE));
             tot_o <= zsh(frame(TOT_RANGE));
             toa_o <= zsh(frame(TOA_RANGE));
@@ -219,22 +249,28 @@ begin
 
             data_en_o <= '1';
 
-            if (special_bit = TRAILER_SPECIAL_BIT_VALUE) then
-              state <= TRAILER_state;
-            end if;
+            -- fifo output
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
 
           end if;
 
         when TRAILER_state =>
 
-          end_of_packet_o <= '1';
+          -- state
+          state <= IDLE_state;
 
+          -- processed outputs
           chip_id_o <= zsh(frame(CHIPID_RANGE));
           crc_o     <= zsh(frame(CRC_RANGE));
           hitcnt_o  <= zsh(frame(HITS_RANGE));
           stat_o    <= zsh(frame(STATUS_RANGE));
 
-          state <= IDLE_state;
+          end_of_packet_o <= '1';
+
+          -- fifo output
+          fifo_data_o  <= frame;
+          fifo_wr_en_o <= '1';
 
         when others =>
 

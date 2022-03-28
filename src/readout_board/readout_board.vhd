@@ -146,6 +146,17 @@ architecture behavioral of readout_board is
 
   signal ila_sel : integer := 0;
 
+  --------------------------------------------------------------------------------
+  -- ETROC RX
+  --------------------------------------------------------------------------------
+
+  signal rx_frame_mon  : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_data  : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_wr_en : std_logic;
+
+  signal rx_start_of_packet  : std_logic;
+  signal rx_end_of_packet   : std_logic;
+
 begin
 
   --------------------------------------------------------------------------------
@@ -634,34 +645,39 @@ begin
   -- Data Decoder
   --------------------------------------------------------------------------------
 
-  -- etroc_rx_1: entity work.etroc_rx
-  --   generic map (
-  --     MAX_ELINK_WIDTH => MAX_ELINK_WIDTH,
-  --     FRAME_WIDTH     => FRAME_WIDTH)
-  --   port map (
-  --     clock           => clock,
-  --     reset           => reset,
-  --     data_i          => data_i,
-  --     bitslip_i       => bitslip_i,
-  --     bcid_o          => open,
-  --     type_o          => open,
-  --     event_cnt_o     => open,
-  --     cal_o           => open,
-  --     tot_o           => open,
-  --     toa_o           => open,
-  --     col_o           => open,
-  --     row_o           => open,
-  --     ea_o            => open,
-  --     data_en_o       => open,
-  --     stat_o          => open,
-  --     hitcnt_o        => open,
-  --     crc_o           => open,
-  --     chip_id_o       => open,
-  --     end_of_packet_o => open,
-  --     err_o           => open,
-  --     busy_o          => open,
-  --     idle_o          => open
-  --     );
+  etroc_rx_gen : for I in 0 to 0 generate
+  begin
+    etroc_rx_1 : entity etroc.etroc_rx
+      port map (
+        clock             => clk40,
+        reset             => reset,
+        data_i            => x"000000" & uplink_data_aligned(lpgbt_sel(I)).data(8*(elink_sel(I)+1)-1 downto 8*elink_sel(I)),
+        bitslip_i         => ctrl.etroc_bitslip(I),
+        fifo_wr_en_o      => rx_fifo_wr_en,
+        fifo_data_o       => rx_fifo_data,
+        frame_mon_o       => rx_frame_mon,
+        bcid_o            => open,
+        type_o            => open,
+        event_cnt_o       => open,
+        cal_o             => open,
+        tot_o             => open,
+        toa_o             => open,
+        col_o             => open,
+        row_o             => open,
+        ea_o              => open,
+        data_en_o         => open,
+        stat_o            => open,
+        hitcnt_o          => open,
+        crc_o             => open,
+        chip_id_o         => open,
+        start_of_packet_o => open,
+        end_of_packet_o   => open,
+        err_o             => open,
+        busy_o            => open,
+        idle_o            => open
+        );
+  end generate;
+
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
   --------------------------------------------------------------------------------
