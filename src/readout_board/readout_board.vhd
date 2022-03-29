@@ -689,26 +689,17 @@ begin
 
     ila_lpgbt_trig_inst : ila_lpgbt
       port map (
-        clk                 => clk40,
-        probe0(31 downto 0) => (others => '0'),
-        probe1              => (others => '0'),
-        probe2(0)           => '0',
-        probe3(0)           => '0',
-        probe4(0)           => '0',
-        probe5(31 downto 0) => (others => '0'),
-        probe6              => uplink_data_aligned(ila_sel).data,
-        probe7(0)           => uplink_data_aligned(ila_sel).valid,
-        probe8(0)           => uplink_ready(ila_sel),
-        probe9(0)           => uplink_reset(ila_sel),
-        probe10(0)          => uplink_fec_err(ila_sel),
-        probe11             => uplink_data(ila_sel).ic,
-        probe12             => "00",
-        probe13             => uplink_data(ila_sel).ec,
-        probe14             => "00",
-        probe15(0)          => '1',
-        probe16(0)          => '1',
-        probe17(0)          => '1',
-        probe18(0)          => '1'
+        clk                  => clk40,
+        probe0(223 downto 0) => uplink_data_aligned(ila_sel).data,
+        probe1(0)            => uplink_data_aligned(ila_sel).valid,
+        probe2(0)            => uplink_ready(ila_sel),
+        probe3(0)            => uplink_reset(ila_sel),
+        probe4(0)            => uplink_fec_err(ila_sel),
+        probe5(1 downto 0)   => uplink_data(ila_sel).ic,
+        probe6(1 downto 0)   => uplink_data(ila_sel).ec,
+        probe7(39 downto 0)  => rx_frame_mon,
+        probe8(39 downto 0)  => rx_fifo_data,
+        probe9(0)            => rx_fifo_wr_en
         );
 
   end generate;
