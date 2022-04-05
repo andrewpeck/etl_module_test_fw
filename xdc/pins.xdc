@@ -133,6 +133,6 @@ set_property PACKAGE_PIN AN19 [get_ports sw[1]]
 set_property PACKAGE_PIN AP18 [get_ports sw[2]]
 set_property PACKAGE_PIN AN14 [get_ports sw[3]]
 
-set_property IOSTANDARD LVDS [get_ports clock_o_*]
+set_property IOSTANDARD SUB_LVDS [get_ports clock_o_*]
 set_property PACKAGE_PIN H27 [get_ports clock_o_p]
 set_property PACKAGE_PIN G27 [get_ports clock_o_n]
