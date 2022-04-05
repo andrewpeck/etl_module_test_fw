@@ -52,6 +52,10 @@ entity etl_test_fw is
     );
   port(
 
+    --------------------------------------------------------------------------------
+    -- PCIE
+    --------------------------------------------------------------------------------
+
     -- PCIe clock and reset
     pcie_sys_clk_p : in std_logic_vector(0*USE_PCIE-1 downto 0);
     pcie_sys_clk_n : in std_logic_vector(0*USE_PCIE-1 downto 0);
@@ -63,6 +67,10 @@ entity etl_test_fw is
     pcie_tx_p : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
     pcie_tx_n : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
 
+    --------------------------------------------------------------------------------
+    -- Oscillators
+    --------------------------------------------------------------------------------
+
     -- external oscillator, 125MHz
     osc_clk125_p : in std_logic;
     osc_clk125_n : in std_logic;
@@ -71,15 +79,29 @@ entity etl_test_fw is
     osc_clk300_p : in std_logic;
     osc_clk300_n : in std_logic;
 
-    -- Transceiver ref-clocks
-    si570_refclk_p : in std_logic;
-    si570_refclk_n : in std_logic;
-
     si570_usrclk_p : in std_logic;
     si570_usrclk_n : in std_logic;
 
+    --------------------------------------------------------------------------------
+    -- Transceiver ref-clocks
+    --------------------------------------------------------------------------------
+
+    si570_refclk_p : in std_logic;
+    si570_refclk_n : in std_logic;
+
     sma_refclk_p : in std_logic;
     sma_refclk_n : in std_logic;
+
+    --------------------------------------------------------------------------------
+    -- Clock output
+    --------------------------------------------------------------------------------
+
+    clock_o_p : out std_logic;
+    clock_o_n : out std_logic;
+
+    --------------------------------------------------------------------------------
+    -- Transceivers
+    --------------------------------------------------------------------------------
 
     tx_p : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
     tx_n : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
@@ -128,6 +150,8 @@ architecture behavioral of etl_test_fw is
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
   signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
+
+  signal si570_usrclk_oddr : std_logic := '0';
 
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
@@ -264,6 +288,26 @@ begin
       o => clk_osc300
       );
 
+  oddr0 : oddr2 port map(
+    Q  => si570_usrclk_oddr,
+    C0 => si570_usrclk,
+    C1 => not si570_usrclk,
+    CE => '1',
+    D0 => '0',
+    D1 => '1',
+    R  => '0',
+    S  => '0'
+    );                                  -- DDR register for clock forwarding
+
+  OBUFDS_inst : OBUFDS
+    generic map (
+      IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
+      SLEW       => "SLOW")             -- Specify the output slew rate
+    port map (
+      O  => clock_o_p,                  -- Diff_p output (connect directly to top-level port)
+      OB => clock_o_n,                  -- Diff_n output (connect directly to top-level port)
+      I  => si570_usrclk_oddr           -- Buffer input
+      );
 
   ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
   mac_addr(3 downto 0) <= sw(3 downto 0);
