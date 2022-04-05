@@ -19,6 +19,9 @@
 
   </node>
 
+  <node id="ILA_SEL" address="0x103" mask="0x3" permission="rw" description="Select which LPGBT is connected to the ILA" />
+  <node id="ETROC_BITSLIP" address="0x104" mask="0xffffffff" permission="rw" description="1 to bitslip an ETROC" />
+
   <!-- LPGBT-FPGA  -->
   <node id="SC"   address="0x200" module="file://GBT_SC.xml"/>
 
@@ -59,5 +62,11 @@
   <node id="FIFO_FORCE_TRIG"     address="0x417" mask="0x1"          permission="w"  description="Force trigger"/>
   <node id="FIFO_CAPTURE_DEPTH"  address="0x418" mask="0x00ffffff"   permission="rw" description="# of words to capture in the fifo" parameters="default=0x3fff"/>
   <node id="FIFO_REVERSE_BITS"   address="0x419" mask="0x00000001"   permission="rw" description="Reverse the bits going into the FIFO" parameters="default=0x1"/>
+
+  <node id="L1A_PULSE" address="0x500" mask="0x00000001" permission="w"  description="Write 1 to pulse L1A"/>
+  <node id="LINK_RESET_PULSE" address="0x501" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
+  <node id="L1A_RATE" address="0x502" mask="0xffffffff" permission="rw" description="Rate of generated triggers f_trig =(2^32-1) * clk_period * rate" parameters="default=0x00000000"/>
+  <node id="L1A_RATE_CNT" address="0x503" mask="0xffffffff" permission="r" description="Measured rate of generated triggers in Hz" />
+
 
 </node>

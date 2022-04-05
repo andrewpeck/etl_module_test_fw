@@ -6,7 +6,7 @@
 # Prevent these reset registers from getting merged across different LPGBT instances...
 # they are high fanout and it caused timing to fail early on
 
-set lpgbt_path "lpgbt_gen.rbgen[*].readout_board_inst/lpgbt_link_wrapper"
+set lpgbt_path "rb_gen.rbgen[*].readout_board_inst/lpgbt_link_wrapper"
 
 set_property -quiet KEEP true \
     [get_cells -quiet -hierarchical -filter {NAME =~ rbgen[*]*/lpgbt_link_wrapper/*/gearboxSyncReset*}]

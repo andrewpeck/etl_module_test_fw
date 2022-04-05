@@ -449,7 +449,11 @@ begin
       CEMASK  => '0'
       );
 
-  lpgbt_gen : if (EN_LPGBTS = 1) generate
+  --------------------------------------------------------------------------------
+  -- Readout Boards
+  --------------------------------------------------------------------------------
+
+  rb_gen : if (EN_LPGBTS = 1) generate
 
     rbgen : for I in 0 to NUM_RBS-1 generate
       constant NU : integer := NUM_LPGBTS_TRIG + NUM_LPGBTS_DAQ;

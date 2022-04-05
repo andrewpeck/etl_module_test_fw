@@ -86,7 +86,7 @@ package READOUT_BOARD_CTRL is
     ALIGN_1                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 1
     ALIGN_2                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 2
     ALIGN_3                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 3
-    DL_SRC                     :std_logic_vector( 2 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=fast command
+    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
     FAST_CMD_IDLE              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
     FAST_CMD_DATA              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
     FAST_CMD_PULSE             :std_logic;                      -- Write 1 to pulse fast_cmd
@@ -327,12 +327,15 @@ package READOUT_BOARD_CTRL is
     FIFO_FULL1                 :std_logic;                  -- FIFO is full
     FIFO_ARMED1                :std_logic;                  -- FIFO armed
     FIFO_EMPTY1                :std_logic;                  -- FIFO empty
+    L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
   end record READOUT_BOARD_MON_t;
 
 
   type READOUT_BOARD_CTRL_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_CTRL_t;
-    SC                         :READOUT_BOARD_SC_CTRL_t;   
+    ILA_SEL                    :std_logic_vector( 1 downto 0);  -- Select which LPGBT is connected to the ILA
+    ETROC_BITSLIP              :std_logic_vector(31 downto 0);  -- 1 to bitslip an ETROC
+    SC                         :READOUT_BOARD_SC_CTRL_t;      
     FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_ELINK_SEL1            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
@@ -361,11 +364,16 @@ package READOUT_BOARD_CTRL is
     FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
     FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
     FIFO_REVERSE_BITS          :std_logic;                      -- Reverse the bits going into the FIFO
+    L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
+    LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
+    L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
   end record READOUT_BOARD_CTRL_t;
 
 
   constant DEFAULT_READOUT_BOARD_CTRL_t : READOUT_BOARD_CTRL_t := (
                                                                    LPGBT => DEFAULT_READOUT_BOARD_LPGBT_CTRL_t,
+                                                                   ILA_SEL => (others => '0'),
+                                                                   ETROC_BITSLIP => (others => '0'),
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL0 => (others => '0'),
                                                                    FIFO_LPGBT_SEL0 => '0',
@@ -394,7 +402,10 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_TRIG9_MASK => x"ffffffff",
                                                                    FIFO_FORCE_TRIG => '0',
                                                                    FIFO_CAPTURE_DEPTH => x"003fff",
-                                                                   FIFO_REVERSE_BITS => '1'
+                                                                   FIFO_REVERSE_BITS => '1',
+                                                                   L1A_PULSE => '0',
+                                                                   LINK_RESET_PULSE => '0',
+                                                                   L1A_RATE => x"00000000"
                                                                   );
 
 

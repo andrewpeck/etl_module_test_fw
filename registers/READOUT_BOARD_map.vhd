@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1049);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1049) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1283);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1283) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -103,7 +103,7 @@ begin  -- architecture behavioral
           localRdData(10 downto  8)  <=  reg_data(18)(10 downto  8);                  --Downlink bitslip alignment for Group 2
           localRdData(14 downto 12)  <=  reg_data(18)(14 downto 12);                  --Downlink bitslip alignment for Group 3
         when 19 => --0x13
-          localRdData( 2 downto  0)  <=  reg_data(19)( 2 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=fast command
+          localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
         when 20 => --0x14
           localRdData(15 downto  8)  <=  reg_data(20)(15 downto  8);                  --Data to send on fast_cmd
           localRdData(23 downto 16)  <=  reg_data(20)(23 downto 16);                  --Data to send on fast_cmd
@@ -160,6 +160,10 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.UPCNT_ERRORS;      --Errors on Upcnt
         when 58 => --0x3a
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.PRBS_ERRORS;       --Errors on Prbs
+        when 259 => --0x103
+          localRdData( 1 downto  0)  <=  reg_data(259)( 1 downto  0);                 --Select which LPGBT is connected to the ILA
+        when 260 => --0x104
+          localRdData(31 downto  0)  <=  reg_data(260)(31 downto  0);                 --1 to bitslip an ETROC
         when 516 => --0x204
           localRdData(15 downto  8)  <=  reg_data(516)(15 downto  8);                 --I2C address of the GBTx
         when 517 => --0x205
@@ -255,6 +259,10 @@ begin  -- architecture behavioral
           localRdData(23 downto  0)  <=  reg_data(1048)(23 downto  0);                --# of words to capture in the fifo
         when 1049 => --0x419
           localRdData( 0)            <=  reg_data(1049)( 0);                          --Reverse the bits going into the FIFO
+        when 1282 => --0x502
+          localRdData(31 downto  0)  <=  reg_data(1282)(31 downto  0);                --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
+        when 1283 => --0x503
+          localRdData(31 downto  0)  <=  Mon.L1A_RATE_CNT;                            --Measured rate of generated triggers in Hz
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -298,7 +306,7 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_1              <=  reg_data(18)( 6 downto  4);       
   Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_2              <=  reg_data(18)(10 downto  8);       
   Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_3              <=  reg_data(18)(14 downto 12);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.DL_SRC               <=  reg_data(19)( 2 downto  0);       
+  Ctrl.LPGBT.DAQ.DOWNLINK.DL_SRC               <=  reg_data(19)( 3 downto  0);       
   Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_IDLE        <=  reg_data(20)(15 downto  8);       
   Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_DATA        <=  reg_data(20)(23 downto 16);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_0            <=  reg_data(34)( 2 downto  0);       
@@ -334,6 +342,8 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1   <=  reg_data(52)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1  <=  reg_data(53)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.SEL               <=  reg_data(56)(31 downto 16);       
+  Ctrl.ILA_SEL                                 <=  reg_data(259)( 1 downto  0);      
+  Ctrl.ETROC_BITSLIP                           <=  reg_data(260)(31 downto  0);      
   Ctrl.SC.TX_GBTX_ADDR                         <=  reg_data(516)(15 downto  8);      
   Ctrl.SC.TX_REGISTER_ADDR                     <=  reg_data(517)(15 downto  0);      
   Ctrl.SC.TX_NUM_BYTES_TO_READ                 <=  reg_data(518)(15 downto  0);      
@@ -370,6 +380,7 @@ begin  -- architecture behavioral
   Ctrl.FIFO_TRIG9_MASK                         <=  reg_data(1046)(31 downto  0);     
   Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(1048)(23 downto  0);     
   Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(1049)( 0);               
+  Ctrl.L1A_RATE                                <=  reg_data(1282)(31 downto  0);     
 
 
   -- writes to slave
@@ -396,6 +407,8 @@ begin  -- architecture behavioral
       Ctrl.SC.INJ_CRC_ERR <= '0';
       Ctrl.FIFO_RESET <= '0';
       Ctrl.FIFO_FORCE_TRIG <= '0';
+      Ctrl.L1A_PULSE <= '0';
+      Ctrl.LINK_RESET_PULSE <= '0';
       
 
 
@@ -444,7 +457,7 @@ begin  -- architecture behavioral
           reg_data(18)(10 downto  8)              <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
           reg_data(18)(14 downto 12)              <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
         when 19 => --0x13
-          reg_data(19)( 2 downto  0)              <=  localWrData( 2 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=fast command
+          reg_data(19)( 3 downto  0)              <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
         when 20 => --0x14
           reg_data(20)(15 downto  8)              <=  localWrData(15 downto  8);      --Data to send on fast_cmd
           reg_data(20)(23 downto 16)              <=  localWrData(23 downto 16);      --Data to send on fast_cmd
@@ -500,6 +513,10 @@ begin  -- architecture behavioral
           reg_data(53)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 56 => --0x38
           reg_data(56)(31 downto 16)              <=  localWrData(31 downto 16);      --Channel to select for error counting
+        when 259 => --0x103
+          reg_data(259)( 1 downto  0)             <=  localWrData( 1 downto  0);      --Select which LPGBT is connected to the ILA
+        when 260 => --0x104
+          reg_data(260)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to bitslip an ETROC
         when 512 => --0x200
           Ctrl.SC.TX_RESET                        <=  localWrData( 0);               
         when 513 => --0x201
@@ -592,6 +609,12 @@ begin  -- architecture behavioral
           reg_data(1048)(23 downto  0)            <=  localWrData(23 downto  0);      --# of words to capture in the fifo
         when 1049 => --0x419
           reg_data(1049)( 0)                      <=  localWrData( 0);                --Reverse the bits going into the FIFO
+        when 1280 => --0x500
+          Ctrl.L1A_PULSE                          <=  localWrData( 0);               
+        when 1281 => --0x501
+          Ctrl.LINK_RESET_PULSE                   <=  localWrData( 0);               
+        when 1282 => --0x502
+          reg_data(1282)(31 downto  0)            <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
 
         when others => null;
 
@@ -632,7 +655,7 @@ begin  -- architecture behavioral
       reg_data(18)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_1;
       reg_data(18)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_2;
       reg_data(18)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_3;
-      reg_data(19)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.DL_SRC;
+      reg_data(19)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.DL_SRC;
       reg_data(20)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_IDLE;
       reg_data(20)(23 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_DATA;
       reg_data(34)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_0;
@@ -668,6 +691,8 @@ begin  -- architecture behavioral
       reg_data(52)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1;
       reg_data(53)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1;
       reg_data(56)(31 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.SEL;
+      reg_data(259)( 1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ILA_SEL;
+      reg_data(260)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_BITSLIP;
       reg_data(516)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_GBTX_ADDR;
       reg_data(517)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_REGISTER_ADDR;
       reg_data(518)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_NUM_BYTES_TO_READ;
@@ -704,6 +729,7 @@ begin  -- architecture behavioral
       reg_data(1046)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG9_MASK;
       reg_data(1048)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
       reg_data(1049)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
+      reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
 
       end if; -- reset
     end if; -- clk
