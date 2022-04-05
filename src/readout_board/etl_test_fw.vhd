@@ -288,16 +288,21 @@ begin
       o => clk_osc300
       );
 
-  oddr0 : oddr2 port map(
-    Q  => si570_usrclk_oddr,
-    C0 => si570_usrclk,
-    C1 => not si570_usrclk,
-    CE => '1',
-    D0 => '0',
-    D1 => '1',
-    R  => '0',
-    S  => '0'
-    );                                  -- DDR register for clock forwarding
+  ODDRE1_inst : ODDRE1
+    generic map (
+      IS_C_INVERTED  => '0',            -- Optional inversion for C
+      IS_D1_INVERTED => '0',            -- Unsupported, do not use
+      IS_D2_INVERTED => '0',            -- Unsupported, do not use
+      SIM_DEVICE     => "ULTRASCALE",   -- Set the device version for simulation functionality (ULTRASCALE)
+      SRVAL          => '0'             -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
+      )
+    port map (
+      Q  => si570_usrclk_oddr,          -- 1-bit output: Data output to IOB
+      C  => si570_usrclk,               -- 1-bit input: High-speed clock input
+      D1 => '0',                        -- 1-bit input: Parallel data input 1
+      D2 => '1',                        -- 1-bit input: Parallel data input 2
+      SR => '0'                         -- 1-bit input: Active-High Async Reset
+      );
 
   OBUFDS_inst : OBUFDS
     generic map (
