@@ -17,13 +17,13 @@ package constants_pkg is
   constant CALB : positive := 1 + CAL_RANGE'high - CAL_RANGE'low;
   constant TOTB : positive := 1 + TOT_RANGE'high - TOT_RANGE'low;
   constant TOAB : positive := 1 + TOA_RANGE'high - TOA_RANGE'low;
-  constant ROWB : positive := 1 + ROW_RANGE'high - ROW_RANGE'low;
-  constant COLB : positive := 1 + COL_RANGE'high - COL_RANGE'low;
+  constant ROWB : positive := 1 + ROW_ID_RANGE'high - ROW_ID_RANGE'low;
+  constant COLB : positive := 1 + COL_ID_RANGE'high - COL_ID_RANGE'low;
   constant EAB  : positive := 1 + EA_RANGE'high - EA_RANGE'low;
 
   constant BXB       : positive := 1 + BCID_RANGE'high - BCID_RANGE'low;
   constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
-  constant EVENTCNTB : positive := 1 + EVENTCNT_RANGE'high - EVENTCNT_RANGE'low;
+  constant EVENTCNTB : positive := 1 + L1COUNTER_RANGE'high - L1COUNTER_RANGE'low;
 end package constants_pkg;
 
 --------------------------------------------------------------------------------
@@ -111,10 +111,12 @@ architecture behavioral of etroc_rx is
   signal frame    : std_logic_vector (FRAME_WIDTH-1 downto 0) := (others => '0');
   signal frame_en : std_logic;
 
-  signal next_data_is_header : boolean;
-  signal next_data_is_filler : boolean;
-  signal special_bit         : std_logic := '0';
+  signal next_data_is_header  : boolean;
+  signal next_data_is_filler  : boolean;
+  signal next_data_is_trailer : boolean;
 
+  -- takes a std_logic_vector (x downto y) and converts it to a
+  -- std_logic_vector (x-y downto 0)
   function zsh (a : std_logic_vector)
     return std_logic_vector is
     variable result : std_logic_vector(a'high - a'low downto 0);
@@ -123,7 +125,7 @@ architecture behavioral of etroc_rx is
       result(i) := a(i+a'low);
     end loop;
     return result;
-  end;  -- function reverse_vector
+  end;
 
   function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
@@ -146,13 +148,9 @@ begin
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
-  special_bit <= next_frame(SPECIAL_BIT_INDEX);
-
-  next_data_is_header <= next_frame(HEADER_OR_FILLER_RANGE) = HEADER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
-
-  next_data_is_filler <= next_frame(HEADER_OR_FILLER_RANGE) = FILLER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
+  next_data_is_header  <= (next_frame & HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
+  next_data_is_filler  <= (next_frame & FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
+  next_data_is_trailer <= (next_frame & TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
@@ -222,7 +220,7 @@ begin
           -- processed outputs
           bcid_o      <= zsh(frame(BCID_RANGE));
           type_o      <= zsh(frame(TYPE_RANGE));
-          event_cnt_o <= zsh(frame(EVENTCNT_RANGE));
+          event_cnt_o <= zsh(frame(L1COUNTER_RANGE));
 
           start_of_packet_o <= '1';
 
@@ -235,7 +233,7 @@ begin
           if (frame_en = '1') then
 
             -- state
-            if (special_bit = TRAILER_SPECIAL_BIT_VALUE) then
+            if (next_data_is_trailer) then
               state <= TRAILER_state;
             end if;
 
@@ -243,8 +241,8 @@ begin
             cal_o <= zsh(frame(CAL_RANGE));
             tot_o <= zsh(frame(TOT_RANGE));
             toa_o <= zsh(frame(TOA_RANGE));
-            col_o <= zsh(frame(COL_RANGE));
-            row_o <= zsh(frame(ROW_RANGE));
+            col_o <= zsh(frame(COL_ID_RANGE));
+            row_o <= zsh(frame(ROW_ID_RANGE));
             ea_o  <= zsh(frame(EA_RANGE));
 
             data_en_o <= '1';

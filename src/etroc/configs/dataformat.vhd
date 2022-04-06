@@ -5,27 +5,26 @@ use ieee.numeric_std.all;
 
 package dataformat_pkg is
 
-  constant REVERSE                   : boolean                        := true;
-  constant MAGIC_WORD                : std_logic_vector (15 downto 0) := x"3C5C";
-  constant SPECIAL_BIT_INDEX         : natural                        := 39;
-  constant TRAILER_SPECIAL_BIT_VALUE : std_logic                      := '0';
+  constant REVERSE : boolean := true;
 
-  constant HEADER_MAGIC : std_logic_vector (1 downto 0) := "00";
-  constant FILLER_MAGIC : std_logic_vector (1 downto 0) := "10";
+  constant HEADER_IDENTIFIER_FRAME  : std_logic_vector (39 downto 0) := x"3C5C000000";
+  constant HEADER_IDENTIFIER_MASK   : std_logic_vector (39 downto 0) := x"FFFFC00000";
+  constant FILLER_IDENTIFIER_FRAME  : std_logic_vector (39 downto 0) := x"3C5C800000";
+  constant FILLER_IDENTIFIER_MASK   : std_logic_vector (39 downto 0) := x"FFFFC00000";
+  constant TRAILER_IDENTIFIER_FRAME : std_logic_vector (39 downto 0) := x"0000000000";
+  constant TRAILER_IDENTIFIER_MASK  : std_logic_vector (39 downto 0) := x"8000000000";
 
   -- header
   subtype BCID_RANGE is natural range 11 downto 0;
   subtype TYPE_RANGE is natural range 13 downto 12;
-  subtype EVENTCNT_RANGE is natural range 21 downto 14;
-  subtype HEADER_OR_FILLER_RANGE is natural range 23 downto 22;
-  subtype MAGIC_RANGE is natural range 39 downto 24;
+  subtype L1COUNTER_RANGE is natural range 21 downto 14;
 
   -- data
   subtype TOT_RANGE is natural range 8 downto 0;
   subtype CAL_RANGE is natural range 18 downto 9;
   subtype TOA_RANGE is natural range 28 downto 19;
-  subtype COL_RANGE is natural range 32 downto 29;
-  subtype ROW_RANGE is natural range 36 downto 33;
+  subtype COL_ID_RANGE is natural range 32 downto 29;
+  subtype ROW_ID_RANGE is natural range 36 downto 33;
   subtype EA_RANGE is natural range 38 downto 37;
 
   -- trailer
