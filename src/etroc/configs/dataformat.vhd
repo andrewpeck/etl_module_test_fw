@@ -18,8 +18,6 @@ package dataformat_pkg is
   subtype BCID_RANGE is natural range 11 downto 0;
   subtype TYPE_RANGE is natural range 13 downto 12;
   subtype L1COUNTER_RANGE is natural range 21 downto 14;
-  subtype HEADER_OR_FILLER_RANGE is natural range 23 downto 22;
-  subtype MAGIC_RANGE is natural range 39 downto 24;
 
   -- data
   subtype TOT_RANGE is natural range 8 downto 0;
