@@ -16,7 +16,7 @@ package dataformat_pkg is
   -- header
   subtype BCID_RANGE is natural range 11 downto 0;
   subtype TYPE_RANGE is natural range 13 downto 12;
-  subtype EVENTCNT_RANGE is natural range 21 downto 14;
+  subtype L1COUNTER_RANGE is natural range 21 downto 14;
   subtype HEADER_OR_FILLER_RANGE is natural range 23 downto 22;
   subtype MAGIC_RANGE is natural range 39 downto 24;
 
@@ -24,8 +24,8 @@ package dataformat_pkg is
   subtype TOT_RANGE is natural range 8 downto 0;
   subtype CAL_RANGE is natural range 18 downto 9;
   subtype TOA_RANGE is natural range 28 downto 19;
-  subtype COL_RANGE is natural range 32 downto 29;
-  subtype ROW_RANGE is natural range 36 downto 33;
+  subtype COL_ID_RANGE is natural range 32 downto 29;
+  subtype ROW_ID_RANGE is natural range 36 downto 33;
   subtype EA_RANGE is natural range 38 downto 37;
 
   -- trailer

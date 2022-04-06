@@ -17,13 +17,13 @@ package constants_pkg is
   constant CALB : positive := 1 + CAL_RANGE'high - CAL_RANGE'low;
   constant TOTB : positive := 1 + TOT_RANGE'high - TOT_RANGE'low;
   constant TOAB : positive := 1 + TOA_RANGE'high - TOA_RANGE'low;
-  constant ROWB : positive := 1 + ROW_RANGE'high - ROW_RANGE'low;
-  constant COLB : positive := 1 + COL_RANGE'high - COL_RANGE'low;
+  constant ROWB : positive := 1 + ROW_ID_RANGE'high - ROW_ID_RANGE'low;
+  constant COLB : positive := 1 + COL_ID_RANGE'high - COL_ID_RANGE'low;
   constant EAB  : positive := 1 + EA_RANGE'high - EA_RANGE'low;
 
   constant BXB       : positive := 1 + BCID_RANGE'high - BCID_RANGE'low;
   constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
-  constant EVENTCNTB : positive := 1 + EVENTCNT_RANGE'high - EVENTCNT_RANGE'low;
+  constant EVENTCNTB : positive := 1 + L1COUNTER_RANGE'high - L1COUNTER_RANGE'low;
 end package constants_pkg;
 
 --------------------------------------------------------------------------------
@@ -115,6 +115,8 @@ architecture behavioral of etroc_rx is
   signal next_data_is_filler : boolean;
   signal special_bit         : std_logic := '0';
 
+  -- takes a std_logic_vector (x downto y) and converts it to a
+  -- std_logic_vector (x-y downto 0)
   function zsh (a : std_logic_vector)
     return std_logic_vector is
     variable result : std_logic_vector(a'high - a'low downto 0);
@@ -123,7 +125,7 @@ architecture behavioral of etroc_rx is
       result(i) := a(i+a'low);
     end loop;
     return result;
-  end;  -- function reverse_vector
+  end;
 
   function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
@@ -222,7 +224,7 @@ begin
           -- processed outputs
           bcid_o      <= zsh(frame(BCID_RANGE));
           type_o      <= zsh(frame(TYPE_RANGE));
-          event_cnt_o <= zsh(frame(EVENTCNT_RANGE));
+          event_cnt_o <= zsh(frame(L1COUNTER_RANGE));
 
           start_of_packet_o <= '1';
 
@@ -243,8 +245,8 @@ begin
             cal_o <= zsh(frame(CAL_RANGE));
             tot_o <= zsh(frame(TOT_RANGE));
             toa_o <= zsh(frame(TOA_RANGE));
-            col_o <= zsh(frame(COL_RANGE));
-            row_o <= zsh(frame(ROW_RANGE));
+            col_o <= zsh(frame(COL_ID_RANGE));
+            row_o <= zsh(frame(ROW_ID_RANGE));
             ea_o  <= zsh(frame(EA_RANGE));
 
             data_en_o <= '1';
