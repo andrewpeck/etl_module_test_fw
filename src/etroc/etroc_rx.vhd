@@ -114,6 +114,7 @@ architecture behavioral of etroc_rx is
   signal next_data_is_header  : boolean;
   signal next_data_is_filler  : boolean;
   signal next_data_is_trailer : boolean;
+  signal next_data_is_data    : boolean;
 
   -- takes a std_logic_vector (x downto y) and converts it to a
   -- std_logic_vector (x-y downto 0)
@@ -151,6 +152,7 @@ begin
   next_data_is_header  <= (next_frame & HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
   next_data_is_filler  <= (next_frame & FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
   next_data_is_trailer <= (next_frame & TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
+  next_data_is_data    <= (next_frame & DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
@@ -215,7 +217,11 @@ begin
         when HEADER_state =>
 
           -- state
-          state <= data_state;
+          if (next_data_is_data) then
+            state <= DATA_state;
+          else
+            state <= TRAILER_state;
+          end if;
 
           -- processed outputs
           bcid_o      <= zsh(frame(BCID_RANGE));

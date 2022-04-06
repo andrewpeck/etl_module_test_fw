@@ -13,6 +13,8 @@ package dataformat_pkg is
   constant FILLER_IDENTIFIER_MASK   : std_logic_vector (39 downto 0) := x"FFFFC00000";
   constant TRAILER_IDENTIFIER_FRAME : std_logic_vector (39 downto 0) := x"0000000000";
   constant TRAILER_IDENTIFIER_MASK  : std_logic_vector (39 downto 0) := x"8000000000";
+  constant DATA_IDENTIFIER_FRAME    : std_logic_vector (39 downto 0) := x"8000000000";
+  constant DATA_IDENTIFIER_MASK     : std_logic_vector (39 downto 0) := x"8000000000";
 
   -- header
   subtype BCID_RANGE is natural range 11 downto 0;
