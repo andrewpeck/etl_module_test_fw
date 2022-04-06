@@ -111,9 +111,9 @@ architecture behavioral of etroc_rx is
   signal frame    : std_logic_vector (FRAME_WIDTH-1 downto 0) := (others => '0');
   signal frame_en : std_logic;
 
-  signal next_data_is_header : boolean;
-  signal next_data_is_filler : boolean;
-  signal special_bit         : std_logic := '0';
+  signal next_data_is_header  : boolean;
+  signal next_data_is_filler  : boolean;
+  signal next_data_is_trailer : boolean;
 
   -- takes a std_logic_vector (x downto y) and converts it to a
   -- std_logic_vector (x-y downto 0)
@@ -148,13 +148,9 @@ begin
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
-  special_bit <= next_frame(SPECIAL_BIT_INDEX);
-
-  next_data_is_header <= next_frame(HEADER_OR_FILLER_RANGE) = HEADER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
-
-  next_data_is_filler <= next_frame(HEADER_OR_FILLER_RANGE) = FILLER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
+  next_data_is_header  <= (next_frame & HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
+  next_data_is_filler  <= (next_frame & FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
+  next_data_is_trailer <= (next_frame & TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
@@ -237,7 +233,7 @@ begin
           if (frame_en = '1') then
 
             -- state
-            if (special_bit = TRAILER_SPECIAL_BIT_VALUE) then
+            if (next_data_is_trailer) then
               state <= TRAILER_state;
             end if;
 

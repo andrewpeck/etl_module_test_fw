@@ -5,13 +5,14 @@ use ieee.numeric_std.all;
 
 package dataformat_pkg is
 
-  constant REVERSE                   : boolean                        := true;
-  constant MAGIC_WORD                : std_logic_vector (15 downto 0) := x"3C5C";
-  constant SPECIAL_BIT_INDEX         : natural                        := 39;
-  constant TRAILER_SPECIAL_BIT_VALUE : std_logic                      := '0';
+  constant REVERSE : boolean := true;
 
-  constant HEADER_MAGIC : std_logic_vector (1 downto 0) := "00";
-  constant FILLER_MAGIC : std_logic_vector (1 downto 0) := "10";
+  constant HEADER_IDENTIFIER_FRAME  : std_logic_vector (39 downto 0) := x"3C5C000000";
+  constant HEADER_IDENTIFIER_MASK   : std_logic_vector (39 downto 0) := x"FFFFC00000";
+  constant FILLER_IDENTIFIER_FRAME  : std_logic_vector (39 downto 0) := x"3C5C800000";
+  constant FILLER_IDENTIFIER_MASK   : std_logic_vector (39 downto 0) := x"FFFFC00000";
+  constant TRAILER_IDENTIFIER_FRAME : std_logic_vector (39 downto 0) := x"0000000000";
+  constant TRAILER_IDENTIFIER_MASK  : std_logic_vector (39 downto 0) := x"8000000000";
 
   -- header
   subtype BCID_RANGE is natural range 11 downto 0;
