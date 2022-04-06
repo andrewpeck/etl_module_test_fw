@@ -112,8 +112,14 @@ ETROC2:
         mask: 0x00000001FF
         shift: 0
       # generic portion of the data
-      data:
-        mask: 0x001FFFFFFF
+      toa:
+        mask: 0x003FF80000
+        shift: 19
+      cal:
+        mask: 0x000007FE00
+        shift: 9
+      tot:
+        mask: 0x00000001FF
         shift: 0
     trailer:
       chipid:
