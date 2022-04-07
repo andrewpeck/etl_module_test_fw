@@ -199,8 +199,14 @@ architecture behavioral of etl_test_fw is
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
 
-
   signal fw_info_mon : FW_INFO_Mon_t;
+
+  component fader is
+    port (
+      clock : in  std_logic;
+      led   : out std_logic
+      );
+  end component;
 
   component cylon1 is
     port (
@@ -220,6 +226,7 @@ architecture behavioral of etl_test_fw is
 
   signal cylon1_signal : std_logic_vector (7 downto 0);
   signal cylon2_signal : std_logic_vector (7 downto 0);
+  signal breath        : std_logic;
 
   component system_clocks is
     port (
@@ -247,10 +254,37 @@ begin
       q     => cylon2_signal
       );
 
+  fader_inst : fader
+    port map (
+      clock => clk40,
+      led   => breath
+      );
+
+
   pcie_sys_rst_n <= not pcie_sys_rst;
 
-  leds(7 downto 0) <= cylon1_signal (7 downto 0) when readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
-                      else cylon2_signal (7 downto 0);
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+
+      if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
+          readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
+
+        leds(7 downto 0) <= cylon2_signal (7 downto 0);
+
+      elsif  (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
+
+        leds(7 downto 0) <= cylon1_signal (7 downto 0);
+
+      else
+
+        leds(7 downto 0) <= breath & breath & breath & breath &
+                            breath & breath & breath & breath;
+
+      end if;
+
+    end if;
+  end process;
 
   si570_usrclk_ibuf_inst : IBUFDS
     port map(
