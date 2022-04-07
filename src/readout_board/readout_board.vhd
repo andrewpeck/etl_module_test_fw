@@ -25,7 +25,7 @@ library etroc;
 entity readout_board is
   generic(
     INST            : integer := 0;
-    C_DEBUG         : boolean := false;
+    C_DEBUG         : boolean := true;
     NUM_LPGBTS_DAQ  : integer := 1;
     NUM_LPGBTS_TRIG : integer := 1;
     NUM_DOWNLINKS   : integer := 1;
