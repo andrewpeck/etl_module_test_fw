@@ -91,7 +91,8 @@ end etroc_rx;
 
 architecture behavioral of etroc_rx is
 
-  signal bitslip : std_logic := '0';
+  signal bitslip      : std_logic := '0';
+  signal bitslip_auto : std_logic := '0';
 
   -- receive data at:
   --
@@ -100,7 +101,7 @@ architecture behavioral of etroc_rx is
   --   32 bits / bx @ 1280 MHz
   --
 
-  type state_t is (ERR_state, IDLE_state, HEADER_state, DATA_state, TRAILER_state);
+  type state_t is (ERR_state, FILLER_state, HEADER_state, DATA_state, TRAILER_state);
 
   signal state : state_t := ERR_state;
 
@@ -139,11 +140,73 @@ architecture behavioral of etroc_rx is
     return result;
   end;  -- function reverse_vector
 
+  constant ALIGN_BAD_CNT_MAX : positive := 31;
+  signal align_bad_cnt       : natural range 0 to ALIGN_BAD_CNT_MAX;
+  signal bad_cnt_max         : boolean;
+
+  constant ALIGN_GOOD_CNT_MAX : positive := 1023;
+  signal align_good_cnt       : natural range 0 to ALIGN_GOOD_CNT_MAX;
+  signal good_cnt_max         : boolean;
+
+  type align_state_t is (ALIGNING_state, LOCKED_state);
+
+  signal align_state : align_state_t := ALIGNING_state;
+
 begin
+
+  --------------------------------------------------------------------------------
+  -- Alignment State Machine
+  --------------------------------------------------------------------------------
+
+  bad_cnt_max <= align_bad_cnt = ALIGN_BAD_CNT_MAX;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      bitslip_auto <= '0';
+
+      case align_state is
+
+        when ALIGNING_state =>
+
+          -- counter to vote on bitslips
+          if (bad_cnt_max) then
+            align_bad_cnt <= 0;
+            bitslip_auto  <= '1';
+          elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
+            align_bad_cnt  <= align_bad_cnt + 1;
+          end if;
+
+          -- counter to switch to locked
+          if (good_cnt_max) then
+            align_state  <= LOCKED_state;
+          elsif (next_frame_en='1' and state = FILLER_state) then
+            align_good_cnt <= align_good_cnt + 1;
+          end if;
+
+        when LOCKED_state =>
+
+          -- counter to switch to unlocked
+          if (bad_cnt_max) then
+            align_bad_cnt <= 0;
+            align_state   <= ALIGNING_state;
+          elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
+            align_bad_cnt  <= align_bad_cnt + 1;
+          end if;
+
+      end case;
+
+    end if;
+  end process;
 
   -- take bitslip from the outside, but also have an internal signal so we can
   -- develop a firmware statemachine to do alignment
-  bitslip <= bitslip_i;
+  bitslip <= bitslip_i or bitslip_auto;
+
+  --------------------------------------------------------------------------------
+  -- Data Parser
+  --------------------------------------------------------------------------------
 
   err_o <= '1' when state = ERR_state else '0';
 
@@ -203,10 +266,10 @@ begin
         when ERR_state =>
 
           if (next_data_is_filler) then
-            state <= IDLE_state;
+            state <= FILLER_state;
           end if;
 
-        when IDLE_state =>
+        when FILLER_state =>
 
           if (next_data_is_header) then
             state <= HEADER_state;
@@ -262,7 +325,7 @@ begin
         when TRAILER_state =>
 
           -- state
-          state <= IDLE_state;
+          state <= FILLER_state;
 
           -- processed outputs
           chip_id_o <= zsh(frame(CHIPID_RANGE));
@@ -283,7 +346,7 @@ begin
       end case;
 
       if (reset = '1') then
-        state <= IDLE_state;
+        state <= FILLER_state;
       end if;
 
     end if;
