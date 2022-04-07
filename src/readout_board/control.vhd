@@ -26,8 +26,11 @@ entity control is
     reset : in std_logic;
     clock : in std_logic;
 
-    daq_ipb_w_array : out ipb_wbus_array(NUM_RBS*2 - 1 downto 0);
-    daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS*2 - 1 downto 0);
+    elink_ipb_w_array : out ipb_wbus_array(NUM_RBS*2 - 1 downto 0);
+    elink_ipb_r_array : in  ipb_rbus_array(NUM_RBS*2 - 1 downto 0);
+
+    daq_ipb_w_array : out ipb_wbus_array(NUM_RBS - 1 downto 0);
+    daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS - 1 downto 0);
 
     fw_info_mon : in FW_INFO_Mon_t;
 
@@ -168,22 +171,48 @@ begin
   -- Readout Board
   --------------------------------------------------------------------------------
 
-  daqgen : for I in 0 to 2*NUM_RBS-1 generate
-    constant DAQ_BASE : integer := N_SLV_DAQ_0;
-  begin
-    daq_ipb_w_array(I) <= ipb_w_array(DAQ_BASE+I);
+  --------------------------------------------------------------------------------
+  -- ETROC DAQ
+  --------------------------------------------------------------------------------
 
-    ipb_r_array(DAQ_BASE+I).ipb_rdata <= daq_ipb_r_array(I).ipb_rdata;
-    ipb_r_array(DAQ_BASE+I).ipb_ack   <= daq_ipb_r_array(I).ipb_ack
+  daqgen : for I in 0 to NUM_RBS-1 generate
+    constant BASE : integer := N_SLV_DAQ_RB0;
+  begin
+    daq_ipb_w_array(I) <= ipb_w_array(BASE+I);
+
+    ipb_r_array(BASE+I).ipb_rdata <= daq_ipb_r_array(I).ipb_rdata;
+    ipb_r_array(BASE+I).ipb_ack   <= daq_ipb_r_array(I).ipb_ack
                                          when
                                          to_integer(unsigned(ipbus_sel_etl_test_fw(ipb_w.ipb_addr)))
-                                         = DAQ_BASE+I
+                                         = BASE+I
                                          else '0';
-    ipb_r_array(DAQ_BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
+    ipb_r_array(BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
   end generate;
 
+  --------------------------------------------------------------------------------
+  -- Dumb DAQ
+  --------------------------------------------------------------------------------
+
+  elinkgen : for I in 0 to 2*NUM_RBS-1 generate
+    constant BASE : integer := N_SLV_DAQ_0;
+  begin
+    elink_ipb_w_array(I) <= ipb_w_array(BASE+I);
+
+    ipb_r_array(BASE+I).ipb_rdata <= elink_ipb_r_array(I).ipb_rdata;
+    ipb_r_array(BASE+I).ipb_ack   <= elink_ipb_r_array(I).ipb_ack
+                                         when
+                                         to_integer(unsigned(ipbus_sel_etl_test_fw(ipb_w.ipb_addr)))
+                                         = BASE+I
+                                         else '0';
+    ipb_r_array(BASE+I).ipb_err <= elink_ipb_r_array(I).ipb_err;
+  end generate;
+
+  --------------------------------------------------------------------------------
+  -- Readout Boards
+  --------------------------------------------------------------------------------
+
   rbgen : for I in 0 to NUM_RBS-1 generate
-    constant RB_BASE  : integer := N_SLV_READOUT_BOARD_0;
+    constant BASE  : integer := N_SLV_READOUT_BOARD_0;
   begin
     rb_en : if (EN_LPGBTS = 1) generate
 
@@ -191,13 +220,13 @@ begin
         port map (
           clk       => clock,
           reset     => reset,
-          wb_addr   => ipb_w_array(RB_BASE+I).ipb_addr,
-          wb_wdata  => ipb_w_array(RB_BASE+I).ipb_wdata,
-          wb_strobe => ipb_w_array(RB_BASE+I).ipb_strobe,
-          wb_write  => ipb_w_array(RB_BASE+I).ipb_write,
-          wb_rdata  => ipb_r_array(RB_BASE+I).ipb_rdata,
-          wb_ack    => ipb_r_array(RB_BASE+I).ipb_ack,
-          wb_err    => ipb_r_array(RB_BASE+I).ipb_err,
+          wb_addr   => ipb_w_array(BASE+I).ipb_addr,
+          wb_wdata  => ipb_w_array(BASE+I).ipb_wdata,
+          wb_strobe => ipb_w_array(BASE+I).ipb_strobe,
+          wb_write  => ipb_w_array(BASE+I).ipb_write,
+          wb_rdata  => ipb_r_array(BASE+I).ipb_rdata,
+          wb_ack    => ipb_r_array(BASE+I).ipb_ack,
+          wb_err    => ipb_r_array(BASE+I).ipb_err,
           mon       => readout_board_mon(I),
           ctrl      => readout_board_ctrl(I)
           );
@@ -206,13 +235,13 @@ begin
         ila_ipb_rb_inst : ila_ipb
           port map (
             clk       => clock,
-            probe0    => ipb_w_array(RB_BASE+I).ipb_addr,
-            probe1    => ipb_w_array(RB_BASE+I).ipb_wdata,
-            probe2(0) => ipb_w_array(RB_BASE+I).ipb_strobe,
-            probe3(0) => ipb_w_array(RB_BASE+I).ipb_write,
-            probe4    => ipb_r_array(RB_BASE+I).ipb_rdata,
-            probe5(0) => ipb_r_array(RB_BASE+I).ipb_ack,
-            probe6(0) => ipb_r_array(RB_BASE+I).ipb_err
+            probe0    => ipb_w_array(BASE+I).ipb_addr,
+            probe1    => ipb_w_array(BASE+I).ipb_wdata,
+            probe2(0) => ipb_w_array(BASE+I).ipb_strobe,
+            probe3(0) => ipb_w_array(BASE+I).ipb_write,
+            probe4    => ipb_r_array(BASE+I).ipb_rdata,
+            probe5(0) => ipb_r_array(BASE+I).ipb_ack,
+            probe6(0) => ipb_r_array(BASE+I).ipb_err
             );
       end generate;
 
