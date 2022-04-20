@@ -272,19 +272,26 @@ begin
 
         when FILLER_state =>
 
-          if (next_data_is_header) then
+          -- state
+          if (next_data_is_filler) then
+            state <= FILLER_state;
+          elsif (next_data_is_header) then
             state <= HEADER_state;
-          elsif (next_frame_en = '1' and not next_data_is_filler) then
+          else
             state <= ERR_state;
           end if;
 
         when HEADER_state =>
 
           -- state
-          if (next_data_is_data) then
+          if (next_data_is_header) then
+            state <= HEADER_state;
+          elsif (next_data_is_data) then
             state <= DATA_state;
-          else
+          elsif (next_data_is_trailer) then
             state <= TRAILER_state;
+          else
+            state <= ERR_state;
           end if;
 
           -- processed outputs
@@ -295,16 +302,20 @@ begin
           start_of_packet_o <= '1';
 
           -- fifo output
-          fifo_data_o  <= frame;
-          fifo_wr_en_o <= '1';
+          if (frame_en = '1') then
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
+          end if;
 
         when DATA_state =>
 
-          if (frame_en = '1') then
-
             -- state
-            if (next_data_is_trailer) then
+            if (next_data_is_data) then
+              state <= DATA_state;
+            elsif (next_data_is_trailer) then
               state <= TRAILER_state;
+            else
+              state <= ERR_state;
             end if;
 
             -- processed outputs
@@ -315,18 +326,26 @@ begin
             row_o <= zsh(frame(ROW_ID_RANGE));
             ea_o  <= zsh(frame(EA_RANGE));
 
-            data_en_o <= '1';
 
             -- fifo output
-            fifo_data_o  <= frame;
-            fifo_wr_en_o <= '1';
-
-          end if;
+            if (frame_en = '1') then
+              data_en_o <= '1';
+              fifo_data_o  <= frame;
+              fifo_wr_en_o <= '1';
+            end if;
 
         when TRAILER_state =>
 
           -- state
-          state <= FILLER_state;
+          if (next_data_is_trailer) then
+            state <= TRAILER_state;
+          elsif (next_data_is_header) then
+            state <= HEADER_state;
+          elsif (next_data_is_filler) then
+            state <= FILLER_state;
+          else
+            state <= ERR_state;
+          end if;
 
           -- processed outputs
           chip_id_o <= zsh(frame(CHIPID_RANGE));
@@ -337,8 +356,10 @@ begin
           end_of_packet_o <= '1';
 
           -- fifo output
-          fifo_data_o  <= frame;
-          fifo_wr_en_o <= '1';
+          if (frame_en = '1') then
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
+          end if;
 
         when others =>
 
