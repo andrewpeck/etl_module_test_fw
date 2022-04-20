@@ -176,6 +176,7 @@ begin
             bitslip_auto  <= '1';
           elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
             align_bad_cnt  <= align_bad_cnt + 1;
+            align_good_cnt <= 0;
           end if;
 
           -- counter to switch to locked after some number of good frames
