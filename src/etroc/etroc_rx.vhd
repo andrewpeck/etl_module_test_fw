@@ -338,9 +338,7 @@ begin
         when TRAILER_state =>
 
           -- state
-          if (next_data_is_trailer) then
-            state <= TRAILER_state;
-          elsif (next_data_is_header) then
+          if (next_data_is_header) then
             state <= HEADER_state;
           elsif (next_data_is_filler) then
             state <= FILLER_state;
