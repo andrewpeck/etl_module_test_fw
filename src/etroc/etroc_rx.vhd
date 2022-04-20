@@ -212,10 +212,10 @@ begin
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
-  next_data_is_header  <= (next_frame & HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
-  next_data_is_filler  <= (next_frame & FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
-  next_data_is_trailer <= (next_frame & TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
-  next_data_is_data    <= (next_frame & DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
+  next_data_is_header  <= (next_frame and HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
+  next_data_is_filler  <= (next_frame and FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
+  next_data_is_trailer <= (next_frame and TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
+  next_data_is_data    <= (next_frame and DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
