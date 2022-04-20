@@ -342,6 +342,8 @@ begin
             state <= HEADER_state;
           elsif (next_data_is_filler) then
             state <= FILLER_state;
+          elsif (next_data_is_trailer) then
+            state <= TRAILER_state;
           else
             state <= ERR_state;
           end if;
