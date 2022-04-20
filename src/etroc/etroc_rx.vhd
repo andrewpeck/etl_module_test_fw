@@ -170,7 +170,7 @@ begin
 
         when ALIGNING_state =>
 
-          -- counter to vote on bitslips
+          -- counter to bitslip after some number of errors
           if (bad_cnt_max) then
             align_bad_cnt <= 0;
             bitslip_auto  <= '1';
@@ -178,7 +178,7 @@ begin
             align_bad_cnt  <= align_bad_cnt + 1;
           end if;
 
-          -- counter to switch to locked
+          -- counter to switch to locked after some number of good frames
           if (good_cnt_max) then
             align_state  <= LOCKED_state;
           elsif (next_frame_en='1' and state = FILLER_state) then
@@ -187,7 +187,7 @@ begin
 
         when LOCKED_state =>
 
-          -- counter to switch to unlocked
+          -- counter to switch to unlocked after some number of errors
           if (bad_cnt_max) then
             align_bad_cnt <= 0;
             align_state   <= ALIGNING_state;
@@ -265,6 +265,7 @@ begin
 
         when ERR_state =>
 
+          -- state
           if (next_data_is_filler) then
             state <= FILLER_state;
           end if;
