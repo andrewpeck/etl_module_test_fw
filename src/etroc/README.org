@@ -1,0 +1,30 @@
+#+TITLE: README
+
+This firmware is responsible for receiving and processing ETROC2 datapackets, as
+well as sending ETROC fast commands.
+
+It takes in 8 bits / bx (320 Mbps) and outputs 40 bit frames. The input data can
+be programmed to also be 16 bit, or 32 bit, and should work identically. It has
+so far only been tested with 8 bit words due to limitations of the emulator.
+
+The 8/16/32 bit words are grouped into 40 bit frames.
+
+An automatic state machine bitslips the data until the frame is synced to the
+ETROC dataformat specification.
+
+The dataformat is saved in a yaml file, sourced from the `module_test_sw`
+respository. A script in this respository will pull the latest dataformat yaml,
+parse it to produce a VHDL package, which is then used by the data decoder as
+well as the fast command generator.
+
+Updating the dataformat can be done simply by running `make` in the `configs`
+directory.
+
+A simple syntax checking test bench also can be used by running `make` in the
+pwd.
+
+*** Dataformat
+[[./dataformat.png]]
+
+*** Pixel Word Definition
+[[./pixel_word_definition.png]]
