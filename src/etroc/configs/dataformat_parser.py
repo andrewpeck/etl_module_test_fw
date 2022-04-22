@@ -29,7 +29,7 @@ def defConstants(dat):
     for const in data:
         for typ in data[const]:
             vhd.write(
-                "  constant %s_IDENTIFIER_%s%s: std_logic_vector (39 downto 0) := %s;\n"
+                "  constant %s_IDENTIFIER_%s%s : std_logic_vector (39 downto 0) := %s;\n"
                 % (
                     str.upper(const),
                     str.upper(typ),
