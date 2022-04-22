@@ -17,13 +17,13 @@ package constants_pkg is
   constant CALB : positive := 1 + CAL_RANGE'high - CAL_RANGE'low;
   constant TOTB : positive := 1 + TOT_RANGE'high - TOT_RANGE'low;
   constant TOAB : positive := 1 + TOA_RANGE'high - TOA_RANGE'low;
-  constant ROWB : positive := 1 + ROW_RANGE'high - ROW_RANGE'low;
-  constant COLB : positive := 1 + COL_RANGE'high - COL_RANGE'low;
+  constant ROWB : positive := 1 + ROW_ID_RANGE'high - ROW_ID_RANGE'low;
+  constant COLB : positive := 1 + COL_ID_RANGE'high - COL_ID_RANGE'low;
   constant EAB  : positive := 1 + EA_RANGE'high - EA_RANGE'low;
 
   constant BXB       : positive := 1 + BCID_RANGE'high - BCID_RANGE'low;
   constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
-  constant EVENTCNTB : positive := 1 + EVENTCNT_RANGE'high - EVENTCNT_RANGE'low;
+  constant EVENTCNTB : positive := 1 + L1COUNTER_RANGE'high - L1COUNTER_RANGE'low;
 end package constants_pkg;
 
 --------------------------------------------------------------------------------
@@ -91,7 +91,8 @@ end etroc_rx;
 
 architecture behavioral of etroc_rx is
 
-  signal bitslip : std_logic := '0';
+  signal bitslip      : std_logic := '0';
+  signal bitslip_auto : std_logic := '0';
 
   -- receive data at:
   --
@@ -100,7 +101,7 @@ architecture behavioral of etroc_rx is
   --   32 bits / bx @ 1280 MHz
   --
 
-  type state_t is (ERR_state, IDLE_state, HEADER_state, DATA_state, TRAILER_state);
+  type state_t is (ERR_state, FILLER_state, HEADER_state, DATA_state, TRAILER_state);
 
   signal state : state_t := ERR_state;
 
@@ -111,10 +112,13 @@ architecture behavioral of etroc_rx is
   signal frame    : std_logic_vector (FRAME_WIDTH-1 downto 0) := (others => '0');
   signal frame_en : std_logic;
 
-  signal next_data_is_header : boolean;
-  signal next_data_is_filler : boolean;
-  signal special_bit         : std_logic := '0';
+  signal next_data_is_header  : boolean;
+  signal next_data_is_filler  : boolean;
+  signal next_data_is_trailer : boolean;
+  signal next_data_is_data    : boolean;
 
+  -- takes a std_logic_vector (x downto y) and converts it to a
+  -- std_logic_vector (x-y downto 0)
   function zsh (a : std_logic_vector)
     return std_logic_vector is
     variable result : std_logic_vector(a'high - a'low downto 0);
@@ -123,7 +127,7 @@ architecture behavioral of etroc_rx is
       result(i) := a(i+a'low);
     end loop;
     return result;
-  end;  -- function reverse_vector
+  end;
 
   function reverse_vector (a : std_logic_vector)
     return std_logic_vector is
@@ -136,23 +140,83 @@ architecture behavioral of etroc_rx is
     return result;
   end;  -- function reverse_vector
 
+  constant ALIGN_BAD_CNT_MAX : positive := 31;
+  signal align_bad_cnt       : natural range 0 to ALIGN_BAD_CNT_MAX;
+  signal bad_cnt_max         : boolean;
+
+  constant ALIGN_GOOD_CNT_MAX : positive := 1023;
+  signal align_good_cnt       : natural range 0 to ALIGN_GOOD_CNT_MAX;
+  signal good_cnt_max         : boolean;
+
+  type align_state_t is (ALIGNING_state, LOCKED_state);
+
+  signal align_state : align_state_t := ALIGNING_state;
+
 begin
+
+  --------------------------------------------------------------------------------
+  -- Alignment State Machine
+  --------------------------------------------------------------------------------
+
+  bad_cnt_max <= align_bad_cnt = ALIGN_BAD_CNT_MAX;
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+
+      bitslip_auto <= '0';
+
+      case align_state is
+
+        when ALIGNING_state =>
+
+          -- counter to bitslip after some number of errors
+          if (bad_cnt_max) then
+            align_bad_cnt <= 0;
+            bitslip_auto  <= '1';
+          elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
+            align_bad_cnt  <= align_bad_cnt + 1;
+            align_good_cnt <= 0;
+          end if;
+
+          -- counter to switch to locked after some number of good frames
+          if (good_cnt_max) then
+            align_state  <= LOCKED_state;
+          elsif (next_frame_en='1' and state = FILLER_state) then
+            align_good_cnt <= align_good_cnt + 1;
+          end if;
+
+        when LOCKED_state =>
+
+          -- counter to switch to unlocked after some number of errors
+          if (bad_cnt_max) then
+            align_bad_cnt <= 0;
+            align_state   <= ALIGNING_state;
+          elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
+            align_bad_cnt  <= align_bad_cnt + 1;
+          end if;
+
+      end case;
+
+    end if;
+  end process;
 
   -- take bitslip from the outside, but also have an internal signal so we can
   -- develop a firmware statemachine to do alignment
-  bitslip <= bitslip_i;
+  bitslip <= bitslip_i or bitslip_auto;
+
+  --------------------------------------------------------------------------------
+  -- Data Parser
+  --------------------------------------------------------------------------------
 
   err_o <= '1' when state = ERR_state else '0';
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
-  special_bit <= next_frame(SPECIAL_BIT_INDEX);
-
-  next_data_is_header <= next_frame(HEADER_OR_FILLER_RANGE) = HEADER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
-
-  next_data_is_filler <= next_frame(HEADER_OR_FILLER_RANGE) = FILLER_MAGIC
-                         and next_frame(MAGIC_RANGE) = MAGIC_WORD;
+  next_data_is_header  <= (next_frame and HEADER_IDENTIFIER_MASK) = HEADER_IDENTIFIER_FRAME;
+  next_data_is_filler  <= (next_frame and FILLER_IDENTIFIER_MASK) = FILLER_IDENTIFIER_FRAME;
+  next_data_is_trailer <= (next_frame and TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
+  next_data_is_data    <= (next_frame and DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
@@ -202,63 +266,87 @@ begin
 
         when ERR_state =>
 
+          -- state
           if (next_data_is_filler) then
-            state <= IDLE_state;
+            state <= FILLER_state;
           end if;
 
-        when IDLE_state =>
+        when FILLER_state =>
 
-          if (next_data_is_header) then
+          -- state
+          if (next_data_is_filler) then
+            state <= FILLER_state;
+          elsif (next_data_is_header) then
             state <= HEADER_state;
-          elsif (next_frame_en = '1' and not next_data_is_filler) then
+          else
             state <= ERR_state;
           end if;
 
         when HEADER_state =>
 
           -- state
-          state <= data_state;
+          if (next_data_is_header) then
+            state <= HEADER_state;
+          elsif (next_data_is_data) then
+            state <= DATA_state;
+          elsif (next_data_is_trailer) then
+            state <= TRAILER_state;
+          else
+            state <= ERR_state;
+          end if;
 
           -- processed outputs
           bcid_o      <= zsh(frame(BCID_RANGE));
           type_o      <= zsh(frame(TYPE_RANGE));
-          event_cnt_o <= zsh(frame(EVENTCNT_RANGE));
+          event_cnt_o <= zsh(frame(L1COUNTER_RANGE));
 
           start_of_packet_o <= '1';
 
           -- fifo output
-          fifo_data_o  <= frame;
-          fifo_wr_en_o <= '1';
+          if (frame_en = '1') then
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
+          end if;
 
         when DATA_state =>
 
-          if (frame_en = '1') then
-
             -- state
-            if (special_bit = TRAILER_SPECIAL_BIT_VALUE) then
+            if (next_data_is_data) then
+              state <= DATA_state;
+            elsif (next_data_is_trailer) then
               state <= TRAILER_state;
+            else
+              state <= ERR_state;
             end if;
 
             -- processed outputs
             cal_o <= zsh(frame(CAL_RANGE));
             tot_o <= zsh(frame(TOT_RANGE));
             toa_o <= zsh(frame(TOA_RANGE));
-            col_o <= zsh(frame(COL_RANGE));
-            row_o <= zsh(frame(ROW_RANGE));
+            col_o <= zsh(frame(COL_ID_RANGE));
+            row_o <= zsh(frame(ROW_ID_RANGE));
             ea_o  <= zsh(frame(EA_RANGE));
 
-            data_en_o <= '1';
 
             -- fifo output
-            fifo_data_o  <= frame;
-            fifo_wr_en_o <= '1';
-
-          end if;
+            if (frame_en = '1') then
+              data_en_o <= '1';
+              fifo_data_o  <= frame;
+              fifo_wr_en_o <= '1';
+            end if;
 
         when TRAILER_state =>
 
           -- state
-          state <= IDLE_state;
+          if (next_data_is_header) then
+            state <= HEADER_state;
+          elsif (next_data_is_filler) then
+            state <= FILLER_state;
+          elsif (next_data_is_trailer) then
+            state <= TRAILER_state;
+          else
+            state <= ERR_state;
+          end if;
 
           -- processed outputs
           chip_id_o <= zsh(frame(CHIPID_RANGE));
@@ -269,8 +357,10 @@ begin
           end_of_packet_o <= '1';
 
           -- fifo output
-          fifo_data_o  <= frame;
-          fifo_wr_en_o <= '1';
+          if (frame_en = '1') then
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
+          end if;
 
         when others =>
 
@@ -279,7 +369,7 @@ begin
       end case;
 
       if (reset = '1') then
-        state <= IDLE_state;
+        state <= FILLER_state;
       end if;
 
     end if;

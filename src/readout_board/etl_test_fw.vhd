@@ -52,6 +52,10 @@ entity etl_test_fw is
     );
   port(
 
+    --------------------------------------------------------------------------------
+    -- PCIE
+    --------------------------------------------------------------------------------
+
     -- PCIe clock and reset
     pcie_sys_clk_p : in std_logic_vector(0*USE_PCIE-1 downto 0);
     pcie_sys_clk_n : in std_logic_vector(0*USE_PCIE-1 downto 0);
@@ -63,6 +67,10 @@ entity etl_test_fw is
     pcie_tx_p : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
     pcie_tx_n : out std_logic_vector(PCIE_LANES*USE_PCIE-1 downto 0);
 
+    --------------------------------------------------------------------------------
+    -- Oscillators
+    --------------------------------------------------------------------------------
+
     -- external oscillator, 125MHz
     osc_clk125_p : in std_logic;
     osc_clk125_n : in std_logic;
@@ -71,15 +79,29 @@ entity etl_test_fw is
     osc_clk300_p : in std_logic;
     osc_clk300_n : in std_logic;
 
-    -- Transceiver ref-clocks
-    si570_refclk_p : in std_logic;
-    si570_refclk_n : in std_logic;
-
     si570_usrclk_p : in std_logic;
     si570_usrclk_n : in std_logic;
 
+    --------------------------------------------------------------------------------
+    -- Transceiver ref-clocks
+    --------------------------------------------------------------------------------
+
+    si570_refclk_p : in std_logic;
+    si570_refclk_n : in std_logic;
+
     sma_refclk_p : in std_logic;
     sma_refclk_n : in std_logic;
+
+    --------------------------------------------------------------------------------
+    -- Clock output
+    --------------------------------------------------------------------------------
+
+    clock_o_p : out std_logic;
+    clock_o_n : out std_logic;
+
+    --------------------------------------------------------------------------------
+    -- Transceivers
+    --------------------------------------------------------------------------------
 
     tx_p : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
     tx_n : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
@@ -129,6 +151,8 @@ architecture behavioral of etl_test_fw is
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
   signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
 
+  signal si570_usrclk_oddr : std_logic := '0';
+
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
 
@@ -169,11 +193,20 @@ architecture behavioral of etl_test_fw is
   signal fifo_ipb_w_array : ipb_wbus_array(2*NUM_RBS - 1 downto 0);
   signal fifo_ipb_r_array : ipb_rbus_array(2*NUM_RBS - 1 downto 0);
 
+  signal daq_ipb_w_array : ipb_wbus_array(NUM_RBS - 1 downto 0);
+  signal daq_ipb_r_array : ipb_rbus_array(NUM_RBS - 1 downto 0);
+
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
 
-
   signal fw_info_mon : FW_INFO_Mon_t;
+
+  component fader is
+    port (
+      clock : in  std_logic;
+      led   : out std_logic
+      );
+  end component;
 
   component cylon1 is
     port (
@@ -193,6 +226,7 @@ architecture behavioral of etl_test_fw is
 
   signal cylon1_signal : std_logic_vector (7 downto 0);
   signal cylon2_signal : std_logic_vector (7 downto 0);
+  signal breath        : std_logic;
 
   component system_clocks is
     port (
@@ -220,10 +254,37 @@ begin
       q     => cylon2_signal
       );
 
+  fader_inst : fader
+    port map (
+      clock => clk40,
+      led   => breath
+      );
+
+
   pcie_sys_rst_n <= not pcie_sys_rst;
 
-  leds(7 downto 0) <= cylon1_signal (7 downto 0) when readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
-                      else cylon2_signal (7 downto 0);
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+
+      if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
+          readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
+
+        leds(7 downto 0) <= cylon2_signal (7 downto 0);
+
+      elsif  (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
+
+        leds(7 downto 0) <= cylon1_signal (7 downto 0);
+
+      else
+
+        leds(7 downto 0) <= breath & breath & breath & breath &
+                            breath & breath & breath & breath;
+
+      end if;
+
+    end if;
+  end process;
 
   si570_usrclk_ibuf_inst : IBUFDS
     port map(
@@ -264,6 +325,31 @@ begin
       o => clk_osc300
       );
 
+  ODDRE1_inst : ODDRE1
+    generic map (
+      IS_C_INVERTED  => '0',            -- Optional inversion for C
+      IS_D1_INVERTED => '0',            -- Unsupported, do not use
+      IS_D2_INVERTED => '0',            -- Unsupported, do not use
+      SIM_DEVICE     => "ULTRASCALE",   -- Set the device version for simulation functionality (ULTRASCALE)
+      SRVAL          => '0'             -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
+      )
+    port map (
+      Q  => si570_usrclk_oddr,          -- 1-bit output: Data output to IOB
+      C  => si570_usrclk,               -- 1-bit input: High-speed clock input
+      D1 => '0',                        -- 1-bit input: Parallel data input 1
+      D2 => '1',                        -- 1-bit input: Parallel data input 2
+      SR => '0'                         -- 1-bit input: Active-High Async Reset
+      );
+
+  OBUFDS_inst : OBUFDS
+    generic map (
+      IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
+      SLEW       => "SLOW")             -- Specify the output slew rate
+    port map (
+      O  => clock_o_p,                  -- Diff_p output (connect directly to top-level port)
+      OB => clock_o_n,                  -- Diff_n output (connect directly to top-level port)
+      I  => si570_usrclk_oddr           -- Buffer input
+      );
 
   ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
   mac_addr(3 downto 0) <= sw(3 downto 0);
@@ -351,8 +437,11 @@ begin
       eth_ipb_w          => eth_ipb_w,
       eth_ipb_r          => eth_ipb_r,
 
-      daq_ipb_w_array => fifo_ipb_w_array,
-      daq_ipb_r_array => fifo_ipb_r_array
+      elink_ipb_w_array => fifo_ipb_w_array,
+      elink_ipb_r_array => fifo_ipb_r_array,
+
+      daq_ipb_w_array => daq_ipb_w_array,
+      daq_ipb_r_array => daq_ipb_r_array
 
       );
 
@@ -427,6 +516,9 @@ begin
 
           fifo_wb_in => fifo_ipb_w_array(I*2+1 downto I*2),
           fifo_wb_out => fifo_ipb_r_array(I*2+1 downto I*2),
+
+          daq_wb_in => daq_ipb_w_array(I downto I),
+          daq_wb_out => daq_ipb_r_array(I downto I),
 
           clk40  => clk40,
           clk320 => clk320,

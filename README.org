@@ -66,6 +66,8 @@ The ethernet interface on your computer can be configured, e.g. with the command
 sudo /sbin/ifconfig eth0 192.168.0.130 netmask 255.255.255.0 broadcast 192.168.0.255
 #+end_src
 
+[[file:doc/kcu105.jpg]]
+
 ** Notes :noexport:
 
 From: https://www.xilinx.com/support/documentation/user_guides/ug575-ultrascale-pkg-pinout.pdf

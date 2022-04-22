@@ -48,6 +48,9 @@ entity readout_board is
     fifo_wb_in  : in  ipb_wbus_array(1 downto 0);
     fifo_wb_out : out ipb_rbus_array(1 downto 0);
 
+    daq_wb_in  : in  ipb_wbus_array(0 downto 0);
+    daq_wb_out : out ipb_rbus_array(0 downto 0);
+
     uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
     uplink_mgt_word_array   : in  std32_array_t (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
     downlink_mgt_word_array : out std32_array_t (NUM_DOWNLINKS-1 downto 0)
@@ -677,6 +680,20 @@ begin
         idle_o            => open
         );
   end generate;
+
+  etroc_fifo_inst : entity work.etroc_fifo
+    generic map (
+      DEPTH => 32768
+      )
+    port map (
+      clk40        => clk40,
+      reset        => reset,
+      fifo_reset_i => ctrl.fifo_reset,
+      fifo_data_i  => rx_fifo_data,
+      fifo_wr_en   => rx_fifo_wr_en,
+      fifo_wb_in   => daq_wb_in(0),
+      fifo_wb_out  => daq_wb_out(0)
+      );
 
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
