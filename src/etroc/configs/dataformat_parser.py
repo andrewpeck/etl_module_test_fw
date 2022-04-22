@@ -80,4 +80,4 @@ defSubTypes(ROC2dat, "header")
 defSubTypes(ROC2dat, "data")
 defSubTypes(ROC2dat, "trailer")
 
-vhd.write("end package " + filename + "_pkg;")
+vhd.write("end package " + filename + "_pkg;\n")
