@@ -21,7 +21,7 @@ def writeData(dat, vhd):
             max = length
 
     for const in dat:
-        vhd.write("\tconstant " + const + "_CMD" + " " * (max - len(const)) + " : ")
+        vhd.write("  constant " + const + "_CMD" + " " * (max - len(const)) + " : ")
         vhd.write("std_logic_vector(7 downto 0) := " + toVHDhex(dat[const]) + ";\n")
     return
 
