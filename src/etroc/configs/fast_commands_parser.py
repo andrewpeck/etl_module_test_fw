@@ -13,8 +13,15 @@ def toVHDhex(num, length=0):
 
 
 def writeData(dat, vhd):
+
+    max = 0
     for const in dat:
-        vhd.write("\tconstant " + const + "_CMD\t: ")
+        length = len(const)
+        if length > max:
+            max = length
+
+    for const in dat:
+        vhd.write("\tconstant " + const + "_CMD" + " " * (max - len(const)) + " : ")
         vhd.write("std_logic_vector(7 downto 0) := " + toVHDhex(dat[const]) + ";\n")
     return
 
