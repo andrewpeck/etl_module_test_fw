@@ -5,16 +5,8 @@ stream = open(filename+".yaml", "r")
 ROC2dat = yaml.safe_load(stream)["ETROC2"]
 
 def toVHDhex(num, length=0):
-    hexnum = str(hex(num))
-    if length == 0:
-        length = len(hexnum)
-        hexnum = hexnum[1]+"\""+str.upper(hexnum[2:])+"\""
-    elif length <= len(hexnum):
-        hexnum = hexnum[1]+"\""+str.upper(hexnum[2:])[:length]+"\""
-    else:
-        num0 = length - len(hexnum) + 2
-        hexnum = hexnum[1]+"\""+"0"*num0+str.upper(hexnum[2:])+"\""
-    return hexnum
+    return 'x"{num:0{width}X}"'.format(num=num, width=length)
+
 
 def mask2range(num):
     binnum = bin(num)[2:]
