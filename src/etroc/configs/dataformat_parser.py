@@ -43,12 +43,16 @@ def defSubTypes(dat, name):
     data = dat["data"][name]
     vhd.write("  -- " + name + "\n")
     for const in reversed(data):
+        if name == "data" and const == "bcid":
+            constname = "RANDOM_DATA_BCID"
+        else:
+            constname = const
         vhd.write(
-            "  subtype "
-            + str.upper(const)
-            + "_RANGE is natural range "
-            + mask2range(data[const]["mask"])
-            + ";\n"
+            "  subtype %s_RANGE is natural range %s;\n"
+            % (
+                str.upper(constname),
+                mask2range(data[const]["mask"])
+            )
         )
     vhd.write("\n")
 
