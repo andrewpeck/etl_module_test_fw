@@ -31,3 +31,11 @@ dataformat-update-job:
   <<: *tag-hog
   stage: user_pre
   script: "make -C src/etroc/configs && git diff --exit-code"
+
+registers-update-job:
+  variables:
+    GIT_STRATEGY: clone
+  <<: *only-default
+  <<: *tag-hog
+  stage: user_pre
+  script: "make reg && git checkout registers/ipbus_decode_etl_test_fw.vhd && git diff --exit-code"
