@@ -1,5 +1,5 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: 'efab1d6'
+      ref: '1914966'
     - local: '/Top/etl_test_fw/gitlab-ci.yml'
