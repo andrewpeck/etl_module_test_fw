@@ -22,6 +22,9 @@ package dataformat_pkg is
   subtype L1COUNTER_RANGE is natural range 21 downto 14;
 
   -- data
+  subtype TOT_RANGE is natural range 8 downto 0;
+  subtype CAL_RANGE is natural range 18 downto 9;
+  subtype TOA_RANGE is natural range 28 downto 19;
   subtype DATA_RANGE is natural range 28 downto 0;
   subtype COUNTER_A_RANGE is natural range 8 downto 0;
   subtype RANDOM_DATA_BCID_RANGE is natural range 20 downto 9;
