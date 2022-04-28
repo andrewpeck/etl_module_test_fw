@@ -3,4 +3,4 @@ gen:etl_test_fw_devel:
     variables:
       extends: .vars
       PROJECT_NAME: etl_test_fw
-      INTERMEDIATE_BUILD: 1
+      INTERMEDIATE_BUILD: "1"
