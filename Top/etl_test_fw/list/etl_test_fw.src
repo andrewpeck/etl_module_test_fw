@@ -41,3 +41,5 @@ ip/ila_elink_daq/ila_elink_daq.xci
 ip/vio_lpgbt/vio_lpgbt.xci
 ip/vio_mgt/vio_mgt.xci
 ip/system_ibert/system_ibert.xci
+
+src/etroc/etroc.src lib=etl_test_fw

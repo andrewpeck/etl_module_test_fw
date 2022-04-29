@@ -6,9 +6,10 @@ use ieee.std_logic_1164.all;
 
 entity fifo_async is
   generic (
-    DEPTH    : integer := 16;
-    WR_WIDTH : integer := 16;
-    RD_WIDTH : integer := 16
+    DEPTH          : integer := 16;
+    WR_WIDTH       : integer := 16;
+    RD_WIDTH       : integer := 16;
+    RELATED_CLOCKS : integer := 0
     );
   port (
     rst    : in  std_logic;
@@ -57,7 +58,7 @@ begin
       RD_DATA_COUNT_WIDTH => 5,                    -- DECIMAL
       READ_DATA_WIDTH     => RD_WIDTH,             -- DECIMAL
       read_mode           => "std",                -- std or fwft
-      RELATED_CLOCKS      => 0,                    -- DECIMAL
+      RELATED_CLOCKS      => RELATED_CLOCKS,       -- DECIMAL
       USE_ADV_FEATURES    => USE_ADV_FEATURES_STR, -- String
       WAKEUP_TIME         => 0,                    -- 0 = disable sleep, 2 = use sleep pin
       WRITE_DATA_WIDTH    => WR_WIDTH,             -- DECIMAL

@@ -1,5 +1,0 @@
-src/etroc/configs/dataformat.vhd
-src/etroc/configs/fast_commands.vhd
-src/etroc/etroc_rx.vhd
-src/etroc/decoding_gearbox.vhd
-src/etroc/etroc_tx.vhd

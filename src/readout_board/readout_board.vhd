@@ -153,12 +153,7 @@ architecture behavioral of readout_board is
   -- ETROC RX
   --------------------------------------------------------------------------------
 
-  signal rx_frame_mon  : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_fifo_data  : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_fifo_wr_en : std_logic;
-
-  signal rx_start_of_packet  : std_logic;
-  signal rx_end_of_packet   : std_logic;
+  constant c_NUM_ETROCS : natural := 24;
 
 begin
 
@@ -269,7 +264,7 @@ begin
                  ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
                  ctrl.lpgbt.daq.downlink.fast_cmd_idle;
 
-  etroc_tx_inst : entity etroc.etroc_tx
+  etroc_tx_inst : entity work.etroc_tx
     port map (
       clock      => clk40,
       reset      => reset,
@@ -645,55 +640,60 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- Data Decoder
+  -- DAQ
   --------------------------------------------------------------------------------
 
-  etroc_rx_gen : for I in 0 to 0 generate
+  etroc_daq_gen : if (true) generate
+    -- FIXME: this should scale from a # of etrocs + bandwidth
+    signal concat_data   : std_logic_vector (191 downto 0);
+    signal rx_fifo_data  : std_logic_vector (39 downto 0);
+    signal rx_fifo_wr_en : std_logic;
   begin
-    etroc_rx_1 : entity etroc.etroc_rx
+
+    -- FIXME: this should concat automatically, need a function
+    concat_data <=
+      uplink_data_aligned(1).data(183 downto 176) & uplink_data_aligned(0).data(183 downto 176) &
+      uplink_data_aligned(1).data(167 downto 160) & uplink_data_aligned(0).data(167 downto 160) &
+      uplink_data_aligned(1).data(151 downto 144) & uplink_data_aligned(0).data(151 downto 144) &
+      uplink_data_aligned(1).data(135 downto 128) & uplink_data_aligned(0).data(135 downto 128) &
+      uplink_data_aligned(1).data(119 downto 112) & uplink_data_aligned(0).data(119 downto 112) &
+      uplink_data_aligned(1).data(103 downto 96) & uplink_data_aligned(0).data(103 downto 96) &
+      uplink_data_aligned(1).data(87 downto 80) & uplink_data_aligned(0).data(87 downto 80) &
+      uplink_data_aligned(1).data(71 downto 64) & uplink_data_aligned(0).data(71 downto 64) &
+      uplink_data_aligned(1).data(55 downto 48) & uplink_data_aligned(0).data(55 downto 48) &
+      uplink_data_aligned(1).data(39 downto 32) & uplink_data_aligned(0).data(39 downto 32) &
+      uplink_data_aligned(1).data(23 downto 16) & uplink_data_aligned(0).data(23 downto 16) &
+      uplink_data_aligned(1).data(7 downto 0) & uplink_data_aligned(0).data(7 downto 0);
+
+    etroc_merger_inst : entity work.etroc_merger
+      generic map (
+        g_NUM_ETROCS  => 24,
+        g_FRAME_WIDTH => 40,
+        g_ELINK_WIDTH => 8
+        )
       port map (
-        clock             => clk40,
-        reset             => reset,
-        data_i            => x"000000" & uplink_data_aligned(lpgbt_sel(I)).data(8*(elink_sel(I)+1)-1 downto 8*elink_sel(I)),
-        bitslip_i         => ctrl.etroc_bitslip(I),
-        fifo_wr_en_o      => rx_fifo_wr_en,
-        fifo_data_o       => rx_fifo_data,
-        frame_mon_o       => rx_frame_mon,
-        bcid_o            => open,
-        type_o            => open,
-        event_cnt_o       => open,
-        cal_o             => open,
-        tot_o             => open,
-        toa_o             => open,
-        col_o             => open,
-        row_o             => open,
-        ea_o              => open,
-        data_en_o         => open,
-        stat_o            => open,
-        hitcnt_o          => open,
-        crc_o             => open,
-        chip_id_o         => open,
-        start_of_packet_o => open,
-        end_of_packet_o   => open,
-        err_o             => open,
-        busy_o            => open,
-        idle_o            => open
+        clk_etroc => clk40,
+        clk_daq   => clk320,
+        reset     => reset,
+        data_i    => concat_data,
+        data_o    => rx_fifo_data,
+        valid_o   => rx_fifo_wr_en
+        );
+
+    etroc_fifo_inst : entity work.etroc_fifo
+      generic map (
+        DEPTH => 32768*4
+        )
+      port map (
+        clock        => clk320,
+        reset        => reset,
+        fifo_reset_i => ctrl.fifo_reset,
+        fifo_data_i  => rx_fifo_data,
+        fifo_wr_en   => rx_fifo_wr_en,
+        fifo_wb_in   => daq_wb_in(0),
+        fifo_wb_out  => daq_wb_out(0)
         );
   end generate;
-
-  etroc_fifo_inst : entity work.etroc_fifo
-    generic map (
-      DEPTH => 32768
-      )
-    port map (
-      clk40        => clk40,
-      reset        => reset,
-      fifo_reset_i => ctrl.fifo_reset,
-      fifo_data_i  => rx_fifo_data,
-      fifo_wr_en   => rx_fifo_wr_en,
-      fifo_wb_in   => daq_wb_in(0),
-      fifo_wb_out  => daq_wb_out(0)
-      );
 
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
@@ -714,9 +714,9 @@ begin
         probe4(0)            => uplink_fec_err(ila_sel),
         probe5(1 downto 0)   => uplink_data(ila_sel).ic,
         probe6(1 downto 0)   => uplink_data(ila_sel).ec,
-        probe7(39 downto 0)  => rx_frame_mon,
-        probe8(39 downto 0)  => rx_fifo_data,
-        probe9(0)            => rx_fifo_wr_en
+        probe7(39 downto 0)  => (others => '0'),
+        probe8(39 downto 0)  => (others => '0'),
+        probe9(0)            => '0'
         );
 
   end generate;

@@ -1,6 +1,30 @@
---------------------------------------------------------------------------------
--- Constants
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- CMS Endcap Timing Layer
+-- ETROC Readout Firmware
+-- A. Peck, D. Spitzbart
+-- Boston University
+--
+-- ETROC RX
+--
+----------------------------------------------------------------------------------
+-- Description:
+--
+-- This module takes in a single e-link from an ETROC and produces 40 bit ETROC
+-- data frames. It will automatically be bitslipped to achieve correct
+-- alignment. The e-link can be configured as 8, 16, or 32 bits so that the same
+-- firmware can decode either 320, 640, or 1280 Mbps ETROC e-links. This can be
+-- run-time programmable, but fixing it at compile time will reduce resource
+-- usage.
+--
+-- It is based on a set of constants which are derived from a YAML dataformat
+-- definition. Minor differences in the data format can be accommodated by simply
+-- updating the yaml source and re-generating the VHDL constants packages.
+--
+-- In addition to FIFO output interface (data + valid) this module also outputs
+-- individual data fields which can be used for in-FPGA data processing / DQM.
+--
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -9,6 +33,11 @@ use ieee.numeric_std.all;
 use work.dataformat_pkg.all;
 
 package constants_pkg is
+
+  --------------------------------------------------------------------------------
+  -- Constants
+  --------------------------------------------------------------------------------
+
   constant CRCB    : positive := 1 + CRC_RANGE'high - CRC_RANGE'low;
   constant CHIPIDB : positive := 1 + CHIPID_RANGE'high - CHIPID_RANGE'low;
   constant HITCNTB : positive := 1 + HITS_RANGE'high - HITS_RANGE'low;
@@ -24,6 +53,7 @@ package constants_pkg is
   constant BXB       : positive := 1 + BCID_RANGE'high - BCID_RANGE'low;
   constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
   constant EVENTCNTB : positive := 1 + L1COUNTER_RANGE'high - L1COUNTER_RANGE'low;
+
 end package constants_pkg;
 
 --------------------------------------------------------------------------------
@@ -374,10 +404,5 @@ begin
 
     end if;
   end process;
-
-
-  --------------------------------------------------------------------------------
-  -- Bitslipping
-  --------------------------------------------------------------------------------
 
 end behavioral;
