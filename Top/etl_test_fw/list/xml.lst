@@ -1,2 +1,2 @@
-address_tables/etl_test_fw.xml
+address_tables/etl_test_fw.xml registers/ipbus_decode_etl_test_fw.vhd
 address_tables/modules/*.xml
