@@ -1,4 +1,4 @@
-set describe [GetGitDescribe $sha]
+set describe [GetHogDescribe $sha]
 set dst_mcs [file normalize "$dst_dir/$proj_name\-$describe.mcs"]
 set dst_bit [file normalize "$dst_dir/$proj_name\-$describe.bit"]
 
