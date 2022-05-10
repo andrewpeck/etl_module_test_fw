@@ -77,8 +77,8 @@ begin
     signal elink_i : std_logic_vector (31 downto 0) := (others => '0');
     signal frame   : std_logic_vector (g_FRAME_WIDTH-1 downto 0);
 
-    constant bithi : natural := g_ELINK_WIDTH*I;
-    constant bitlo : natural := g_ELINK_WIDTH*(I+1)-1;
+    constant bitlo : natural := g_ELINK_WIDTH*I;
+    constant bithi : natural := g_ELINK_WIDTH*(I+1)-1;
 
     function elink_width_set (width : natural) return std_logic_vector is
     begin
@@ -156,7 +156,7 @@ begin
         rd_en  => etroc_rden(I),
         rd_clk => clk_daq,
         dout   => etroc_data_from_fifo(I),
-        valid  => valid,
+        valid  => etroc_valid(I),
         full   => open,                 -- FIXME: should monitor overflows
         empty  => etroc_empty(I)
         );
