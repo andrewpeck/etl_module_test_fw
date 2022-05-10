@@ -1,6 +1,7 @@
 # downlink
 src/etroc/configs/fast_commands.vhd
 src/etroc/etroc_tx.vhd
+src/etroc/etroc_downlink.vhd
 
 # uplink
 src/etroc/configs/dataformat.vhd

@@ -68,8 +68,6 @@ architecture behavioral of readout_board is
   constant UPWIDTH    : integer := FREQ/40;
   constant NUM_ELINKS : integer := 224/UPWIDTH;  -- FIXME: account for fec5/12
 
-  signal valid : std_logic;
-
   --------------------------------------------------------------------------------
   -- FEC Error Counters
   --------------------------------------------------------------------------------
@@ -95,17 +93,14 @@ architecture behavioral of readout_board is
   signal downlink_data_aligned : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
   signal downlink_reset        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
   signal downlink_ready        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
+  signal downlink_data32       : std_logic_vector (31 downto 0);
+
+  signal valid : std_logic;
 
   -- master
 
   signal prbs_err_counters  : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
   signal upcnt_err_counters : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
-
-  signal counter : integer range 0 to 255        := 0;
-  signal cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
-
-  signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
-  signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
 
   signal prbs_ff  : std_logic_vector (31 downto 0) := (others => '0');
   signal upcnt_ff : std_logic_vector (31 downto 0) := (others => '0');
@@ -165,114 +160,42 @@ begin
     port map (
       fast_clk_i => clk320,
       slow_clk_i => clk40,
-      strobe_o   => valid);
+      strobe_o   => valid
+      );
 
   --------------------------------------------------------------------------------
-  -- Downlink Data Generation
-  --
-  -- TODO: move this into its own block
-  --
+  -- ETROC Downlink
   --------------------------------------------------------------------------------
 
-  -- up counter
-
-  cnt_slv <= std_logic_vector (to_unsigned(counter, cnt_slv'length));
-  process (clk40) is
-  begin
-    if (rising_edge(clk40)) then
-      if (counter = 255) then
-        counter <= 0;
-      else
-        counter <= counter + 1;
-      end if;
-    end if;
-  end process;
-
-  -- prbs generation
-
-  prbs_any_gen : entity work.prbs_any
+  etroc_downlink_inst : entity work.etroc_downlink
     generic map (
-      chk_mode    => false,
-      inv_pattern => false,
-      poly_lenght => 7,
-      poly_tap    => 6,
-      nbits       => 8
+      g_DOWNWIDTH => 8
       )
     port map (
-      rst      => reset,
-      clk      => clk40,
-      data_in  => (others => '0'),
-      en       => '1',
-      data_out => prbs_gen
+      clock          => clk40,
+      reset          => reset,
+      l1a            => l1a,
+      bc0            => bc0,
+      link_reset     => link_reset,
+      fast_cmd_data  => ctrl.lpgbt.daq.downlink.fast_cmd_data,
+      fast_cmd_idle  => ctrl.lpgbt.daq.downlink.fast_cmd_idle,
+      fast_cmd_pulse => ctrl.lpgbt.daq.downlink.fast_cmd_pulse,
+      data_o         => downlink_data32,
+      dl_src         => to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src))
       );
 
-  -- need to reverse the prbs vector to match lpgbt
-
-
-  --------------------------------------------------------------------------------
-  -- lpgbt downlink multiplexing
-  --------------------------------------------------------------------------------
-  --
-  -- Choose between different data sources
-  --
-  --  + up count
-  --  + prbs-7 generation
-  --  + programmable fast command
-
-  dl_assign : for I in 0 to NUM_DOWNLINKS-1 generate
-
-    function repeat_byte (x : std_logic_vector) return std_logic_vector is
-      variable result : std_logic_vector(x'length*4-1 downto 0);
-    begin
-      result := x & x & x & x;
-      return result;
-    end;
-
-    signal dl_src : integer;
-
-  begin
-
-    dl_src <= to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src));
-
-    process (clk40) is
-    begin
-      if (rising_edge(clk40)) then
-        case dl_src is
-
-          when 0 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
-          when 1 =>
-            downlink_data(I).data <= repeat_byte(cnt_slv);
-          when 2 =>
-            downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
-          when 3 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_sw);
-          when others =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
-
-        end case;
-      end if;
-    end process;
+  downlink_data_assign : for I in downlink_data'range generate
+    downlink_data(I).data <= downlink_data32;
   end generate;
 
-  -- Fast command pulse
-  --  + make it so that the fast commands are just one pulse wide
-  --    (gated by the strobe)
+  l1a        <= ctrl.l1a_pulse or l1a_gen;
+  link_reset <= ctrl.link_reset_pulse;
+  bc0        <= '1' when bxn = 0 else '0';
 
-  fast_cmd_sw <= ctrl.lpgbt.daq.downlink.fast_cmd_data
-                 when
-                 ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
-                 ctrl.lpgbt.daq.downlink.fast_cmd_idle;
-
-  etroc_tx_inst : entity work.etroc_tx
-    port map (
-      clock      => clk40,
-      reset      => reset,
-      l1a        => l1a,
-      bc0        => bc0,
-      link_reset => link_reset,
-      data_o     => fast_cmd_fw
-      );
+  --------------------------------------------------------------------------------
+  -- Trigger Generation
+  -- TODO: trigger generator should be global
+  --------------------------------------------------------------------------------
 
   trig_gen_inst : entity work.trig_gen
     port map (
@@ -411,14 +334,11 @@ begin
 
   --------------------------------------------------------------------------------
   -- Downlink Frame Aligner
-  --
   -- TODO: move this into its own block
-  --
   --------------------------------------------------------------------------------
 
   dlvalid : for I in 0 to NUM_DOWNLINKS-1 generate
   begin
-
     downlink_data_aligned(I).valid <= valid;
   end generate;
 
@@ -606,7 +526,6 @@ begin
   end generate;
 
   -- multiplex the outputs into one register for readout
-
   process (ctrl_clk) is
     variable sel : integer;
   begin
@@ -622,7 +541,6 @@ begin
   end process;
 
   -- create a long (64 bit) timer to record how long the prbs tests have been running
-
   timer : entity work.counter
     generic map (
       roll_over   => false,
@@ -651,6 +569,7 @@ begin
   begin
 
     -- FIXME: this should concat automatically, need a function
+    -- right now it only works for elink rate = 320 Mbps
     concat_data <=
       uplink_data_aligned(1).data(183 downto 176) & uplink_data_aligned(0).data(183 downto 176) &
       uplink_data_aligned(1).data(167 downto 160) & uplink_data_aligned(0).data(167 downto 160) &
