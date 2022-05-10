@@ -247,10 +247,7 @@ begin
   mon.lpgbt.trigger.uplink.ready <= uplink_ready(1);
   downlink_reset(0)              <= ctrl.lpgbt.daq.downlink.reset;
   uplink_reset(0)                <= ctrl.lpgbt.daq.uplink.reset;
-
-  trg : if (NUM_LPGBTS_TRIG > 0) generate
-    uplink_reset(NUM_LPGBTS_DAQ) <= ctrl.lpgbt.trigger.uplink.reset;
-  end generate;
+  uplink_reset(1)                <= ctrl.lpgbt.trigger.uplink.reset;
 
   --------------------------------------------------------------------------------
   -- GBT Slow Control
