@@ -111,8 +111,6 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of prbs_ff  : signal is "true";
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
-  signal fast_cmd_fw, fast_cmd_sw : std_logic_vector (7 downto 0) := (others => '0');
-
   --------------------------------------------------------------------------------
   -- FIFO
   --------------------------------------------------------------------------------
