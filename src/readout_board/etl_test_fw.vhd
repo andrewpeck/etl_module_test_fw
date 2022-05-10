@@ -501,11 +501,10 @@ begin
     begin
       readout_board_inst : entity work.readout_board
         generic map (
-          INST            => I,
-          NUM_LPGBTS_DAQ  => NUM_LPGBTS_DAQ,
-          NUM_LPGBTS_TRIG => NUM_LPGBTS_TRIG,
-          NUM_DOWNLINKS   => NUM_DOWNLINKS,
-          NUM_SCAS        => NUM_SCAS
+          INST          => I,
+          NUM_UPLINKS   => NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG,
+          NUM_DOWNLINKS => NUM_DOWNLINKS,
+          NUM_SCAS      => NUM_SCAS
           )
         port map (
           reset => not locked,

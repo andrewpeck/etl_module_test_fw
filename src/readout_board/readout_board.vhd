@@ -24,12 +24,12 @@ library etroc;
 
 entity readout_board is
   generic(
-    INST            : integer := 0;
-    C_DEBUG         : boolean := true;
-    NUM_LPGBTS_DAQ  : integer := 1;
-    NUM_LPGBTS_TRIG : integer := 1;
-    NUM_DOWNLINKS   : integer := 1;
-    NUM_SCAS        : integer := 1
+    RB_TYPE       : string  := "RB6";
+    INST          : integer := 0;
+    C_DEBUG       : boolean := true;
+    NUM_UPLINKS   : integer := 2;
+    NUM_DOWNLINKS : integer := 1;
+    NUM_SCAS      : integer := 1
     );
   port(
 
@@ -51,8 +51,9 @@ entity readout_board is
     daq_wb_in  : in  ipb_wbus_array(0 downto 0);
     daq_wb_out : out ipb_rbus_array(0 downto 0);
 
-    uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
-    uplink_mgt_word_array   : in  std32_array_t (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
+    -- Interface to MGTs
+    uplink_bitslip          : out std_logic_vector (NUM_UPLINKS-1 downto 0);
+    uplink_mgt_word_array   : in  std32_array_t (NUM_UPLINKS-1 downto 0);
     downlink_mgt_word_array : out std32_array_t (NUM_DOWNLINKS-1 downto 0)
 
     );
@@ -60,7 +61,6 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  constant NUM_UPLINKS : integer := NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG;
 
   constant FREQ : integer := 320;       -- uplink frequency
 
