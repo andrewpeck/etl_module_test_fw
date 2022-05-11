@@ -599,7 +599,7 @@ begin
         DEPTH => 32768*4
         )
       port map (
-        clock        => clk320,
+        clock        => clk40,
         reset        => reset,
         fifo_reset_i => ctrl.fifo_reset,
         fifo_data_i  => rx_fifo_data,
