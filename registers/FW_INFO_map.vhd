@@ -67,6 +67,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_VER;       --
         when 3 => --0x3
           localRdData(31 downto  0)  <=  Mon.HOG_INFO.GLOBAL_SHA;       --
+        when 4 => --0x4
+          localRdData(31 downto  0)  <=  Mon.HOG_INFO.REPO_SHA;         --This is the number you want to use, the rest are confusing and useless
         when 5 => --0x5
           localRdData(31 downto  0)  <=  Mon.UPTIME_MSBS;               --
         when 6 => --0x6

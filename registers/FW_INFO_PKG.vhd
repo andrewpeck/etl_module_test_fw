@@ -10,6 +10,7 @@ package FW_INFO_CTRL is
     GLOBAL_TIME                :std_logic_vector(31 downto 0);
     GLOBAL_VER                 :std_logic_vector(31 downto 0);
     GLOBAL_SHA                 :std_logic_vector(31 downto 0);
+    REPO_SHA                   :std_logic_vector(31 downto 0);  -- This is the number you want to use, the rest are confusing and useless
   end record FW_INFO_HOG_INFO_MON_t;
 
 
