@@ -68,7 +68,8 @@ begin
       USE_ALMOST_FULL   => 1,
       WR_WIDTH          => 64,
       RD_WIDTH          => 32,
-      USE_WR_DATA_COUNT => 0
+      USE_WR_DATA_COUNT => 0,
+      FIFO_READ_LATENCY => 8
       )
     port map (
       rst            =>  fifo_reset,       -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
