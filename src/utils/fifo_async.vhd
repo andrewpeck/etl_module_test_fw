@@ -50,7 +50,7 @@ begin
       DOUT_RESET_VALUE    => "0",                  -- String
       ECC_MODE            => "no_ecc",             -- no_ecc, en_ecc
       FIFO_MEMORY_TYPE    => "auto",               -- auto, block, distributed, ultra
-      FIFO_READ_LATENCY   => 1,                    -- DECIMAL
+      FIFO_READ_LATENCY   => 4,                    -- DECIMAL
       FIFO_WRITE_DEPTH    => DEPTH,                -- DECIMAL
       FULL_RESET_VALUE    => 0,                    -- DECIMAL
       PROG_EMPTY_THRESH   => 5,                    -- DECIMAL
