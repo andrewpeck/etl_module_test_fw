@@ -6,10 +6,11 @@ use ieee.std_logic_1164.all;
 
 entity fifo_async is
   generic (
-    DEPTH          : integer := 16;
-    WR_WIDTH       : integer := 16;
-    RD_WIDTH       : integer := 16;
-    RELATED_CLOCKS : integer := 0
+    DEPTH             : integer := 16;
+    WR_WIDTH          : integer := 16;
+    RD_WIDTH          : integer := 16;
+    FIFO_READ_LATENCY : integer := 1;
+    RELATED_CLOCKS    : integer := 0
     );
   port (
     rst    : in  std_logic;
@@ -50,7 +51,7 @@ begin
       DOUT_RESET_VALUE    => "0",                  -- String
       ECC_MODE            => "no_ecc",             -- no_ecc, en_ecc
       FIFO_MEMORY_TYPE    => "auto",               -- auto, block, distributed, ultra
-      FIFO_READ_LATENCY   => 4,                    -- DECIMAL
+      FIFO_READ_LATENCY   => FIFO_READ_LATENCY,    -- DECIMAL
       FIFO_WRITE_DEPTH    => DEPTH,                -- DECIMAL
       FULL_RESET_VALUE    => 0,                    -- DECIMAL
       PROG_EMPTY_THRESH   => 5,                    -- DECIMAL
