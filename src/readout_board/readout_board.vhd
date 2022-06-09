@@ -653,7 +653,7 @@ begin
     etroc_rx_1 : entity etroc.etroc_rx
       port map (
         clock             => clk40,
-        reset             => reset,
+        reset             => reset or ctrl.reset_etroc_rx(I),
         data_i            => x"000000" & uplink_data_aligned(lpgbt_sel(I)).data(8*(elink_sel(I)+1)-1 downto 8*elink_sel(I)),
         bitslip_i         => ctrl.etroc_bitslip(I),
         fifo_wr_en_o      => rx_fifo_wr_en,

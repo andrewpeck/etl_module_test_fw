@@ -394,6 +394,7 @@ begin  -- architecture behavioral
       Ctrl.LPGBT.PATTERN_CHECKER.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.CNT_RESET <= '0';
       Ctrl.ETROC_BITSLIP <= (others => '0');
+      Ctrl.RESET_ETROC_RX <= (others => '0');
       Ctrl.SC.TX_RESET <= '0';
       Ctrl.SC.RX_RESET <= '0';
       Ctrl.SC.TX_START_WRITE <= '0';
@@ -515,6 +516,8 @@ begin  -- architecture behavioral
           reg_data(259)( 1 downto  0)             <=  localWrData( 1 downto  0);      --Select which LPGBT is connected to the ILA
         when 260 => --0x104
           Ctrl.ETROC_BITSLIP                      <=  localWrData(31 downto  0);     
+        when 261 => --0x105
+          Ctrl.RESET_ETROC_RX                     <=  localWrData(31 downto  0);     
         when 512 => --0x200
           Ctrl.SC.TX_RESET                        <=  localWrData( 0);               
         when 513 => --0x201
