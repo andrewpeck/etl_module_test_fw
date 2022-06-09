@@ -152,6 +152,8 @@ architecture behavioral of etroc_rx is
 
   signal align_state : align_state_t := ALIGNING_state;
 
+  signal data_frame_cnt : natural range 0 to 255:= 0;
+
 begin
 
   --------------------------------------------------------------------------------
@@ -286,7 +288,12 @@ begin
 
           -- state
           if (next_data_is_header) then
-            state <= HEADER_state;
+            -- disallow repeat headers
+            if (frame_en='1') then
+              state <= ERR_state;
+            else
+              state <= HEADER_state;
+            end if;
           elsif (next_data_is_data) then
             state <= DATA_state;
           elsif (next_data_is_trailer) then
@@ -313,6 +320,10 @@ begin
             -- state
             if (next_data_is_data) then
               state <= DATA_state;
+              -- don't allow more than 256 pixels
+              if (next_frame_en='1' and data_frame_cnt = 255) then
+                state <= ERR_state;
+              end if;
             elsif (next_data_is_trailer) then
               state <= TRAILER_state;
             else
@@ -327,12 +338,12 @@ begin
             row_o <= zsh(frame(ROW_ID_RANGE));
             ea_o  <= zsh(frame(EA_RANGE));
 
-
             -- fifo output
             if (frame_en = '1') then
-              data_en_o <= '1';
-              fifo_data_o  <= frame;
-              fifo_wr_en_o <= '1';
+              data_en_o      <= '1';
+              fifo_data_o    <= frame;
+              fifo_wr_en_o   <= '1';
+              data_frame_cnt <= data_frame_cnt + 1;
             end if;
 
         when TRAILER_state =>
@@ -343,7 +354,12 @@ begin
           elsif (next_data_is_filler) then
             state <= FILLER_state;
           elsif (next_data_is_trailer) then
-            state <= TRAILER_state;
+            -- disallow repeat trailers
+            if (next_frame_en='1') then
+              state <= ERR_state;
+            else
+              state <= TRAILER_state;
+            end if;
           else
             state <= ERR_state;
           end if;
