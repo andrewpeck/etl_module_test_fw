@@ -49,6 +49,7 @@ entity etl_test_fw is
     GLOBAL_TIME : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     GLOBAL_VER  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     GLOBAL_SHA  : std_logic_vector (31 downto 0) := x"DEFFFFFF";
+    XML_SHA     : std_logic_vector (31 downto 0) := x"DEFFFFFF";
     REPO_SHA    : std_logic_vector (31 downto 0) := x"DEFFFFFF"
     );
   port(
@@ -706,6 +707,7 @@ begin
   fw_info_mon.HOG_INFO.GLOBAL_VER  <= GLOBAL_VER;
   fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_SHA;
   fw_info_mon.HOG_INFO.REPO_SHA    <= REPO_SHA;
+  fw_info_mon.HOG_INFO.XML_SHA     <= XML_SHA;
 
   process (ipb_clk) is
     variable upcnt : unsigned (63 downto 0) := (others => '0');
