@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 lpgbt-fpga/downlink/lpgbtfpga_encoder.vhd
 lpgbt-fpga/downlink/lpgbtfpga_interleaver.vhd
 lpgbt-fpga/downlink/lpgbtfpga_scrambler.vhd

@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 registers/ipbus_decode_etl_test_fw.vhd
 
 src/pcie_infra.vhd

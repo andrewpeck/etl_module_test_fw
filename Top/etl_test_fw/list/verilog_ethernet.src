@@ -1,5 +1,3 @@
-# -*- mode: TCL;-*-
-
 verilog-ethernet/rtl/eth_mac_1g.v
 verilog-ethernet/rtl/axis_gmii_rx.v
 verilog-ethernet/rtl/axis_gmii_tx.v
