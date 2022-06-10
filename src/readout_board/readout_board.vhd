@@ -677,7 +677,8 @@ begin
         end_of_packet_o   => open,
         err_o             => open,
         busy_o            => open,
-        idle_o            => open
+        idle_o            => open,
+        locked_o          => open
         );
   end generate;
 

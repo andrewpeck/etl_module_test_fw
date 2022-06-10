@@ -83,9 +83,10 @@ entity etroc_rx is
     chip_id_o       : out std_logic_vector (CHIPIDB -1 downto 0);
     end_of_packet_o : out std_logic;    -- end of packet
 
-    err_o  : out std_logic;
-    busy_o : out std_logic;
-    idle_o : out std_logic
+    locked_o : out std_logic;
+    err_o    : out std_logic;
+    busy_o   : out std_logic;
+    idle_o   : out std_logic
     );
 end etroc_rx;
 
