@@ -35,7 +35,6 @@ ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_multi
 ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_multibuffer_tx_dpram.vhd
 ipbus-firmware/components/ipbus_transport_axi/firmware/hdl/ipbus_transport_ram_if.vhd
 ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_clock_div.vhd
-ipbus-firmware/components/ipbus_util/firmware/hdl/ipbus_decode_ipbus_example.vhd
 
 #ip/temac_gbe_v9_0/temac_gbe_v9_0.xci
 ip/gig_eth_pcs_pma_gmii_to_sgmii_bridge/gig_eth_pcs_pma_gmii_to_sgmii_bridge.xci
