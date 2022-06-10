@@ -23,6 +23,8 @@ entity elink_daq is
     reset      : in std_logic;
     fifo_reset : in std_logic;
 
+    fixed_pattern : in std_logic;
+
     trig0, trig1, trig2, trig3, trig4, trig5, trig6, trig7, trig8, trig9 :
         in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
     mask0, mask1, mask2, mask3, mask4, mask5, mask6, mask7, mask8, mask9 :
@@ -80,6 +82,9 @@ architecture behavioral of elink_daq is
 
   signal trigger    : std_logic;
   signal trig_match : boolean;
+
+  signal fifo_din_mux : std_logic_vector (31 downto 0) := (others => '0');
+  signal fifo_wen_mux : std_logic := '0';
 
 begin
 
@@ -166,6 +171,20 @@ begin
     end if;
   end process;
 
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (fixed_pattern = '0') then
+        fifo_din_mux <= x"000000" & data_r9;
+        fifo_wen_mux <= fifo_wr_en;
+      else
+        fifo_din_mux <= x"000000" & x"AA";
+        fifo_wen_mux <= '1';
+      end if;
+    end if;
+  end process;
+
+
   fifo_sync_inst : entity work.fifo_sync
     generic map (
       DEPTH               => DAQ_FIFO_DEPTH,
@@ -178,9 +197,9 @@ begin
     port map (
       rst           => fifo_reset,      -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
       clk           => clk40,
-      wr_en         => fifo_wr_en,
+      wr_en         => fifo_wen_mux,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & data_r9,
+      din           => fifo_din_mux,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,

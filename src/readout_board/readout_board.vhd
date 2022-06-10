@@ -153,9 +153,10 @@ architecture behavioral of readout_board is
   -- ETROC RX
   --------------------------------------------------------------------------------
 
-  signal rx_frame_mon  : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_fifo_data  : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_fifo_wr_en : std_logic;
+  signal rx_frame_mon : std_logic_vector (39 downto 0) := (others => '0');
+
+  signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
 
   signal rx_start_of_packet  : std_logic;
   signal rx_end_of_packet   : std_logic;
@@ -509,9 +510,12 @@ begin
         NUM_UPLINKS => NUM_UPLINKS
         )
       port map (
+
         clk40      => clk40,
         reset      => reset,
         fifo_reset => ctrl.fifo_reset,
+
+        fixed_pattern => ctrl.elink_fifo_data_src,
 
         trig0 => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
         trig1 => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
@@ -682,6 +686,21 @@ begin
         locked_o          => open
         );
   end generate;
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (ctrl.etroc_fifo_data_src = '1') then
+        rx_fifo_data_mux <= x"AAAAAAAAAA";
+        rx_fifo_wr_en_mux <= '1';
+      else
+        rx_fifo_data_mux <= rx_fifo_data;
+        rx_fifo_wr_en_mux <= rx_fifo_wr_en_mux;
+      end if;
+
+    end if;
+  end process;
+
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (

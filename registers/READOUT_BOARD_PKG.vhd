@@ -366,6 +366,9 @@ package READOUT_BOARD_CTRL is
     FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
     FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
     FIFO_REVERSE_BITS          :std_logic;                      -- Reverse the bits going into the FIFO
+    RX_FIFO_DATA_SRC           :std_logic;                      -- 0=etroc data, 1=fixed pattern for ETROC data fifo
+    ELINK_FIFO0_DATA_SRC       :std_logic;                      -- 0=etroc data, 1=fixed pattern for ELINK data fifo 0
+    ELINK_FIFO1_DATA_SRC       :std_logic;                      -- 0=etroc data, 1=fixed pattern for ELINK data fifo 1
     L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
     LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
     L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
@@ -407,6 +410,9 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_FORCE_TRIG => '0',
                                                                    FIFO_CAPTURE_DEPTH => x"003fff",
                                                                    FIFO_REVERSE_BITS => '1',
+                                                                   RX_FIFO_DATA_SRC => '0',
+                                                                   ELINK_FIFO0_DATA_SRC => '0',
+                                                                   ELINK_FIFO1_DATA_SRC => '0',
                                                                    L1A_PULSE => '0',
                                                                    LINK_RESET_PULSE => '0',
                                                                    L1A_RATE => x"00000000"
