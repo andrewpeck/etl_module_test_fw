@@ -45,11 +45,22 @@ entity etroc_rx is
     );
   port(
 
+    -- 40MHz clock + reset
     clock : in std_logic;
-
     reset : in std_logic;
 
+    -- elink data (32 bits wide.. zero pad for 8 or 16 bit inputs)
     data_i : in std_logic_vector (MAX_ELINK_WIDTH-1 downto 0);
+
+    -- elink width configuration
+    elinkwidth : in std_logic_vector(2 downto 0) := "010";  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
+
+    -- set to 1 and this module will output filler words in addition to the
+    -- header/payload/trailer
+    zero_supress : in std_logic;
+
+    -- assert 1 to force a bitslip
+    bitslip_i : in std_logic;
 
     -- expose a raw copy of the 40 bit word for debugging
     frame_mon_o : out std_logic_vector (FRAME_WIDTH-1 downto 0);
@@ -59,10 +70,6 @@ entity etroc_rx is
     -- 40 bits so need an asymmetric fifo (e.g. 2:1 with padding)
     fifo_data_o  : out std_logic_vector (FRAME_WIDTH-1 downto 0);
     fifo_wr_en_o : out std_logic;
-
-    bitslip_i : in std_logic;
-
-    elinkwidth : in std_logic_vector(2 downto 0) := "010";  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
 
     bcid_o            : out std_logic_vector (BXB-1 downto 0);
     type_o            : out std_logic_vector (TYPEB-1 downto 0);
@@ -283,6 +290,12 @@ begin
             state <= HEADER_state;
           else
             state <= ERR_state;
+          end if;
+
+          -- fifo output
+          if (frame_en = '1' and zero_supress='0') then
+            fifo_data_o  <= frame;
+            fifo_wr_en_o <= '1';
           end if;
 
         when HEADER_state =>

@@ -656,6 +656,7 @@ begin
         reset             => reset or ctrl.reset_etroc_rx(I),
         data_i            => x"000000" & uplink_data_aligned(lpgbt_sel(I)).data(8*(elink_sel(I)+1)-1 downto 8*elink_sel(I)),
         bitslip_i         => ctrl.etroc_bitslip(I),
+        zero_supress      => ctrl.zero_supress(I),
         fifo_wr_en_o      => rx_fifo_wr_en,
         fifo_data_o       => rx_fifo_data,
         frame_mon_o       => rx_frame_mon,
