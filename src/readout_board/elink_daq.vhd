@@ -88,8 +88,6 @@ architecture behavioral of elink_daq is
   signal fifo_din_mux : std_logic_vector (31 downto 0) := (others => '0');
   signal fifo_wen_mux : std_logic := '0';
 
-  signal fifo_wen_mux : integer := 0;
-
   constant RESET_CNT_MAX : natural := 7;
   signal reset_cnt : integer := 7;
   signal fifo_reset : std_logic := '0';
