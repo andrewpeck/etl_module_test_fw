@@ -760,7 +760,7 @@ begin
         probe6(1 downto 0)   => ila_uplink_ec,
         probe7(39 downto 0)  => rx_frame_mon,
         probe8(39 downto 0)  => rx_fifo_data_mux,
-        probe9(0)            => rx_fifo_wr_en_mux,
+        probe9(0)            => rx_fifo_wr_en_mux
         );
   end generate;
 
