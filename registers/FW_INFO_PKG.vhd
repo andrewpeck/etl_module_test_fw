@@ -46,6 +46,7 @@ package FW_INFO_CTRL is
     RXCLK7_FREQ                :std_logic_vector(31 downto 0);
     RXCLK8_FREQ                :std_logic_vector(31 downto 0);
     RXCLK9_FREQ                :std_logic_vector(31 downto 0);
+    DNA                        :std_logic_vector(31 downto 0);  -- Device DNA [31:0]
   end record FW_INFO_MON_t;
 
 

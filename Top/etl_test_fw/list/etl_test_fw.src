@@ -5,6 +5,7 @@ src/readout_board/*.vhd
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
 src/utils/cylon1.v
+src/utils/device_dna.v
 src/utils/fader.v
 src/utils/cylon2.v
 src/utils/prbs_any.vhd

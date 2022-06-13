@@ -24,8 +24,8 @@ architecture behavioral of FW_INFO_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 34);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 34) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 35);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 35) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -129,6 +129,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.RXCLK8_FREQ;               --
         when 33 => --0x21
           localRdData(31 downto  0)  <=  Mon.RXCLK9_FREQ;               --
+        when 35 => --0x23
+          localRdData(31 downto  0)  <=  Mon.DNA;                       --Device DNA [31:0]
 
         when others =>
           localRdData <= x"DEADDEAD";

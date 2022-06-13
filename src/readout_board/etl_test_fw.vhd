@@ -203,6 +203,16 @@ architecture behavioral of etl_test_fw is
 
   signal fw_info_mon : FW_INFO_Mon_t;
 
+  signal dna : std_logic_vector (95 downto 0) := (others => '0');
+
+  component device_dna
+    port (
+      clock : in  std_logic;
+      reset : in  std_logic;
+      dna   : out std_logic_vector (95 downto 0)
+      );
+  end component;
+
   component fader is
     port (
       clock : in  std_logic;
@@ -708,6 +718,15 @@ begin
   fw_info_mon.HOG_INFO.GLOBAL_SHA  <= GLOBAL_SHA;
   fw_info_mon.HOG_INFO.REPO_SHA    <= REPO_SHA;
   fw_info_mon.HOG_INFO.XML_SHA     <= XML_SHA;
+
+  fw_info_mon.DNA <= dna(31 downto 0);
+
+  device_dna_inst : entity work.device_dna
+    port map (
+      clock => ipb_clk,
+      reset => reset,
+      dna   => dna
+      );
 
   process (ipb_clk) is
     variable upcnt : unsigned (63 downto 0) := (others => '0');
