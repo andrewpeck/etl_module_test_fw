@@ -502,7 +502,15 @@ begin
   mon.fifo_empty1 <= fifo_empty(1);
 
   daq_gen : for I in 0 to 1 generate
+    signal data_src : std_logic := '0';
   begin
+
+    gen0 : if (I=0) generate
+      data_src <= ctrl.elink_fifo0_data_src;
+    end generate;
+    gen1 : if (I=1) generate
+      data_src <= ctrl.elink_fifo1_data_src;
+    end generate;
 
     elink_daq_inst : entity work.elink_daq
       generic map (
@@ -515,7 +523,7 @@ begin
         reset      => reset,
         fifo_reset => ctrl.fifo_reset,
 
-        fixed_pattern => ctrl.elink_fifo_data_src,
+        fixed_pattern => data_src,
 
         trig0 => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
         trig1 => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
