@@ -729,25 +729,39 @@ begin
   --------------------------------------------------------------------------------
 
   debug : if (C_DEBUG) generate
+    signal ila_uplink_data    : std_logic_vector (223 downto 0);
+    signal ila_uplink_valid   : std_logic;
+    signal ila_uplink_ready   : std_logic;
+    signal ila_uplink_reset   : std_logic;
+    signal ila_uplink_fec_err : std_logic;
+    signal ila_uplink_ic      : std_logic_vector (1 downto 0);
+    signal ila_uplink_ec      : std_logic_vector (1 downto 0);
   begin
 
     ila_sel <= to_integer(unsigned(ctrl.ila_sel));
 
+    ila_uplink_data    <= uplink_data_aligned(ila_sel).data;
+    ila_uplink_valid   <= uplink_valid_aligned(ila_sel).valid;
+    ila_uplink_ready   <= uplink_ready(ila_sel);
+    ila_uplink_reset   <= uplink_reset(ila_sel);
+    ila_uplink_fec_err <= uplink_fec_err(ila_sel);
+    ila_uplink_ic      <= uplink_data(ila_sel).ic;
+    ila_uplink_ec      <= uplink_data(ila_sel).ec;
+
     ila_lpgbt_trig_inst : ila_lpgbt
       port map (
         clk                  => clk40,
-        probe0(223 downto 0) => uplink_data_aligned(ila_sel).data,
-        probe1(0)            => uplink_data_aligned(ila_sel).valid,
-        probe2(0)            => uplink_ready(ila_sel),
-        probe3(0)            => uplink_reset(ila_sel),
-        probe4(0)            => uplink_fec_err(ila_sel),
-        probe5(1 downto 0)   => uplink_data(ila_sel).ic,
-        probe6(1 downto 0)   => uplink_data(ila_sel).ec,
+        probe0(223 downto 0) => ila_uplink_data,
+        probe1(0)            => ila_uplink_valid,
+        probe2(0)            => ila_uplink_ready,
+        probe3(0)            => ila_uplink_reset,
+        probe4(0)            => ila_uplink_fec_err,
+        probe5(1 downto 0)   => ila_uplink_ic,
+        probe6(1 downto 0)   => ila_uplink_ec,
         probe7(39 downto 0)  => rx_frame_mon,
         probe8(39 downto 0)  => rx_fifo_data,
         probe9(0)            => rx_fifo_wr_en
         );
-
   end generate;
 
 end behavioral;
