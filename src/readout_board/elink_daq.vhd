@@ -246,7 +246,7 @@ begin
     port map (
       clk                => clk40,
       probe0(7 downto 0) => fifo_din_mux,
-      probe1(7 downto 0) => fifo_dout_mux,
+      probe1(7 downto 0) => fifo_dout,
       probe2             => trigger,
       probe3             => fifo_reset,
       probe4             => fifo_full,
