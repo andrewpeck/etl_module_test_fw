@@ -519,9 +519,9 @@ begin
         )
       port map (
 
-        clk40      => clk40,
-        reset      => reset,
-        fifo_reset => ctrl.fifo_reset,
+        clk40        => clk40,
+        reset        => reset,
+        fifo_reset_i => ctrl.fifo_reset,
 
         fixed_pattern => data_src,
 
