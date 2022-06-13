@@ -718,8 +718,8 @@ begin
       clk40        => clk40,
       reset        => reset,
       fifo_reset_i => ctrl.fifo_reset,
-      fifo_data_i  => rx_fifo_data,
-      fifo_wr_en   => rx_fifo_wr_en,
+      fifo_data_i  => rx_fifo_data_mux,
+      fifo_wr_en   => rx_fifo_wr_en_mux,
       fifo_wb_in   => daq_wb_in(0),
       fifo_wb_out  => daq_wb_out(0)
       );
@@ -759,8 +759,8 @@ begin
         probe5(1 downto 0)   => ila_uplink_ic,
         probe6(1 downto 0)   => ila_uplink_ec,
         probe7(39 downto 0)  => rx_frame_mon,
-        probe8(39 downto 0)  => rx_fifo_data,
-        probe9(0)            => rx_fifo_wr_en
+        probe8(39 downto 0)  => rx_fifo_data_mux,
+        probe9(0)            => rx_fifo_wr_en_mux,
         );
   end generate;
 
