@@ -741,7 +741,7 @@ begin
     ila_sel <= to_integer(unsigned(ctrl.ila_sel));
 
     ila_uplink_data    <= uplink_data_aligned(ila_sel).data;
-    ila_uplink_valid   <= uplink_valid_aligned(ila_sel).valid;
+    ila_uplink_valid   <= uplink_data_aligned(ila_sel).valid;
     ila_uplink_ready   <= uplink_ready(ila_sel);
     ila_uplink_reset   <= uplink_reset(ila_sel);
     ila_uplink_fec_err <= uplink_fec_err(ila_sel);
