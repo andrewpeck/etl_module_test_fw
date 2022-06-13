@@ -698,7 +698,7 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      if (ctrl.etroc_fifo_data_src = '1') then
+      if (ctrl.rx_fifo_data_src = '1') then
         rx_fifo_data_mux <= x"AAAAAAAAAA";
         rx_fifo_wr_en_mux <= '1';
       else
