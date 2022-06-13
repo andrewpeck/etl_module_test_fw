@@ -99,7 +99,7 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      if (fifo_reset='1') then
+      if (fifo_reset_i='1') then
         reset_cnt <= RESET_CNT_MAX;
       elsif (reset_cnt > 0) then
         reset_cnt <= reset_cnt - 1;
