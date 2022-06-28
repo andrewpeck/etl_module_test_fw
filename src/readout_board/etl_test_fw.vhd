@@ -721,7 +721,7 @@ begin
 
   fw_info_mon.DNA <= dna(31 downto 0);
 
-  device_dna_inst : entity work.device_dna
+  device_dna_inst : device_dna
     port map (
       clock => ipb_clk,
       reset => reset,
