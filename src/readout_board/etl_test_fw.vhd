@@ -252,6 +252,9 @@ architecture behavioral of etl_test_fw is
 
 begin
 
+  sfp0_tx_disable <= mgt_ctrl.sfp0_tx_dis;
+  sfp1_tx_disable <= mgt_ctrl.sfp1_tx_dis;
+
   cylon1_inst : cylon1
     port map (
       clock => locked and clk40,
