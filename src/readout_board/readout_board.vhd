@@ -155,6 +155,16 @@ architecture behavioral of readout_board is
 
   signal rx_frame_mon : std_logic_vector (39 downto 0) := (others => '0');
 
+  type rx_frame_array_t is array (integer range <>) of std_logic_vector(39 downto 0);
+
+  signal rx_frame_mon_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_data_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_wr_en_arr   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+
+  signal rx_locked       : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal end_of_packet   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+
   signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0) := (others => '0');
   signal rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
 
@@ -660,40 +670,74 @@ begin
   -- Data Decoder
   --------------------------------------------------------------------------------
 
-  etroc_rx_gen : for I in 0 to 0 generate
-  begin
-    etroc_rx_1 : entity etroc.etroc_rx
-      port map (
-        clock             => clk40,
-        reset             => reset or ctrl.reset_etroc_rx(I),
-        data_i            => x"000000" & uplink_data_aligned(lpgbt_sel(I)).data(8*(elink_sel(I)+1)-1 downto 8*elink_sel(I)),
-        bitslip_i         => ctrl.etroc_bitslip(I),
-        zero_supress      => ctrl.zero_supress(I),
-        fifo_wr_en_o      => rx_fifo_wr_en,
-        fifo_data_o       => rx_fifo_data,
-        frame_mon_o       => rx_frame_mon,
-        bcid_o            => open,
-        type_o            => open,
-        event_cnt_o       => open,
-        cal_o             => open,
-        tot_o             => open,
-        toa_o             => open,
-        col_o             => open,
-        row_o             => open,
-        ea_o              => open,
-        data_en_o         => open,
-        stat_o            => open,
-        hitcnt_o          => open,
-        crc_o             => open,
-        chip_id_o         => open,
-        start_of_packet_o => open,
-        end_of_packet_o   => open,
-        err_o             => open,
-        busy_o            => open,
-        idle_o            => open,
-        locked_o          => mon.etroc_locked(0)
-        );
+  etroc_rx_lpgbt_gen : for ilpgbt in 0 to NUM_UPLINKS-1 generate
+    etroc_rx_elink_gen : for ielink in 0 to 27 generate
+      signal locked       : std_logic := '0';
+      signal bitslip      : std_logic := '0';
+      signal zero_supress : std_logic := '1';
+      signal data_i       : std_logic_vector (31 downto 0);
+
+    begin
+
+      data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
+
+      etroc_rx_1 : entity etroc.etroc_rx
+        port map (
+          clock             => clk40,
+        -- FIXME: this should not be shared across both lpgbts
+          reset             => reset or ctrl.reset_etroc_rx(ielink),
+          data_i            => data_i,
+          bitslip_i         => bitslip,
+          zero_supress      => zero_supress,
+          fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
+          fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),
+          frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
+          bcid_o            => open,
+          type_o            => open,
+          event_cnt_o       => open,
+          cal_o             => open,
+          tot_o             => open,
+          toa_o             => open,
+          col_o             => open,
+          row_o             => open,
+          ea_o              => open,
+          data_en_o         => open,
+          stat_o            => open,
+          hitcnt_o          => open,
+          crc_o             => open,
+          chip_id_o         => open,
+          start_of_packet_o => start_of_packet(ilpgbt*28+ielink),
+          end_of_packet_o   => end_of_packet(ilpgbt*28+ielink),
+          err_o             => open,
+          busy_o            => open,
+          idle_o            => open,
+          locked_o          => rx_locked(ilpgbt*28+ielink)
+          );
+
+      lpgbt0 : if (ilpgbt = 0) generate
+        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+      end generate;
+
+      lpgbt1 : if (ilpgbt = 1) generate
+        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+      end generate;
+
+    end generate;
   end generate;
+
+  mon.etroc_locked(27 downto 0)       <= rx_locked(27 downto 0);
+  mon.etroc_locked_slave(27 downto 0) <= rx_locked(55 downto 28);
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel(0)*28 + elink_sel(0));
+    end if;
+  end process;
 
   process (clk40) is
   begin

@@ -327,7 +327,8 @@ package READOUT_BOARD_CTRL is
     FIFO_FULL1                 :std_logic;                  -- FIFO is full
     FIFO_ARMED1                :std_logic;                  -- FIFO armed
     FIFO_EMPTY1                :std_logic;                  -- FIFO empty
-    ETROC_LOCKED               :std_logic_vector(31 downto 0);  -- ETROC Link Locked
+    ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked
+    ETROC_LOCKED_SLAVE         :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
   end record READOUT_BOARD_MON_t;
 
