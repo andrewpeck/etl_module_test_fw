@@ -164,6 +164,7 @@ architecture behavioral of etroc_rx is
 
 begin
 
+  locked_o <= '1' when align_state = LOCKED_state else '0';
   --------------------------------------------------------------------------------
   -- Alignment State Machine
   --------------------------------------------------------------------------------

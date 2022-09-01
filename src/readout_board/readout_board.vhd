@@ -691,7 +691,7 @@ begin
         err_o             => open,
         busy_o            => open,
         idle_o            => open,
-        locked_o          => open
+        locked_o          => mon.etroc_locked(0)
         );
   end generate;
 

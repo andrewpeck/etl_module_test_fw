@@ -263,6 +263,8 @@ begin  -- architecture behavioral
           localRdData( 0)            <=  reg_data(1056)( 0);                          --0=etroc data, 1=fixed pattern for ETROC data fifo
           localRdData( 1)            <=  reg_data(1056)( 1);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 0
           localRdData( 2)            <=  reg_data(1056)( 2);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 1
+        when 1057 => --0x421
+          localRdData(31 downto  0)  <=  Mon.ETROC_LOCKED;                            --ETROC Link Locked
         when 1282 => --0x502
           localRdData(31 downto  0)  <=  reg_data(1282)(31 downto  0);                --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1283 => --0x503
