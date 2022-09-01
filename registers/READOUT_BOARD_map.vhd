@@ -642,7 +642,6 @@ begin  -- architecture behavioral
 
       -- synchronous reset (active high)
       if reset = '1' then
-      reg_data( 0)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.RESET;
       reg_data( 2)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_0;
       reg_data( 2)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_1;
       reg_data( 2)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_2;
@@ -671,7 +670,6 @@ begin  -- architecture behavioral
       reg_data( 5)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_25;
       reg_data( 5)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_26;
       reg_data( 5)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_27;
-      reg_data(16)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.RESET;
       reg_data(18)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_0;
       reg_data(18)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_1;
       reg_data(18)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_2;
@@ -679,9 +677,6 @@ begin  -- architecture behavioral
       reg_data(19)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.DL_SRC;
       reg_data(20)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_IDLE;
       reg_data(20)(23 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_DATA;
-      reg_data(21)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE;
-      reg_data(31)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.FEC_ERR_RESET;
-      reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.RESET;
       reg_data(34)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_0;
       reg_data(34)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_1;
       reg_data(34)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_2;
@@ -710,41 +705,27 @@ begin  -- architecture behavioral
       reg_data(37)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_25;
       reg_data(37)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_26;
       reg_data(37)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_27;
-      reg_data(48)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.RESET;
-      reg_data(49)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CNT_RESET;
       reg_data(50)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_0;
       reg_data(51)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_0;
       reg_data(52)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1;
       reg_data(53)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1;
       reg_data(56)(31 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.SEL;
       reg_data(259)( 1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ILA_SEL;
-      reg_data(260)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_BITSLIP;
-      reg_data(261)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RESET_ETROC_RX;
       reg_data(262)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ZERO_SUPRESS;
-      reg_data(512)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_RESET;
-      reg_data(513)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.RX_RESET;
-      reg_data(514)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_START_WRITE;
-      reg_data(515)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_START_READ;
       reg_data(516)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_GBTX_ADDR;
       reg_data(517)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_REGISTER_ADDR;
       reg_data(518)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_NUM_BYTES_TO_READ;
       reg_data(519)( 7 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_DATA_TO_GBTX;
-      reg_data(521)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_WR;
       reg_data(525)( 7 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_CMD;
       reg_data(526)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_ADDRESS;
       reg_data(527)(23 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_TRANSID;
       reg_data(528)(31 downto 24)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_CHANNEL;
       reg_data(529)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_DATA;
       reg_data(540)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.SCA_ENABLE;
-      reg_data(541)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.START_RESET;
-      reg_data(543)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.START_CONNECT;
-      reg_data(544)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.START_COMMAND;
-      reg_data(545)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.INJ_CRC_ERR;
       reg_data(768)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_ELINK_SEL0;
       reg_data(768)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL0;
       reg_data(784)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_ELINK_SEL1;
       reg_data(784)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL1;
-      reg_data(785)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_RESET;
       reg_data(1027)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG0;
       reg_data(1028)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG1;
       reg_data(1029)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG2;
@@ -765,14 +746,11 @@ begin  -- architecture behavioral
       reg_data(1044)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG7_MASK;
       reg_data(1045)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG8_MASK;
       reg_data(1046)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_TRIG9_MASK;
-      reg_data(1047)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_FORCE_TRIG;
       reg_data(1048)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
       reg_data(1049)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
       reg_data(1056)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RX_FIFO_DATA_SRC;
       reg_data(1056)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO0_DATA_SRC;
       reg_data(1056)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO1_DATA_SRC;
-      reg_data(1280)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_PULSE;
-      reg_data(1281)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
 
       end if; -- reset
