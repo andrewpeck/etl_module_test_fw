@@ -330,6 +330,7 @@ package READOUT_BOARD_CTRL is
     ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     ETROC_LOCKED_SLAVE         :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
+    PACKET_RX_RATE             :std_logic_vector(31 downto 0);  -- Measured rate of generated received packets in Hz
   end record READOUT_BOARD_MON_t;
 
 

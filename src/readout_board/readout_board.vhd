@@ -136,6 +136,7 @@ architecture behavioral of readout_board is
   --------------------------------------------------------------------------------
 
   signal trigger_rate : std_logic_vector (31 downto 0);
+  signal packet_rx_rate : std_logic_vector (31 downto 0);
 
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
@@ -328,7 +329,20 @@ begin
       rate_o  => trigger_rate
       );
 
+  pkt_counter_inst : entity work.rate_counter
+    generic map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => 32
+      )
+    port map (
+      clk_i   => clk40,
+      reset_i => reset,
+      en_i    => or_reduce(end_of_packet),
+      rate_o  => packet_rx_rate
+      );
+
   mon.l1a_rate_cnt <= trigger_rate;
+  mon.packet_rx_rate <= packet_rx_rate;
 
   --------------------------------------------------------------------------------
   -- Record mapping

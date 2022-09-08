@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1283);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1283) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1284);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1284) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -271,6 +271,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  reg_data(1282)(31 downto  0);                --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1283 => --0x503
           localRdData(31 downto  0)  <=  Mon.L1A_RATE_CNT;                            --Measured rate of generated triggers in Hz
+        when 1284 => --0x504
+          localRdData(31 downto  0)  <=  Mon.PACKET_RX_RATE;                          --Measured rate of generated received packets in Hz
 
         when others =>
           localRdData <= x"DEADDEAD";
