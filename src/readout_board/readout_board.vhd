@@ -155,22 +155,27 @@ architecture behavioral of readout_board is
   --------------------------------------------------------------------------------
 
   signal rx_frame_mon : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_state_mon : std_logic_vector (2 downto 0) := (others => '0');
 
   type rx_frame_array_t is array (integer range <>) of std_logic_vector(39 downto 0);
+  type rx_state_array_t is array (integer range <>) of std_logic_vector(2 downto 0);
 
   signal rx_frame_mon_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_state_mon_arr    : rx_state_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_fifo_data_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_fifo_wr_en_arr   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
 
-  signal rx_locked       : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
-  signal start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
-  signal end_of_packet   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+
+
+  signal rx_locked          : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_end_of_packet   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_busy            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+  signal rx_idle            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+  signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
 
   signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0) := (others => '0');
   signal rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
-
-  signal rx_start_of_packet  : std_logic;
-  signal rx_end_of_packet   : std_logic;
 
 begin
 
@@ -337,7 +342,7 @@ begin
     port map (
       clk_i   => clk40,
       reset_i => reset,
-      en_i    => or_reduce(end_of_packet),
+      en_i    => or_reduce(rx_end_of_packet),
       rate_o  => packet_rx_rate
       );
 
@@ -706,6 +711,7 @@ begin
           fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
           fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),
           frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
+          state_mon_o       => rx_state_mon_arr(ilpgbt*28+ielink),
           bcid_o            => open,
           type_o            => open,
           event_cnt_o       => open,
@@ -720,11 +726,11 @@ begin
           hitcnt_o          => open,
           crc_o             => open,
           chip_id_o         => open,
-          start_of_packet_o => start_of_packet(ilpgbt*28+ielink),
-          end_of_packet_o   => end_of_packet(ilpgbt*28+ielink),
-          err_o             => open,
-          busy_o            => open,
-          idle_o            => open,
+          start_of_packet_o => rx_start_of_packet(ilpgbt*28+ielink),
+          end_of_packet_o   => rx_end_of_packet(ilpgbt*28+ielink),
+          err_o             => rx_err(ilpgbt*28+ielink),
+          busy_o            => rx_busy(ilpgbt*28+ielink),
+          idle_o            => rx_idle(ilpgbt*28+ielink),
           locked_o          => rx_locked(ilpgbt*28+ielink)
           );
 
@@ -747,6 +753,7 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
+      rx_state_mon  <= rx_state_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
       rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
       rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel(0)*28 + elink_sel(0));
       rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel(0)*28 + elink_sel(0));
@@ -806,7 +813,7 @@ begin
     ila_uplink_ic      <= uplink_data(ila_sel).ic;
     ila_uplink_ec      <= uplink_data(ila_sel).ec;
 
-    ila_lpgbt_trig_inst : ila_lpgbt
+    ila_lpgbt_inst : ila_lpgbt
       port map (
         clk                  => clk40,
         probe0(223 downto 0) => ila_uplink_data,
@@ -818,7 +825,11 @@ begin
         probe6(1 downto 0)   => ila_uplink_ec,
         probe7(39 downto 0)  => rx_frame_mon,
         probe8(39 downto 0)  => rx_fifo_data_mux,
-        probe9(0)            => rx_fifo_wr_en_mux
+        probe9(0)            => rx_fifo_wr_en_mux,
+        probe10(2 downto 0)  => rx_state_mon,
+        probe11(0)           => rx_busy(lpgbt_sel(0)*28+elink_sel(0)),
+        probe12(0)           => rx_err(lpgbt_sel(0)*28+elink_sel(0)),
+        probe13(0)           => rx_idle(lpgbt_sel(0)*28+elink_sel(0))
         );
   end generate;
 

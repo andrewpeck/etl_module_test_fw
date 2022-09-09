@@ -62,6 +62,9 @@ entity etroc_rx is
     -- assert 1 to force a bitslip
     bitslip_i : in std_logic;
 
+    -- expose the sm state for debugging
+    state_mon_o : out std_logic_vector (2 downto 0);
+
     -- expose a raw copy of the 40 bit word for debugging
     frame_mon_o : out std_logic_vector (FRAME_WIDTH-1 downto 0);
 
@@ -164,7 +167,10 @@ architecture behavioral of etroc_rx is
 
 begin
 
+  state_mon_o <= std_logic_vector(to_unsigned(state_t'POS(state),3));
+
   locked_o <= '1' when align_state = LOCKED_state else '0';
+
   --------------------------------------------------------------------------------
   -- Alignment State Machine
   --------------------------------------------------------------------------------
