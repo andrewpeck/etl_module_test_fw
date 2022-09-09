@@ -760,8 +760,8 @@ begin
         rx_fifo_data_mux <= x"AAAAAAAAAA";
         rx_fifo_wr_en_mux <= '1';
       else
-        rx_fifo_data_mux <= rx_fifo_data;
-        rx_fifo_wr_en_mux <= rx_fifo_wr_en_mux;
+        rx_fifo_data_mux  <= rx_fifo_data;
+        rx_fifo_wr_en_mux <= rx_fifo_wr_en;
       end if;
 
     end if;
