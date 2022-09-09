@@ -801,6 +801,9 @@ begin
     signal ila_uplink_fec_err : std_logic;
     signal ila_uplink_ic      : std_logic_vector (1 downto 0);
     signal ila_uplink_ec      : std_logic_vector (1 downto 0);
+    signal rx_busy_mon        : std_logic;
+    signal rx_err_mon         : std_logic;
+    signal rx_idle_mon        : std_logic;
   begin
 
     ila_sel <= to_integer(unsigned(ctrl.ila_sel));
@@ -812,6 +815,10 @@ begin
     ila_uplink_fec_err <= uplink_fec_err(ila_sel);
     ila_uplink_ic      <= uplink_data(ila_sel).ic;
     ila_uplink_ec      <= uplink_data(ila_sel).ec;
+
+    rx_busy_mon <= rx_busy(lpgbt_sel(0)*28+elink_sel(0));
+    rx_err_mon  <= rx_err(lpgbt_sel(0)*28+elink_sel(0));
+    rx_idle_mon <= rx_idle(lpgbt_sel(0)*28+elink_sel(0));
 
     ila_lpgbt_inst : ila_lpgbt
       port map (
@@ -827,9 +834,9 @@ begin
         probe8(39 downto 0)  => rx_fifo_data_mux,
         probe9(0)            => rx_fifo_wr_en_mux,
         probe10(2 downto 0)  => rx_state_mon,
-        probe11(0)           => rx_busy(lpgbt_sel(0)*28+elink_sel(0)),
-        probe12(0)           => rx_err(lpgbt_sel(0)*28+elink_sel(0)),
-        probe13(0)           => rx_idle(lpgbt_sel(0)*28+elink_sel(0))
+        probe11(0)           => rx_busy_mon,
+        probe12(0)           => rx_err_mon,
+        probe13(0)           => rx_idle_mon
         );
   end generate;
 
