@@ -310,7 +310,7 @@ begin
           -- state
           if (next_data_is_header) then
             -- disallow repeat headers
-            if (frame_en='1') then
+            if (next_frame_en='1') then
               state <= ERR_state;
             else
               state <= HEADER_state;
