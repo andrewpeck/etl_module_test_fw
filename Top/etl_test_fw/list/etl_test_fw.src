@@ -5,6 +5,7 @@ src/readout_board/*.vhd
 src/wrappers/lpgbt_link_wrapper.vhd
 src/wrappers/lpgbt_pkg.vhd
 src/utils/cylon1.v
+src/utils/device_dna.v
 src/utils/fader.v
 src/utils/cylon2.v
 src/utils/prbs_any.vhd
@@ -34,6 +35,7 @@ ip/xlx_ku_mgt_ip_10g24/xlx_ku_mgt_ip_10g24.xci
 ip/ila_pat_check/ila_pat_check.xci
 ip/ila_ipb/ila_ipb.xci
 ip/ila_sc/ila_sc.xci
+ip/ila_0/ila_0.xci
 ip/ila_ic/ila_ic.xci
 ip/ila_sca/ila_sca.xci
 ip/ila_lpgbt/ila_lpgbt.xci

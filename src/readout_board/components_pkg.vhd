@@ -74,7 +74,11 @@ package components is
       probe6  : in std_logic_vector(1 downto 0);
       probe7  : in std_logic_vector(39 downto 0);
       probe8  : in std_logic_vector(39 downto 0);
-      probe9  : in std_logic_vector(0 downto 0)
+      probe9  : in std_logic_vector(0 downto 0);
+      probe10 : in std_logic_vector(2 downto 0);
+      probe11 : in std_logic_vector(0 downto 0);
+      probe12 : in std_logic_vector(0 downto 0);
+      probe13 : in std_logic_vector(0 downto 0)
       );
   end component;
 
@@ -82,7 +86,14 @@ package components is
     port (
       clk     : in std_logic;
       probe0  : in std_logic_vector(7 downto 0);
-      probe1  : in std_logic
+      probe1  : in std_logic_vector(7 downto 0);
+      probe2  : in std_logic;
+      probe3  : in std_logic;
+      probe4  : in std_logic;
+      probe5  : in std_logic;
+      probe6  : in std_logic;
+      probe7  : in std_logic;
+      probe8  : in std_logic
       );
   end component;
 

@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 #lpgbt/src/lpgbt-emul/descrambler36bitOrder36.v
 #lpgbt/src/lpgbt-emul/downLinkDeinterleaver.v
 #lpgbt/src/lpgbt-emul/downLinkFECDecoder.v

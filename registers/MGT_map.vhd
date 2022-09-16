@@ -25,8 +25,8 @@ architecture behavioral of MGT_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 49);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 49) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 64);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 64) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -59,7 +59,7 @@ begin  -- architecture behavioral
       localRdData <= x"00000000";
       wb_err <= '0';
       if wb_strobe='1' then
-        case to_integer(unsigned(wb_addr(5 downto 0))) is
+        case to_integer(unsigned(wb_addr(6 downto 0))) is
           when 0 => --0x0
           localRdData( 9 downto  0)  <=  reg_data( 0)( 9 downto  0);      --
           localRdData(21 downto 12)  <=  reg_data( 0)(21 downto 12);      --
@@ -136,6 +136,9 @@ begin  -- architecture behavioral
         when 49 => --0x31
           localRdData(15 downto  0)  <=  Mon.DRP.DRP(9).RD_DATA;          --DRP Read Data
           localRdData(31 downto 16)  <=  reg_data(49)(31 downto 16);      --DRP Write Data
+        when 64 => --0x40
+          localRdData( 0)            <=  reg_data(64)( 0);                --Controls SFP0 Disable
+          localRdData( 1)            <=  reg_data(64)( 1);                --Controls SFP1 Disable
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -179,6 +182,8 @@ begin  -- architecture behavioral
   Ctrl.DRP.DRP(9).WR_ADDR  <=  reg_data(48)( 8 downto  0);     
   Ctrl.DRP.DRP(9).EN       <=  reg_data(48)(12);               
   Ctrl.DRP.DRP(9).WR_DATA  <=  reg_data(49)(31 downto 16);     
+  Ctrl.SFP0_TX_DIS         <=  reg_data(64)( 0);               
+  Ctrl.SFP1_TX_DIS         <=  reg_data(64)( 1);               
 
 
   -- writes to slave
@@ -202,7 +207,7 @@ begin  -- architecture behavioral
 
       -- Write on strobe=write=1
       if strobe_pulse='1' and wb_write = '1' then
-        case to_integer(unsigned(wb_addr(5 downto 0))) is
+        case to_integer(unsigned(wb_addr(6 downto 0))) is
         when 0 => --0x0
           reg_data( 0)( 9 downto  0)  <=  localWrData( 9 downto  0);      --
           reg_data( 0)(21 downto 12)  <=  localWrData(21 downto 12);      --
@@ -276,6 +281,9 @@ begin  -- architecture behavioral
           reg_data(48)(12)            <=  localWrData(12);                --DRP Enable
         when 49 => --0x31
           reg_data(49)(31 downto 16)  <=  localWrData(31 downto 16);      --DRP Write Data
+        when 64 => --0x40
+          reg_data(64)( 0)            <=  localWrData( 0);                --Controls SFP0 Disable
+          reg_data(64)( 1)            <=  localWrData( 1);                --Controls SFP1 Disable
 
         when others => null;
 
@@ -286,36 +294,48 @@ begin  -- architecture behavioral
       if reset = '1' then
       reg_data( 0)( 9 downto  0)  <= DEFAULT_MGT_CTRL_t.MGT_TX_RESET;
       reg_data( 0)(21 downto 12)  <= DEFAULT_MGT_CTRL_t.MGT_RX_RESET;
+      reg_data( 2)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_EN;
       reg_data( 3)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_ADDR;
       reg_data( 3)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).EN;
       reg_data( 4)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(0).WR_DATA;
+      reg_data( 7)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).WR_EN;
       reg_data( 8)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).WR_ADDR;
       reg_data( 8)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).EN;
       reg_data( 9)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(1).WR_DATA;
+      reg_data(12)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).WR_EN;
       reg_data(13)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).WR_ADDR;
       reg_data(13)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).EN;
       reg_data(14)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(2).WR_DATA;
+      reg_data(17)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).WR_EN;
       reg_data(18)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).WR_ADDR;
       reg_data(18)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).EN;
       reg_data(19)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(3).WR_DATA;
+      reg_data(22)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).WR_EN;
       reg_data(23)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).WR_ADDR;
       reg_data(23)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).EN;
       reg_data(24)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(4).WR_DATA;
+      reg_data(27)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).WR_EN;
       reg_data(28)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).WR_ADDR;
       reg_data(28)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).EN;
       reg_data(29)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(5).WR_DATA;
+      reg_data(32)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).WR_EN;
       reg_data(33)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).WR_ADDR;
       reg_data(33)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).EN;
       reg_data(34)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(6).WR_DATA;
+      reg_data(37)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).WR_EN;
       reg_data(38)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).WR_ADDR;
       reg_data(38)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).EN;
       reg_data(39)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(7).WR_DATA;
+      reg_data(42)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).WR_EN;
       reg_data(43)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).WR_ADDR;
       reg_data(43)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).EN;
       reg_data(44)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(8).WR_DATA;
+      reg_data(47)( 0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).WR_EN;
       reg_data(48)( 8 downto  0)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).WR_ADDR;
       reg_data(48)(12)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).EN;
       reg_data(49)(31 downto 16)  <= DEFAULT_MGT_CTRL_t.DRP.DRP(9).WR_DATA;
+      reg_data(64)( 0)  <= DEFAULT_MGT_CTRL_t.SFP0_TX_DIS;
+      reg_data(64)( 1)  <= DEFAULT_MGT_CTRL_t.SFP1_TX_DIS;
 
       end if; -- reset
     end if; -- clk

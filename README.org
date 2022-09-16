@@ -15,7 +15,7 @@
 To build the firmware, simply clone the repository and run:
 #+begin_src
 make init
-make all
+make impl
 #+end_src
 ** Directories
 #+begin_src

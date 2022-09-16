@@ -129,6 +129,7 @@ architecture behavioral of readout_board is
   --------------------------------------------------------------------------------
 
   signal trigger_rate : std_logic_vector (31 downto 0);
+  signal packet_rx_rate : std_logic_vector (31 downto 0);
 
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
@@ -146,7 +147,28 @@ architecture behavioral of readout_board is
   -- ETROC RX
   --------------------------------------------------------------------------------
 
-  constant c_NUM_ETROCS : natural := 24;
+  signal rx_frame_mon : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_state_mon : std_logic_vector (2 downto 0) := (others => '0');
+
+  type rx_frame_array_t is array (integer range <>) of std_logic_vector(39 downto 0);
+  type rx_state_array_t is array (integer range <>) of std_logic_vector(2 downto 0);
+
+  signal rx_frame_mon_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_state_mon_arr    : rx_state_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_data_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_wr_en_arr   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+
+
+
+  signal rx_locked          : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_end_of_packet   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_busy            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+  signal rx_idle            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+  signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+
+  signal rx_fifo_data_daq, rx_fifo_data, rx_fifo_data_mux    : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_wr_en_daq, rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
 
 begin
 
@@ -233,7 +255,20 @@ begin
       rate_o  => trigger_rate
       );
 
+  pkt_counter_inst : entity work.rate_counter
+    generic map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => 32
+      )
+    port map (
+      clk_i   => clk40,
+      reset_i => reset,
+      en_i    => or_reduce(rx_end_of_packet),
+      rate_o  => packet_rx_rate
+      );
+
   mon.l1a_rate_cnt <= trigger_rate;
+  mon.packet_rx_rate <= packet_rx_rate;
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -411,7 +446,15 @@ begin
   mon.fifo_empty1 <= fifo_empty(1);
 
   daq_gen : for I in 0 to 1 generate
+    signal data_src : std_logic := '0';
   begin
+
+    gen0 : if (I=0) generate
+      data_src <= ctrl.elink_fifo0_data_src;
+    end generate;
+    gen1 : if (I=1) generate
+      data_src <= ctrl.elink_fifo1_data_src;
+    end generate;
 
     elink_daq_inst : entity work.elink_daq
       generic map (
@@ -419,9 +462,12 @@ begin
         NUM_UPLINKS => NUM_UPLINKS
         )
       port map (
-        clk40      => clk40,
-        reset      => reset,
-        fifo_reset => ctrl.fifo_reset,
+
+        clk40        => clk40,
+        reset        => reset,
+        fifo_reset_i => ctrl.fifo_reset,
+
+        fixed_pattern => data_src,
 
         trig0 => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
         trig1 => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
@@ -553,14 +599,12 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- DAQ
+  -- Dumb DAQ
   --------------------------------------------------------------------------------
 
   etroc_daq_gen : if (true) generate
     -- FIXME: this should scale from a # of etrocs + bandwidth
     signal concat_data   : std_logic_vector (191 downto 0);
-    signal rx_fifo_data  : std_logic_vector (39 downto 0);
-    signal rx_fifo_wr_en : std_logic;
   begin
 
     -- FIXME: this should concat automatically, need a function
@@ -590,50 +634,179 @@ begin
         clk_daq   => clk320,
         reset     => reset,
         data_i    => concat_data,
-        data_o    => rx_fifo_data,
-        valid_o   => rx_fifo_wr_en
+        data_o    => rx_fifo_data_daq,
+        valid_o   => rx_fifo_wr_en_daq
         );
 
-    etroc_fifo_inst : entity work.etroc_fifo
-      generic map (
-        DEPTH => 32768
-        )
-      port map (
-        wr_clk       => clk320,
-        rd_clk       => clk40,
-        reset        => reset,
-        fifo_reset_i => ctrl.fifo_reset,
-        fifo_data_i  => rx_fifo_data,
-        fifo_wr_en   => rx_fifo_wr_en,
-        fifo_wb_in   => daq_wb_in(0),
-        fifo_wb_out  => daq_wb_out(0)
-        );
   end generate;
+
+  --------------------------------------------------------------------------------
+  -- Dumber DAQ
+  --------------------------------------------------------------------------------
+
+  etroc_rx_lpgbt_gen : for ilpgbt in 0 to NUM_UPLINKS-1 generate
+    etroc_rx_elink_gen : for ielink in 0 to 27 generate
+      signal locked       : std_logic := '0';
+      signal bitslip      : std_logic := '0';
+      signal zero_supress : std_logic := '1';
+      signal data_i       : std_logic_vector (31 downto 0);
+
+    begin
+
+      data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
+
+      etroc_rx_1 : entity etroc.etroc_rx
+        port map (
+          clock             => clk40,
+        -- FIXME: this should not be shared across both lpgbts
+          reset             => reset or ctrl.reset_etroc_rx(ielink),
+          data_i            => data_i,
+          bitslip_i         => bitslip,
+          zero_supress      => zero_supress,
+          fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
+          fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),
+          frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
+          state_mon_o       => rx_state_mon_arr(ilpgbt*28+ielink),
+          bcid_o            => open,
+          type_o            => open,
+          event_cnt_o       => open,
+          cal_o             => open,
+          tot_o             => open,
+          toa_o             => open,
+          col_o             => open,
+          row_o             => open,
+          ea_o              => open,
+          data_en_o         => open,
+          stat_o            => open,
+          hitcnt_o          => open,
+          crc_o             => open,
+          chip_id_o         => open,
+          start_of_packet_o => rx_start_of_packet(ilpgbt*28+ielink),
+          end_of_packet_o   => rx_end_of_packet(ilpgbt*28+ielink),
+          err_o             => rx_err(ilpgbt*28+ielink),
+          busy_o            => rx_busy(ilpgbt*28+ielink),
+          idle_o            => rx_idle(ilpgbt*28+ielink),
+          locked_o          => rx_locked(ilpgbt*28+ielink)
+          );
+
+      lpgbt0 : if (ilpgbt = 0) generate
+        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+      end generate;
+
+      lpgbt1 : if (ilpgbt = 1) generate
+        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+      end generate;
+
+    end generate;
+  end generate;
+
+  --------------------------------------------------------------------------------
+  -- Monitoring
+  --------------------------------------------------------------------------------
+
+  mon.etroc_locked(27 downto 0)       <= rx_locked(27 downto 0);
+  mon.etroc_locked_slave(27 downto 0) <= rx_locked(55 downto 28);
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      rx_state_mon  <= rx_state_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel(0)*28 + elink_sel(0));
+    end if;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- Data MUX
+  --------------------------------------------------------------------------------
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (ctrl.rx_fifo_data_src = "0001") then
+        rx_fifo_data_mux <= x"AAAAAAAAAA";
+        rx_fifo_wr_en_mux <= '1';
+      elsif (ctrl.rx_fifo_data_src = "0010") then
+        rx_fifo_data_mux  <= rx_fifo_data;
+        rx_fifo_wr_en_mux <= rx_fifo_wr_en;
+      elsif (ctrl.rx_fifo_data_src = "0011") then
+        rx_fifo_data_mux  <= rx_fifo_data_daq;
+        rx_fifo_wr_en_mux <= rx_fifo_wr_en_daq;
+      end if;
+
+    end if;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- FIFO for DAQ Readout
+  --------------------------------------------------------------------------------
+
+  etroc_fifo_inst : entity work.etroc_fifo
+    generic map (
+      DEPTH => 32768
+      )
+    port map (
+      clk40        => clk40,
+      reset        => reset,
+      fifo_reset_i => ctrl.fifo_reset,
+      fifo_data_i  => rx_fifo_data_mux,
+      fifo_wr_en   => rx_fifo_wr_en_mux,
+      fifo_wb_in   => daq_wb_in(0),
+      fifo_wb_out  => daq_wb_out(0)
+      );
 
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
   --------------------------------------------------------------------------------
 
   debug : if (C_DEBUG) generate
+    signal ila_uplink_data    : std_logic_vector (223 downto 0);
+    signal ila_uplink_valid   : std_logic;
+    signal ila_uplink_ready   : std_logic;
+    signal ila_uplink_reset   : std_logic;
+    signal ila_uplink_fec_err : std_logic;
+    signal ila_uplink_ic      : std_logic_vector (1 downto 0);
+    signal ila_uplink_ec      : std_logic_vector (1 downto 0);
+    signal rx_busy_mon        : std_logic;
+    signal rx_err_mon         : std_logic;
+    signal rx_idle_mon        : std_logic;
   begin
 
     ila_sel <= to_integer(unsigned(ctrl.ila_sel));
 
-    ila_lpgbt_trig_inst : ila_lpgbt
+    ila_uplink_data    <= uplink_data_aligned(ila_sel).data;
+    ila_uplink_valid   <= uplink_data_aligned(ila_sel).valid;
+    ila_uplink_ready   <= uplink_ready(ila_sel);
+    ila_uplink_reset   <= uplink_reset(ila_sel);
+    ila_uplink_fec_err <= uplink_fec_err(ila_sel);
+    ila_uplink_ic      <= uplink_data(ila_sel).ic;
+    ila_uplink_ec      <= uplink_data(ila_sel).ec;
+
+    rx_busy_mon <= rx_busy(lpgbt_sel(0)*28+elink_sel(0));
+    rx_err_mon  <= rx_err(lpgbt_sel(0)*28+elink_sel(0));
+    rx_idle_mon <= rx_idle(lpgbt_sel(0)*28+elink_sel(0));
+
+    ila_lpgbt_inst : ila_lpgbt
       port map (
         clk                  => clk40,
-        probe0(223 downto 0) => uplink_data_aligned(ila_sel).data,
-        probe1(0)            => uplink_data_aligned(ila_sel).valid,
-        probe2(0)            => uplink_ready(ila_sel),
-        probe3(0)            => uplink_reset(ila_sel),
-        probe4(0)            => uplink_fec_err(ila_sel),
-        probe5(1 downto 0)   => uplink_data(ila_sel).ic,
-        probe6(1 downto 0)   => uplink_data(ila_sel).ec,
-        probe7(39 downto 0)  => (others => '0'),
-        probe8(39 downto 0)  => (others => '0'),
-        probe9(0)            => '0'
+        probe0(223 downto 0) => ila_uplink_data,
+        probe1(0)            => ila_uplink_valid,
+        probe2(0)            => ila_uplink_ready,
+        probe3(0)            => ila_uplink_reset,
+        probe4(0)            => ila_uplink_fec_err,
+        probe5(1 downto 0)   => ila_uplink_ic,
+        probe6(1 downto 0)   => ila_uplink_ec,
+        probe7(39 downto 0)  => rx_frame_mon,
+        probe8(39 downto 0)  => rx_fifo_data_mux,
+        probe9(0)            => rx_fifo_wr_en_mux,
+        probe10(2 downto 0)  => rx_state_mon,
+        probe11(0)           => rx_busy_mon,
+        probe12(0)           => rx_err_mon,
+        probe13(0)           => rx_idle_mon
         );
-
   end generate;
 
 end behavioral;

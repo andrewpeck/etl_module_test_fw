@@ -11,6 +11,7 @@ package FW_INFO_CTRL is
     GLOBAL_VER                 :std_logic_vector(31 downto 0);
     GLOBAL_SHA                 :std_logic_vector(31 downto 0);
     REPO_SHA                   :std_logic_vector(31 downto 0);  -- This is the number you want to use, the rest are confusing and useless
+    XML_SHA                    :std_logic_vector(31 downto 0);  -- Last commit in which the XML address table was modified
   end record FW_INFO_HOG_INFO_MON_t;
 
 
@@ -45,6 +46,7 @@ package FW_INFO_CTRL is
     RXCLK7_FREQ                :std_logic_vector(31 downto 0);
     RXCLK8_FREQ                :std_logic_vector(31 downto 0);
     RXCLK9_FREQ                :std_logic_vector(31 downto 0);
+    DNA                        :std_logic_vector(31 downto 0);  -- Device DNA [31:0]
   end record FW_INFO_MON_t;
 
 

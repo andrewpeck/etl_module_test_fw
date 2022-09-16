@@ -1,4 +1,3 @@
-# -*- mode: TCL;-*-
 # IC / SCA
 gbt-sc/GBT-SC/gbtsc_top.vhd
 gbt-sc/GBT-SC/IC/ic_deserializer.vhd

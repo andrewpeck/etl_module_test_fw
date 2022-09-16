@@ -19,9 +19,13 @@ entity elink_daq is
     DAQ_FIFO_DEPTH : positive := 2*32768
     );
   port(
-    clk40      : in std_logic;
-    reset      : in std_logic;
-    fifo_reset : in std_logic;
+    clk40        : in std_logic;
+
+    reset        : in std_logic;
+
+    fifo_reset_i : in std_logic;
+
+    fixed_pattern : in std_logic;
 
     trig0, trig1, trig2, trig3, trig4, trig5, trig6, trig7, trig8, trig9 :
         in std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
@@ -81,7 +85,28 @@ architecture behavioral of elink_daq is
   signal trigger    : std_logic;
   signal trig_match : boolean;
 
+  signal fifo_din_mux : std_logic_vector (31 downto 0) := (others => '0');
+  signal fifo_wen_mux : std_logic := '0';
+
+  constant RESET_CNT_MAX : natural := 7;
+  signal reset_cnt : integer := 7;
+  signal fifo_reset : std_logic := '0';
+
 begin
+
+  fifo_reset <= '1' when reset_cnt > 0 else '0';
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (fifo_reset_i='1') then
+        reset_cnt <= RESET_CNT_MAX;
+      elsif (reset_cnt > 0) then
+        reset_cnt <= reset_cnt - 1;
+      end if;
+    end if;
+  end process;
+
 
   armed <= daq_armed;
   full  <= fifo_full;
@@ -166,6 +191,20 @@ begin
     end if;
   end process;
 
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (fixed_pattern = '0') then
+        fifo_din_mux <= x"000000" & data_r9;
+        fifo_wen_mux <= fifo_wr_en;
+      else
+        fifo_din_mux <= x"000000" & x"AA";
+        fifo_wen_mux <= '1';
+      end if;
+    end if;
+  end process;
+
+
   fifo_sync_inst : entity work.fifo_sync
     generic map (
       DEPTH               => DAQ_FIFO_DEPTH,
@@ -176,11 +215,11 @@ begin
       USE_WR_DATA_COUNT   => 1
       )
     port map (
-      rst           => fifo_reset,      -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+      rst           => reset or fifo_reset,      -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
       clk           => clk40,
-      wr_en         => fifo_wr_en,
+      wr_en         => fifo_wen_mux,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & data_r9,
+      din           => fifo_din_mux,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,
@@ -206,8 +245,15 @@ begin
   ila_elink_daq_inst : ila_elink_daq
     port map (
       clk                => clk40,
-      probe0(7 downto 0) => data,
-      probe1             => trigger
+      probe0(7 downto 0) => fifo_din_mux,
+      probe1(7 downto 0) => fifo_dout,
+      probe2             => trigger,
+      probe3             => fifo_reset,
+      probe4             => fifo_full,
+      probe5             => fifo_empty,
+      probe6             => fifo_valid,
+      probe7             => fifo_rd_en,
+      probe8             => fifo_wen_mux
       );
 
 end behavioral;

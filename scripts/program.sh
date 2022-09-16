@@ -1,2 +1,8 @@
 #!/usr/bin/env bash
-vivado -mode batch -source program.tcl
+VIVADO=$(command -v vivado || command -v vivado_lab)
+
+if [[ ! -z "$VIVADO" ]]; then
+   vivado -mode batch -source program.tcl
+else
+    echo "ERROR: Vivado not found in path."
+fi

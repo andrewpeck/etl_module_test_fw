@@ -49,13 +49,17 @@ package MGT_CTRL is
     MGT_TX_RESET               :std_logic_vector( 9 downto 0);
     MGT_RX_RESET               :std_logic_vector( 9 downto 0);
     DRP                        :MGT_DRP_CTRL_t;               
+    SFP0_TX_DIS                :std_logic;                      -- Controls SFP0 Disable
+    SFP1_TX_DIS                :std_logic;                      -- Controls SFP1 Disable
   end record MGT_CTRL_t;
 
 
   constant DEFAULT_MGT_CTRL_t : MGT_CTRL_t := (
                                                MGT_TX_RESET => (others => '0'),
                                                MGT_RX_RESET => (others => '0'),
-                                               DRP => DEFAULT_MGT_DRP_CTRL_t
+                                               DRP => DEFAULT_MGT_DRP_CTRL_t,
+                                               SFP0_TX_DIS => '0',
+                                               SFP1_TX_DIS => '0'
                                               );
 
 

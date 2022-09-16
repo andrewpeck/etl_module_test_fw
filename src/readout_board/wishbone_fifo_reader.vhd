@@ -31,13 +31,48 @@ end wishbone_fifo_reader;
 
 architecture rtl of wishbone_fifo_reader is
 
+
   signal words_todo     : integer range 0 to 255 := 0;
   signal words_todo_buf : integer range 0 to 255 := 0;
 
   signal strobe_r  : std_logic := '0';
   signal strobe_os : std_logic := '0';
 
+  component ila_0
+    port (
+      clk    : in std_logic;
+      probe0 : in std_logic_vector(31 downto 0);
+      probe1 : in std_logic_vector(31 downto 0);
+      probe2 : in std_logic_vector(0 downto 0);
+      probe3 : in std_logic_vector(0 downto 0);
+      probe4 : in std_logic_vector(31 downto 0);
+      probe5 : in std_logic_vector(0 downto 0);
+      probe6 : in std_logic_vector(0 downto 0);
+      probe7 : in std_logic_vector(0 downto 0);
+      probe8 : in std_logic_vector(9 downto 0);
+      probe9 : in std_logic_vector(31 downto 0)
+      );
+  end component;
+
 begin
+
+  ila_0_1 : ila_0
+    port map (
+      clk                  => clk,
+      probe0               => din,
+      probe1               => ipbus_out.ipb_rdata,
+      probe2(0)            => ipbus_in.ipb_strobe,
+      probe3(0)            => ipbus_out.ipb_ack,
+      probe4               => ipbus_in.ipb_wdata,
+      probe5(0)            => rd_en,
+      probe6(0)            => valid,
+      probe7(0)            => empty,
+      probe8               => std_logic_vector(to_unsigned(words_todo, 10)),
+      probe9(0)            => strobe_os,
+      probe9(1)            => strobe_r,
+      probe9(11 downto 2)  => std_logic_vector(to_unsigned(words_todo_buf, 10)),
+      probe9(31 downto 12) => (others => '0')
+      );
 
   -- some tricks to allow this to run at full-throughput,
   -- reading a FIFO word every clock tick
