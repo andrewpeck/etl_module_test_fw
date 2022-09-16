@@ -90,6 +90,7 @@ begin
         return "100";
       else
         assert true report "Invalid elink width selected" severity error;
+        return "000";
       end if;
     end;
 
