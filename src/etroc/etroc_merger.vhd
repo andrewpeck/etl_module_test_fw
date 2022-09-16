@@ -114,6 +114,7 @@ begin
         reset             => reset,
         data_i            => elink_i,
         bitslip_i         => '0',       -- use auto-bitslip
+        zero_supress      => '1',
         fifo_wr_en_o      => valid,
         fifo_data_o       => etroc_data_to_fifo(I),
         frame_mon_o       => open,
@@ -134,6 +135,7 @@ begin
         start_of_packet_o => open,
         end_of_packet_o   => open,
         err_o             => open,
+        locked_o          => open,
         busy_o            => etroc_busy(I),
         idle_o            => open
         );
