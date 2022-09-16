@@ -205,7 +205,8 @@ begin
   -- Alignment State Machine
   --------------------------------------------------------------------------------
 
-  bad_cnt_max <= align_bad_cnt = ALIGN_BAD_CNT_MAX;
+  bad_cnt_max  <= align_bad_cnt = ALIGN_BAD_CNT_MAX;
+  good_cnt_max <= align_good_cnt = ALIGN_GOOD_CNT_MAX;
 
   process (clock) is
   begin
