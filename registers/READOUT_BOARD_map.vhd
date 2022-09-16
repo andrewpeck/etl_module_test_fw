@@ -260,9 +260,9 @@ begin  -- architecture behavioral
         when 1049 => --0x419
           localRdData( 0)            <=  reg_data(1049)( 0);                          --Reverse the bits going into the FIFO
         when 1056 => --0x420
-          localRdData( 0)            <=  reg_data(1056)( 0);                          --0=etroc data, 1=fixed pattern for ETROC data fifo
-          localRdData( 1)            <=  reg_data(1056)( 1);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 0
-          localRdData( 2)            <=  reg_data(1056)( 2);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 1
+          localRdData( 3 downto  0)  <=  reg_data(1056)( 3 downto  0);                --0=etroc data, 1=fixed pattern for ETROC data fifo
+          localRdData( 4)            <=  reg_data(1056)( 4);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 0
+          localRdData( 5)            <=  reg_data(1056)( 5);                          --0=etroc data, 1=fixed pattern for ELINK data fifo 1
         when 1057 => --0x421
           localRdData(27 downto  0)  <=  Mon.ETROC_LOCKED;                            --ETROC Link Locked
         when 1058 => --0x422
@@ -390,9 +390,9 @@ begin  -- architecture behavioral
   Ctrl.FIFO_TRIG9_MASK                         <=  reg_data(1046)(31 downto  0);     
   Ctrl.FIFO_CAPTURE_DEPTH                      <=  reg_data(1048)(23 downto  0);     
   Ctrl.FIFO_REVERSE_BITS                       <=  reg_data(1049)( 0);               
-  Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 0);               
-  Ctrl.ELINK_FIFO0_DATA_SRC                    <=  reg_data(1056)( 1);               
-  Ctrl.ELINK_FIFO1_DATA_SRC                    <=  reg_data(1056)( 2);               
+  Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 3 downto  0);     
+  Ctrl.ELINK_FIFO0_DATA_SRC                    <=  reg_data(1056)( 4);               
+  Ctrl.ELINK_FIFO1_DATA_SRC                    <=  reg_data(1056)( 5);               
   Ctrl.L1A_RATE                                <=  reg_data(1282)(31 downto  0);     
 
 
@@ -629,9 +629,9 @@ begin  -- architecture behavioral
         when 1049 => --0x419
           reg_data(1049)( 0)                      <=  localWrData( 0);                --Reverse the bits going into the FIFO
         when 1056 => --0x420
-          reg_data(1056)( 0)                      <=  localWrData( 0);                --0=etroc data, 1=fixed pattern for ETROC data fifo
-          reg_data(1056)( 1)                      <=  localWrData( 1);                --0=etroc data, 1=fixed pattern for ELINK data fifo 0
-          reg_data(1056)( 2)                      <=  localWrData( 2);                --0=etroc data, 1=fixed pattern for ELINK data fifo 1
+          reg_data(1056)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc data, 1=fixed pattern for ETROC data fifo
+          reg_data(1056)( 4)                      <=  localWrData( 4);                --0=etroc data, 1=fixed pattern for ELINK data fifo 0
+          reg_data(1056)( 5)                      <=  localWrData( 5);                --0=etroc data, 1=fixed pattern for ELINK data fifo 1
         when 1280 => --0x500
           Ctrl.L1A_PULSE                          <=  localWrData( 0);               
         when 1281 => --0x501
@@ -772,9 +772,9 @@ begin  -- architecture behavioral
       reg_data(1047)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_FORCE_TRIG;
       reg_data(1048)(23 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_CAPTURE_DEPTH;
       reg_data(1049)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_REVERSE_BITS;
-      reg_data(1056)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RX_FIFO_DATA_SRC;
-      reg_data(1056)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO0_DATA_SRC;
-      reg_data(1056)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO1_DATA_SRC;
+      reg_data(1056)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RX_FIFO_DATA_SRC;
+      reg_data(1056)( 4)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO0_DATA_SRC;
+      reg_data(1056)( 5)  <= DEFAULT_READOUT_BOARD_CTRL_t.ELINK_FIFO1_DATA_SRC;
       reg_data(1280)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_PULSE;
       reg_data(1281)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
