@@ -135,8 +135,9 @@ architecture behavioral of readout_board is
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal trigger_rate : std_logic_vector (31 downto 0);
+  signal trigger_rate   : std_logic_vector (31 downto 0);
   signal packet_rx_rate : std_logic_vector (31 downto 0);
+  signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
 
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
@@ -345,6 +346,20 @@ begin
       en_i    => or_reduce(rx_end_of_packet),
       rate_o  => packet_rx_rate
       );
+
+  pkt_cnt_gen : for I in rx_end_of_packet'range generate
+  begin
+    pkg_counter  : entity work.counter
+      generic map (width => 16)
+      port map (
+        clk    => clk40,
+        reset  => reset or ctrl.packet_cnt_reset,
+        enable => '1',
+        event  => rx_end_of_packet(I),
+        count  => packet_cnt(I),
+        at_max => open
+        );
+  end generate;
 
   mon.l1a_rate_cnt <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
@@ -788,6 +803,24 @@ begin
       fifo_wb_in   => daq_wb_in(0),
       fifo_wb_out  => daq_wb_out(0)
       );
+
+  -- --------------------------------------------------------------------------------
+  -- -- Histogrammer
+  -- --------------------------------------------------------------------------------
+
+  -- histogrammer_inst : entity work.histogrammer
+  --   generic map (
+  --     NBINS => 28*2,
+  --     DEPTH =>
+  --     )
+  --   port map (
+  --     clock        => clk40,
+  --     reset        => histo_reset,
+  --     freeze_i     => histo_freeze,
+  --     enable_i     => histo_enable,
+  --     bin_select_i => to_integer(unsigned(histo_bin_select)),
+  --     count_o      => histo_count
+  --     );
 
   --------------------------------------------------------------------------------
   -- DEBUG ILAS

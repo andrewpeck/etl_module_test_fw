@@ -11,6 +11,7 @@ package types is
   constant std_logic0 : std_logic := '0';
   constant std_logic1 : std_logic := '1';
   type std32_array_t is array (integer range <>) of std_logic_vector(31 downto 0);
+  type std16_array_t is array (integer range <>) of std_logic_vector(15 downto 0);
   type READOUT_BOARD_Mon_array_t is array (integer range <>) of READOUT_BOARD_Mon_t;
   type READOUT_BOARD_Ctrl_array_t is array (integer range <>) of READOUT_BOARD_Ctrl_t;
 

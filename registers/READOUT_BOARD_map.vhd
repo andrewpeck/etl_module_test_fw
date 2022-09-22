@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1284);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1284) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1286);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1286) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -273,6 +273,8 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.L1A_RATE_CNT;                            --Measured rate of generated triggers in Hz
         when 1284 => --0x504
           localRdData(31 downto  0)  <=  Mon.PACKET_RX_RATE;                          --Measured rate of generated received packets in Hz
+        when 1285 => --0x505
+          localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -424,6 +426,7 @@ begin  -- architecture behavioral
       Ctrl.FIFO_FORCE_TRIG <= '0';
       Ctrl.L1A_PULSE <= '0';
       Ctrl.LINK_RESET_PULSE <= '0';
+      Ctrl.PACKET_CNT_RESET <= '0';
       
 
 
@@ -638,6 +641,8 @@ begin  -- architecture behavioral
           Ctrl.LINK_RESET_PULSE                   <=  localWrData( 0);               
         when 1282 => --0x502
           reg_data(1282)(31 downto  0)            <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
+        when 1286 => --0x506
+          Ctrl.PACKET_CNT_RESET                   <=  localWrData( 0);               
 
         when others => null;
 
@@ -778,6 +783,7 @@ begin  -- architecture behavioral
       reg_data(1280)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_PULSE;
       reg_data(1281)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
+      reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
 
       end if; -- reset
     end if; -- clk

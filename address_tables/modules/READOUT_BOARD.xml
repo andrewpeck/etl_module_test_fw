@@ -75,7 +75,9 @@
   <node id="LINK_RESET_PULSE" address="0x501" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
   <node id="L1A_RATE" address="0x502" mask="0xffffffff" permission="rw" description="Rate of generated triggers f_trig =(2^32-1) * clk_period * rate" parameters="default=0x00000000"/>
   <node id="L1A_RATE_CNT" address="0x503" mask="0xffffffff" permission="r" description="Measured rate of generated triggers in Hz" />
-  <node id="PACKET_RX_RATE" address="0x504" mask="0xffffffff" permission="r" description="Measured rate of generated received packets in Hz" />
 
+  <node id="PACKET_RX_RATE" address="0x504" mask="0xffffffff" permission="r" description="Measured rate of generated received packets in Hz" />
+  <node id="PACKET_CNT" address="0x505" mask="0xffff" permission="r" description="Count of packets received (muxed across elinks)" />
+  <node id="PACKET_CNT_RESET" address="0x506" mask="0x00000001" permission="w"  description="Write 1 to reset packet counters"/>
 
 </node>
