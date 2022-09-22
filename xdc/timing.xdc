@@ -1,4 +1,19 @@
 ################################################################################
+# Create Clocks
+################################################################################
+
+# si570 user clock
+create_clock -period 3.124 -name si570_usrclk_p [get_ports {si570_usrclk_p}]
+
+# locked signal is used for cylon mode
+create_clock -period 24.950 -name system_clocks_inst/inst/locked  \
+    [get_pins {system_clocks_inst/inst/mmcme3_adv_inst/LOCKED}]
+
+create_generated_clock -name clock_o_p \
+    -source [get_pins {ODDRE1_inst/CLKDIV}] \
+    -divide_by 1 -invert [get_ports {clock_o_p}]
+
+################################################################################
 # UDP Clock crossing
 ################################################################################
 
