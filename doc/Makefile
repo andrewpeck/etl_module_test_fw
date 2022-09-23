@@ -16,6 +16,8 @@ open:
 
 svg:
 	draw.io -x -f svg -o daq.svg daq.drawio
+	draw.io -x -f svg -o fast_commands.svg fast_commands.drawio
 
 png:
 	draw.io --width 1024 -x -f png -o daq.png daq.drawio
+	draw.io --width 1024 -x -f png -o fast_commands.png fast_commands.drawio

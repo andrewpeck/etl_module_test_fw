@@ -7,6 +7,7 @@
   - [[#updating-register-definitions][Updating Register Definitions]]
   - [[#block-diagram][Block Diagram]]
     - [[#daq][DAQ]]
+    - [[#downlink][Downlink]]
     - [[#firmware-infrastructure][Firmware Infrastructure]]
   - [[#optical-connections][Optical Connections]]
   - [[#hardware-setup][Hardware Setup]]
@@ -43,6 +44,9 @@ make reg
 ** Block Diagram
 *** DAQ
 [[file:doc/daq.svg]]
+
+*** Downlink
+[[file:doc/fast_commands.svg]]
 
 *** Firmware Infrastructure
 
