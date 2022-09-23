@@ -6,6 +6,8 @@
   - [[#directories][Directories]]
   - [[#updating-register-definitions][Updating Register Definitions]]
   - [[#block-diagram][Block Diagram]]
+    - [[#daq][DAQ]]
+    - [[#firmware-infrastructure][Firmware Infrastructure]]
   - [[#optical-connections][Optical Connections]]
   - [[#hardware-setup][Hardware Setup]]
     - [[#xdma][XDMA]]
@@ -39,6 +41,11 @@ To update register definitions, you should change the corresponding XML file and
 make reg
 #+end_src
 ** Block Diagram
+*** DAQ
+[[file:doc/daq.svg]]
+
+*** Firmware Infrastructure
+
 [[file:doc/structure/structure.gv.svg]]
 ** Optical Connections
 
