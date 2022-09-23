@@ -45,7 +45,7 @@ begin
 
   xpm_fifo_async_inst : xpm_fifo_async
     generic map (
-      CDC_SYNC_STAGES     => 2,                    -- DECIMAL
+      CDC_SYNC_STAGES     => 4,                    -- DECIMAL
       DOUT_RESET_VALUE    => "0",                  -- String
       ECC_MODE            => "no_ecc",             -- no_ecc, en_ecc
       FIFO_MEMORY_TYPE    => "auto",               -- auto, block, distributed, ultra
