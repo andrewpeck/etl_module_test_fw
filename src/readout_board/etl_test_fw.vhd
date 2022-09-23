@@ -257,14 +257,14 @@ begin
 
   cylon1_inst : cylon1
     port map (
-      clock => locked and clk40,
+      clock => clk40,
       rate  => "00",
       q     => cylon1_signal
       );
 
   cylon2_inst : cylon2
     port map (
-      clock => locked and clk40,
+      clock => clk40,
       rate  => "00",
       q     => cylon2_signal
       );
