@@ -581,6 +581,8 @@ begin
 
     datagen : for I in 0 to NUM_GTS-1 generate
 
+      signal tx_reset, rx_reset : std_logic := '1';
+
       signal txdata, rxdata : std_logic_vector (31 downto 0);
 
       signal drpclk  : std_logic;
@@ -640,6 +642,20 @@ begin
 
       end generate;
 
+      process (txclk(I)) is
+      begin
+        if (rising_edge(txclk(I))) then
+          tx_reset <= not locked or mgt_tx_reset(I);
+        end if;
+      end process;
+
+      process (rxclk(I)) is
+      begin
+        if (rising_edge(rxclk(I))) then
+          rx_reset <= not locked or mgt_rx_reset(I);
+        end if;
+      end process;
+
       xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
         port map (
           mgt_refclk_i => refclk,
@@ -655,8 +671,8 @@ begin
 
           mgt_rxusrclk_o    => rxclk(I),
           mgt_txusrclk_o    => txclk(I),
-          mgt_txreset_i     => not locked or mgt_tx_reset(I),
-          mgt_rxreset_i     => not locked or mgt_rx_reset(I),
+          mgt_txreset_i     => tx_reset,
+          mgt_rxreset_i     => rx_reset,
           mgt_rxslide_i     => rxslide(I),
           mgt_entxcalibin_i => '0',
           mgt_txcalib_i     => (others => '0'),
