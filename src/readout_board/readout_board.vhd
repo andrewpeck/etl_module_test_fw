@@ -138,6 +138,7 @@ architecture behavioral of readout_board is
   signal trigger_rate   : std_logic_vector (31 downto 0);
   signal packet_rx_rate : std_logic_vector (31 downto 0);
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
+  signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
 
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
@@ -347,9 +348,10 @@ begin
       rate_o  => packet_rx_rate
       );
 
-  pkt_cnt_gen : for I in rx_end_of_packet'range generate
+  etroc_rx_cnt_gen : for I in rx_end_of_packet'range generate
   begin
-    pkg_counter  : entity work.counter
+
+    pkt_counter  : entity work.counter
       generic map (width => 16)
       port map (
         clk    => clk40,
@@ -359,10 +361,24 @@ begin
         count  => packet_cnt(I),
         at_max => open
         );
+
+    err_counter  : entity work.counter
+      generic map (width => 16)
+      port map (
+        clk    => clk40,
+        reset  => reset or ctrl.err_cnt_reset,
+        enable => '1',
+        event  => rx_err(I),
+        count  => err_cnt(I),
+        at_max => open
+        );
+
   end generate;
 
-  mon.l1a_rate_cnt <= trigger_rate;
+  mon.l1a_rate_cnt   <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
+  mon.packet_cnt     <= packet_cnt(lpgbt_sel(0)*28 + elink_sel(0));
+  mon.err_cnt        <= err_cnt(lpgbt_sel(0)*28 + elink_sel(0));
 
   --------------------------------------------------------------------------------
   -- Record mapping

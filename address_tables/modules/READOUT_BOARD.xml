@@ -78,6 +78,8 @@
 
   <node id="PACKET_RX_RATE" address="0x504" mask="0xffffffff" permission="r" description="Measured rate of generated received packets in Hz" />
   <node id="PACKET_CNT" address="0x505" mask="0xffff" permission="r" description="Count of packets received (muxed across elinks)" />
+  <node id="ERROR_CNT" address="0x505" mask="0xffff0000" permission="r" description="Count of packet errors (muxed across elinks)" />
   <node id="PACKET_CNT_RESET" address="0x506" mask="0x00000001" permission="w"  description="Write 1 to reset packet counters"/>
+  <node id="ERR_CNT_RESET" address="0x506" mask="0x00000002" permission="w"  description="Write 1 to reset error counters"/>
 
 </node>

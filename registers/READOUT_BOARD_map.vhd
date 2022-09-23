@@ -276,6 +276,7 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.PACKET_RX_RATE;                          --Measured rate of generated received packets in Hz
         when 1285 => --0x505
           localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
+          localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -429,6 +430,7 @@ begin  -- architecture behavioral
       Ctrl.L1A_PULSE <= '0';
       Ctrl.LINK_RESET_PULSE <= '0';
       Ctrl.PACKET_CNT_RESET <= '0';
+      Ctrl.ERR_CNT_RESET <= '0';
       
 
 
@@ -646,6 +648,7 @@ begin  -- architecture behavioral
           reg_data(1282)(31 downto  0)            <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1286 => --0x506
           Ctrl.PACKET_CNT_RESET                   <=  localWrData( 0);               
+          Ctrl.ERR_CNT_RESET                      <=  localWrData( 1);               
 
         when others => null;
 
@@ -788,6 +791,7 @@ begin  -- architecture behavioral
       reg_data(1281)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
+      reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
 
       end if; -- reset
     end if; -- clk

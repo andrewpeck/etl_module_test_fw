@@ -334,6 +334,7 @@ package READOUT_BOARD_CTRL is
     L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
     PACKET_RX_RATE             :std_logic_vector(31 downto 0);  -- Measured rate of generated received packets in Hz
     PACKET_CNT                 :std_logic_vector(15 downto 0);  -- Count of packets received (muxed across elinks)
+    ERROR_CNT                  :std_logic_vector(15 downto 0);  -- Count of packet errors (muxed across elinks)
   end record READOUT_BOARD_MON_t;
 
 
@@ -379,6 +380,7 @@ package READOUT_BOARD_CTRL is
     LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
     L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
+    ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -423,7 +425,8 @@ package READOUT_BOARD_CTRL is
                                                                    L1A_PULSE => '0',
                                                                    LINK_RESET_PULSE => '0',
                                                                    L1A_RATE => x"00000000",
-                                                                   PACKET_CNT_RESET => '0'
+                                                                   PACKET_CNT_RESET => '0',
+                                                                   ERR_CNT_RESET => '0'
                                                                   );
 
 
