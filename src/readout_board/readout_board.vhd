@@ -378,7 +378,7 @@ begin
   mon.l1a_rate_cnt   <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
   mon.packet_cnt     <= packet_cnt(lpgbt_sel(0)*28 + elink_sel(0));
-  mon.err_cnt        <= err_cnt(lpgbt_sel(0)*28 + elink_sel(0));
+  mon.error_cnt      <= err_cnt(lpgbt_sel(0)*28 + elink_sel(0));
 
   --------------------------------------------------------------------------------
   -- Record mapping
