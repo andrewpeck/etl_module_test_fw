@@ -230,6 +230,8 @@ begin
       valid_i    => not ic_rx_empty,
       chip_adr_o => open,
 
+      gbt_frame_format_i => "01",
+
       data_o(7 downto 0)  => mon.rx_data_from_gbtx,
       data_o(31 downto 8) => unused_bits,
 
