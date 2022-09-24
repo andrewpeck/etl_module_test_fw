@@ -252,6 +252,8 @@ architecture behavioral of etl_test_fw is
 
 begin
 
+  reset <= not locked;
+
   sfp0_tx_disable <= mgt_ctrl.sfp0_tx_dis;
   sfp1_tx_disable <= mgt_ctrl.sfp1_tx_dis;
 
@@ -523,7 +525,7 @@ begin
           NUM_SCAS        => NUM_SCAS
           )
         port map (
-          reset => not locked,
+          reset => reset,
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),
@@ -655,8 +657,8 @@ begin
 
           mgt_rxusrclk_o    => rxclk(I),
           mgt_txusrclk_o    => txclk(I),
-          mgt_txreset_i     => not locked or mgt_tx_reset(I),
-          mgt_rxreset_i     => not locked or mgt_rx_reset(I),
+          mgt_txreset_i     => reset or mgt_tx_reset(I),
+          mgt_rxreset_i     => reset or mgt_rx_reset(I),
           mgt_rxslide_i     => rxslide(I),
           mgt_entxcalibin_i => '0',
           mgt_txcalib_i     => (others => '0'),
@@ -678,7 +680,7 @@ begin
           WR_WIDTH => 32,
           RD_WIDTH => 32)
         port map (
-          rst    => not locked,         -- TODO: reset if the mgt is inactive
+          rst    => reset,
           wr_clk => rxclk(I),
           rd_clk => clk320,
           wr_en  => locked,
@@ -696,7 +698,7 @@ begin
           WR_WIDTH => 32,
           RD_WIDTH => 32)
         port map (
-          rst    => not locked,         -- TODO: reset if the mgt is inactive
+          rst    => reset,
           wr_clk => clk320,
           rd_clk => txclk(I),
           wr_en  => locked,
