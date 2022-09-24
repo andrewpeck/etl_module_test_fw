@@ -3,7 +3,7 @@
 	url = https://github.com/ipbus/ipbus-firmware
 [submodule "gbt-sc"]
 	path = gbt-sc
-	url = https://gitlab.cern.ch/atlas-tdaq-phase2-l0mdt-electronics/gbt-sc
+	url = https://gitlab.cern.ch/gbtsc-fpga-support/gbt-sc
 [submodule "lpgbt-fpga"]
 	path = lpgbt-fpga
 	url = https://gitlab.cern.ch/gbt-fpga/lpgbt-fpga

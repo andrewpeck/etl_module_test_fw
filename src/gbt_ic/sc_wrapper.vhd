@@ -57,6 +57,8 @@ architecture common_controller of gbt_controller_wrapper is
 
   signal unused_bits : std_logic_vector (23 downto 0);
 
+  signal lpgbt_version : std_logic_vector;
+
 begin
 
 
@@ -186,6 +188,8 @@ begin
       tx_register_addr_i => ctrl.tx_register_addr,
       tx_nb_to_be_read_i => ctrl.tx_num_bytes_to_read,
 
+      lpgbt_vers_i => ctrl.frame_format,
+
       -- write into internal FIFO (on control clock domain)
       wr_clk_i          => ctrl_clk,
       tx_wr_i           => ctrl.tx_wr,
@@ -222,6 +226,8 @@ begin
       tx_data_i           => ctrl.tx_data
       );
 
+  lpgbt_version <= "01" when (ctrl.frame_format='0') else "10";
+
   gbt_ic_rx_1 : entity work.gbt_ic_rx
     port map (
       clock_i    => rxclk,
@@ -230,7 +236,7 @@ begin
       valid_i    => not ic_rx_empty,
       chip_adr_o => open,
 
-      gbt_frame_format_i => "01",
+      gbt_frame_format_i => lpgbt_version,
 
       data_o(7 downto 0)  => mon.rx_data_from_gbtx,
       data_o(31 downto 8) => unused_bits,

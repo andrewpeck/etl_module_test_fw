@@ -170,7 +170,7 @@ begin  -- architecture behavioral
           localRdData(15 downto  0)  <=  reg_data(517)(15 downto  0);                 --Address of the first register to be accessed
         when 518 => --0x206
           localRdData(15 downto  0)  <=  reg_data(518)(15 downto  0);                 --Number of words/bytes to be read (only for read transactions)
-          localRdData(31 downto 30)  <=  reg_data(518)(31 downto 30);                 --IC Frame format: 00 = GBTX, 01 = lpGBT v0; 10 = lpGBT v1
+          localRdData(28)            <=  reg_data(518)(28);                           --IC Frame format: 0 = lpGBT v0; 1 = lpGBT v1
         when 519 => --0x207
           localRdData( 7 downto  0)  <=  reg_data(519)( 7 downto  0);                 --Data to be written into the internal FIFO
         when 520 => --0x208
@@ -361,7 +361,7 @@ begin  -- architecture behavioral
   Ctrl.SC.TX_GBTX_ADDR                         <=  reg_data(516)(15 downto  8);      
   Ctrl.SC.TX_REGISTER_ADDR                     <=  reg_data(517)(15 downto  0);      
   Ctrl.SC.TX_NUM_BYTES_TO_READ                 <=  reg_data(518)(15 downto  0);      
-  Ctrl.SC.FRAME_FORMAT                         <=  reg_data(518)(31 downto 30);      
+  Ctrl.SC.FRAME_FORMAT                         <=  reg_data(518)(28);                
   Ctrl.SC.TX_DATA_TO_GBTX                      <=  reg_data(519)( 7 downto  0);      
   Ctrl.SC.TX_CMD                               <=  reg_data(525)( 7 downto  0);      
   Ctrl.SC.TX_ADDRESS                           <=  reg_data(526)(15 downto  8);      
@@ -557,7 +557,7 @@ begin  -- architecture behavioral
           reg_data(517)(15 downto  0)             <=  localWrData(15 downto  0);      --Address of the first register to be accessed
         when 518 => --0x206
           reg_data(518)(15 downto  0)             <=  localWrData(15 downto  0);      --Number of words/bytes to be read (only for read transactions)
-          reg_data(518)(31 downto 30)             <=  localWrData(31 downto 30);      --IC Frame format: 00 = GBTX, 01 = lpGBT v0; 10 = lpGBT v1
+          reg_data(518)(28)                       <=  localWrData(28);                --IC Frame format: 0 = lpGBT v0; 1 = lpGBT v1
         when 519 => --0x207
           reg_data(519)( 7 downto  0)             <=  localWrData( 7 downto  0);      --Data to be written into the internal FIFO
         when 521 => --0x209
@@ -743,7 +743,7 @@ begin  -- architecture behavioral
       reg_data(516)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_GBTX_ADDR;
       reg_data(517)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_REGISTER_ADDR;
       reg_data(518)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_NUM_BYTES_TO_READ;
-      reg_data(518)(31 downto 30)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.FRAME_FORMAT;
+      reg_data(518)(28)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.FRAME_FORMAT;
       reg_data(519)( 7 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_DATA_TO_GBTX;
       reg_data(521)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_WR;
       reg_data(525)( 7 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_CMD;

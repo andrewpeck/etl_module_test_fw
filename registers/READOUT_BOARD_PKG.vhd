@@ -282,7 +282,7 @@ package READOUT_BOARD_CTRL is
     TX_GBTX_ADDR               :std_logic_vector( 7 downto 0);  -- I2C address of the GBTx
     TX_REGISTER_ADDR           :std_logic_vector(15 downto 0);  -- Address of the first register to be accessed
     TX_NUM_BYTES_TO_READ       :std_logic_vector(15 downto 0);  -- Number of words/bytes to be read (only for read transactions)
-    FRAME_FORMAT               :std_logic_vector( 1 downto 0);  -- IC Frame format: 00 = GBTX, 01 = lpGBT v0; 10 = lpGBT v1
+    FRAME_FORMAT               :std_logic;                      -- IC Frame format: 0 = lpGBT v0; 1 = lpGBT v1
     TX_DATA_TO_GBTX            :std_logic_vector( 7 downto 0);  -- Data to be written into the internal FIFO
     TX_WR                      :std_logic;                      -- Request a write operation into the internal FIFO (Data to GBTx)
     TX_CMD                     :std_logic_vector( 7 downto 0);  -- Command: The Command field is present in the frames received by the SCA and indicates the operation to be performed. Meaning is specific to the channel.
@@ -306,7 +306,7 @@ package READOUT_BOARD_CTRL is
                                                                          TX_GBTX_ADDR => x"73",
                                                                          TX_REGISTER_ADDR => (others => '0'),
                                                                          TX_NUM_BYTES_TO_READ => x"0001",
-                                                                         FRAME_FORMAT => "01",
+                                                                         FRAME_FORMAT => '0',
                                                                          TX_DATA_TO_GBTX => (others => '0'),
                                                                          TX_WR => '0',
                                                                          TX_CMD => (others => '0'),
