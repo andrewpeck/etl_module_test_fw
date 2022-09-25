@@ -57,7 +57,7 @@ architecture common_controller of gbt_controller_wrapper is
 
   signal unused_bits : std_logic_vector (23 downto 0);
 
-  signal lpgbt_version : std_logic_vector;
+  signal lpgbt_version : std_logic_vector (1 downto 0);
 
 begin
 
