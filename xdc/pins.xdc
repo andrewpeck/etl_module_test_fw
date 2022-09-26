@@ -137,3 +137,8 @@ set_property PACKAGE_PIN AN14 [get_ports sw[3]]
 set_property IOSTANDARD SUB_LVDS [get_ports clock_o_*]
 set_property PACKAGE_PIN H27 [get_ports clock_o_p]
 set_property PACKAGE_PIN G27 [get_ports clock_o_n]
+
+set_property IOSTANDARD LVCMOS18 [get_ports user_sma_*]
+set_property PULLDOWN true [get_ports user_sma_*]
+set_property PACKAGE_PIN H27 [get_ports user_sma_p]
+set_property PACKAGE_PIN G27 [get_ports user_sma_n]

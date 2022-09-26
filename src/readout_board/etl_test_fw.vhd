@@ -126,6 +126,9 @@ entity etl_test_fw is
     phy_mdc       : out   std_logic;    -- clock line (must be < 2.5 MHz)
     phy_interrupt : out   std_logic;    --
 
+    user_sma_p : in  std_logic;
+    user_sma_n : in  std_logic;
+
     -- status LEDs
     leds : out std_logic_vector(7 downto 0);
 
@@ -201,6 +204,8 @@ architecture behavioral of etl_test_fw is
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
 
+  signal ext_trigger : std_logic := '0';
+
   signal fw_info_mon : FW_INFO_Mon_t;
 
   signal dna : std_logic_vector (95 downto 0) := (others => '0');
@@ -251,6 +256,13 @@ architecture behavioral of etl_test_fw is
   end component;
 
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      ext_trigger <= user_sma_p;
+    end if;
+  end process;
 
   reset <= not locked;
 
