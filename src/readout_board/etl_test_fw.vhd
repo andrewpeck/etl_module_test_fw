@@ -380,22 +380,24 @@ begin
         ext_clk_i     => clk40,
         osc_clk_300   => clk_osc300_ibuf,
         osc_clk_125   => clk_osc125_ibuf,
-        rst_in        => (others => '0'),
-        dip_sw        => (others => '0'),
+
         sgmii_clk_p   => sgmii_clk_p,
         sgmii_clk_n   => sgmii_clk_n,
         sgmii_txp     => sgmii_txp,
         sgmii_txn     => sgmii_txn,
         sgmii_rxp     => sgmii_rxp,
         sgmii_rxn     => sgmii_rxn,
+
         phy_resetb    => phy_resetb,
         phy_mdio      => phy_mdio,
         phy_interrupt => phy_interrupt,
         phy_mdc       => phy_mdc,
+
         clk_ipb_o     => ipb_clk,
         rst_ipb_o     => ipb_rst,
         clk_aux_o     => open,
         rst_aux_o     => open,
+
         nuke          => nuke,
         soft_rst      => soft_rst,
         mac_addr      => mac_addr,

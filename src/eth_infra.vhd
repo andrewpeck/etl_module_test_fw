@@ -54,9 +54,7 @@ entity eth_infra is
     -- External oscillators
     osc_clk_300   : in    std_logic;
     osc_clk_125   : in    std_logic;
-    -- status LEDs
-    rst_in        : in    std_logic_vector(4 downto 0);  -- external reset button
-    dip_sw        : in    std_logic_vector(3 downto 0);
+
     -- SGMII clk and data
     sgmii_clk_p   : in    std_logic;
     sgmii_clk_n   : in    std_logic;
@@ -68,17 +66,20 @@ entity eth_infra is
     phy_mdio      : inout std_logic;
     phy_mdc       : out   std_logic;
     phy_interrupt : out   std_logic;
+
     -- IPbus clock and reset
     clk_ipb_o     : out   std_logic;
     rst_ipb_o     : out   std_logic;
     clk_aux_o     : out   std_logic;                     -- 40MHz generated clock
     rst_aux_o     : out   std_logic;
+
     -- The signals of doom and lesser doom
     nuke          : in    std_logic;
     soft_rst      : in    std_logic;
 
     mac_addr : in  std_logic_vector(47 downto 0);  -- MAC address
     ip_addr  : in  std_logic_vector(31 downto 0);  -- IP address
+
     -- IPbus (from / to slaves)
     ipb_in   : in  ipb_rbus;
     ipb_out  : out ipb_wbus
