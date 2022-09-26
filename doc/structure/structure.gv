@@ -4,7 +4,8 @@ digraph {
   edge [fontname = "helvetica"];
   node [width=0.5 shape=rectangle];
 
-  {rank=same; "SFP/Firefly", "PCIE"}
+  // {rank=same; "RJ45", "SFP/Firefly", "PCIE"}
+  {rank=same; "RJ45", "SFP/Firefly"}
   {rank=same; "Control" , "MGT\nWrapper"}
 
   "RJ45" -> "Eth Infra"
@@ -25,19 +26,19 @@ digraph {
   "Control" -> "MGT\nWrapper"
   "Control" -> "Readout\nBoard"
 
-  "PCIE" -> "PCIE Infra"
-  subgraph cluster_PCIE {
-    graph[style=dotted];
-    label=<<FONT POINT-SIZE="20">IPBus Infrastructure</FONT>>
-    labelloc="bot"
-    "PCIE Infra" -> "AXI\nIPBus\nTransactor"
-    "PCIE Infra" -> "Clock\nGeneration"
-    "PCIE Infra" -> "XDMA"
-    "PCIE Infra" -> "AXI IPBus\nTransport"
-    //"XDMA" -> "AXI IPBus\nTransport" -> "IPBus\nTransactor"
-    //{rank=same; "XDMA" , "AXI IPBus\nTransport" , "IPBus\nTransactor"}
-  }
-  //"Control" -> "Readout\nBoards"
+  // "PCIE" -> "PCIE Infra"
+  // subgraph cluster_PCIE {
+  //   graph[style=dotted];
+  //   label=<<FONT POINT-SIZE="20">IPBus Infrastructure</FONT>>
+  //   labelloc="bot"
+  //   "PCIE Infra" -> "AXI\nIPBus\nTransactor"
+  //   "PCIE Infra" -> "Clock\nGeneration"
+  //   "PCIE Infra" -> "XDMA"
+  //   "PCIE Infra" -> "AXI IPBus\nTransport"
+  //   //"XDMA" -> "AXI IPBus\nTransport" -> "IPBus\nTransactor"
+  //   //{rank=same; "XDMA" , "AXI IPBus\nTransport" , "IPBus\nTransactor"}
+  // }
+  // //"Control" -> "Readout\nBoards"
 
 
   "SFP/Firefly" -> "MGT\nWrapper"
@@ -67,7 +68,7 @@ digraph {
     }
   }
 
-  "AXI\nIPBus\nTransactor" -> "Control"
+  // "AXI\nIPBus\nTransactor" -> "Control"
   "Ethernet\nIPBus\nTransactor" -> "Control"
 
 
