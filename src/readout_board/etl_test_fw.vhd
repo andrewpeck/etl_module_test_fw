@@ -257,12 +257,13 @@ architecture behavioral of etl_test_fw is
 
 begin
 
-  process (clock) is
-  begin
-    if (rising_edge(clock)) then
-      ext_trigger <= user_sma_p;
-    end if;
-  end process;
+  ext_trigger_inst : entity work.ext_trigger
+    port map (
+      clock         => clk40,
+      clock_320     => clk320,
+      ext_trigger_i => user_sma_p,
+      ext_trigger_o => ext_trigger
+      );
 
   reset <= not locked;
 
@@ -288,7 +289,6 @@ begin
       clock => clk40,
       led   => breath
       );
-
 
   pcie_sys_rst_n <= not pcie_sys_rst;
 
