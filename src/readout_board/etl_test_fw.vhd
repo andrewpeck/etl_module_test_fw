@@ -98,8 +98,9 @@ entity etl_test_fw is
     -- Clock output
     --------------------------------------------------------------------------------
 
-    clock_o_p : out std_logic;
-    clock_o_n : out std_logic;
+    -- ios are now used for the ext trigger on the user_sma
+    -- clock_o_p : out std_logic;
+    -- clock_o_n : out std_logic;
 
     --------------------------------------------------------------------------------
     -- Transceivers
@@ -154,9 +155,8 @@ architecture behavioral of etl_test_fw is
 
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
-  signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
-
-  signal si570_usrclk_oddr : std_logic := '0';
+  -- signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
+  -- signal si570_usrclk_oddr : std_logic := '0';
 
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
@@ -336,11 +336,11 @@ begin
       o  => clk_osc300_ibuf
       );
 
-  si570_bufg : BUFG
-    port map(
-      i => si570_usrclk_ibuf,
-      o => si570_usrclk
-      );
+  -- si570_bufg : BUFG
+  --   port map(
+  --     i => si570_usrclk_ibuf,
+  --     o => si570_usrclk
+  --     );
 
   osc125_bufg : BUFG
     port map(
@@ -354,31 +354,31 @@ begin
       o => clk_osc300
       );
 
-  ODDRE1_inst : ODDRE1
-    generic map (
-      IS_C_INVERTED  => '0',            -- Optional inversion for C
-      IS_D1_INVERTED => '0',            -- Unsupported, do not use
-      IS_D2_INVERTED => '0',            -- Unsupported, do not use
-      SIM_DEVICE     => "ULTRASCALE",   -- Set the device version for simulation functionality (ULTRASCALE)
-      SRVAL          => '0'             -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
-      )
-    port map (
-      Q  => si570_usrclk_oddr,          -- 1-bit output: Data output to IOB
-      C  => si570_usrclk,               -- 1-bit input: High-speed clock input
-      D1 => '0',                        -- 1-bit input: Parallel data input 1
-      D2 => '1',                        -- 1-bit input: Parallel data input 2
-      SR => '0'                         -- 1-bit input: Active-High Async Reset
-      );
+  -- ODDRE1_inst : ODDRE1
+  --   generic map (
+  --     IS_C_INVERTED  => '0',            -- Optional inversion for C
+  --     IS_D1_INVERTED => '0',            -- Unsupported, do not use
+  --     IS_D2_INVERTED => '0',            -- Unsupported, do not use
+  --     SIM_DEVICE     => "ULTRASCALE",   -- Set the device version for simulation functionality (ULTRASCALE)
+  --     SRVAL          => '0'             -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
+  --     )
+  --   port map (
+  --     Q  => si570_usrclk_oddr,          -- 1-bit output: Data output to IOB
+  --     C  => si570_usrclk,               -- 1-bit input: High-speed clock input
+  --     D1 => '0',                        -- 1-bit input: Parallel data input 1
+  --     D2 => '1',                        -- 1-bit input: Parallel data input 2
+  --     SR => '0'                         -- 1-bit input: Active-High Async Reset
+  --     );
 
-  OBUFDS_inst : OBUFDS
-    generic map (
-      IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
-      SLEW       => "SLOW")             -- Specify the output slew rate
-    port map (
-      O  => clock_o_p,                  -- Diff_p output (connect directly to top-level port)
-      OB => clock_o_n,                  -- Diff_n output (connect directly to top-level port)
-      I  => si570_usrclk_oddr           -- Buffer input
-      );
+  -- OBUFDS_inst : OBUFDS
+  --   generic map (
+  --     IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
+  --     SLEW       => "SLOW")             -- Specify the output slew rate
+  --   port map (
+  --     O  => clock_o_p,                  -- Diff_p output (connect directly to top-level port)
+  --     OB => clock_o_n,                  -- Diff_n output (connect directly to top-level port)
+  --     I  => si570_usrclk_oddr           -- Buffer input
+  --     );
 
   ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
   mac_addr(3 downto 0) <= sw(3 downto 0);
@@ -803,14 +803,14 @@ begin
         rate  => fw_info_mon.refclk_freq
         );
 
-    si570usr_frequency_counter_inst : entity work.frequency_counter
-      generic map (clk_a_freq => freq_cnt_freq)
-      port map (
-        reset => reset,
-        clk_a => freq_cnt_clk,
-        clk_b => si570_usrclk,
-        rate  => fw_info_mon.clkusr_freq
-        );
+    -- si570usr_frequency_counter_inst : entity work.frequency_counter
+    --   generic map (clk_a_freq => freq_cnt_freq)
+    --   port map (
+    --     reset => reset,
+    --     clk_a => freq_cnt_clk,
+    --     clk_b => si570_usrclk,
+    --     rate  => fw_info_mon.clkusr_freq
+    --     );
 
 
     clk125_frequency_counter_inst : entity work.frequency_counter
