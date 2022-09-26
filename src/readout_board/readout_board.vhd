@@ -41,6 +41,8 @@ entity readout_board is
     --tx_ready : in std_logic;
     --rx_ready : in std_logic;
 
+    trigger_i : in std_logic;
+
     ctrl_clk : in  std_logic;
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
@@ -310,7 +312,7 @@ begin
 
   bc0 <= '1' when bxn = 0 else '0';
 
-  l1a        <= ctrl.l1a_pulse or l1a_gen;
+  l1a        <= ctrl.l1a_pulse or l1a_gen or trigger_i;
   link_reset <= ctrl.link_reset_pulse;
 
   process (clk40) is

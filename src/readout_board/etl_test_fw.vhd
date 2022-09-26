@@ -539,7 +539,10 @@ begin
           NUM_SCAS        => NUM_SCAS
           )
         port map (
+
           reset => reset,
+
+          trigger_i => ext_trigger,
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),
