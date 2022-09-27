@@ -23,8 +23,8 @@ entity control is
     );
   port(
 
-    reset : in std_logic;
-    clock : in std_logic;
+    reset_i : in std_logic;
+    clock   : in std_logic;
 
     elink_ipb_w_array : out ipb_wbus_array(NUM_RBS*2 - 1 downto 0);
     elink_ipb_r_array : in  ipb_rbus_array(NUM_RBS*2 - 1 downto 0);
@@ -72,7 +72,17 @@ architecture behavioral of control is
       );
   end component;
 
+  signal reset : std_logic := '0';
+
 begin
+
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      reset <= reset_i;
+    end if;
+  end process;
+
 
   --------------------------------------------------------------------------------
   -- arbiter to handle requests to/from 2 masters, ethernet and pcie

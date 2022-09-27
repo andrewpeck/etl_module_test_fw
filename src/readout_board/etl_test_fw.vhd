@@ -456,7 +456,7 @@ begin
       NUM_RBS   => NUM_RBS
       )
     port map (
-      reset              => ipb_rst,
+      reset_i            => ipb_rst,
       clock              => ipb_clk,
       fw_info_mon        => fw_info_mon,
       readout_board_mon  => readout_board_mon,
