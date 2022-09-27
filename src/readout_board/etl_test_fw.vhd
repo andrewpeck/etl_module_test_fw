@@ -585,7 +585,7 @@ begin
       process (clk320) is
       begin
         if (rising_edge(clk320)) then
-          mgt_data_in(I)           <= downlink_mgt_word_array(I/2);
+          mgt_data_in(I) <= downlink_mgt_word_array(I/2);
         end if;
       end process;
 
@@ -694,9 +694,11 @@ begin
       -- rxclk --> clk320
       mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
         generic map (
-          DEPTH    => 16,
-          WR_WIDTH => 32,
-          RD_WIDTH => 32)
+          FIFO_READ_LATENCY => 4,
+          DEPTH             => 16,
+          WR_WIDTH          => 32,
+          RD_WIDTH          => 32
+          )
         port map (
           rst    => reset,
           wr_clk => rxclk(I),
@@ -713,9 +715,11 @@ begin
       -- clk320 --> txclk
       mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
         generic map (
-          DEPTH    => 16,
-          WR_WIDTH => 32,
-          RD_WIDTH => 32)
+          FIFO_READ_LATENCY => 4,
+          DEPTH             => 16,
+          WR_WIDTH          => 32,
+          RD_WIDTH          => 32
+          )
         port map (
           rst    => reset,
           wr_clk => clk320,
