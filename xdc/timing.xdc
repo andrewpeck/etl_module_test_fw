@@ -16,28 +16,27 @@ create_generated_clock -name clock_o_p \
 # 125MHz clk -> 8 ns
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks I] 4
+    -to   [get_clocks I] 5.0
 
 set_max_delay -datapath_only \
     -from [get_clocks I] \
-    -to   [get_clocks clk125_i] 4
+    -to   [get_clocks clk125_i] 5.0
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks clk_40_system_clocks] 4
+    -to   [get_clocks clk_40_system_clocks] 5.0
 
 set_max_delay -datapath_only \
     -from [get_clocks clk_40_system_clocks] \
-    -to   [get_clocks clk125_i] 4
+    -to   [get_clocks clk125_i] 5.0
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks osc_clk125] 4
+    -to   [get_clocks osc_clk125] 5.0
 
 set_max_delay -datapath_only \
     -from [get_clocks osc_clk125] \
-    -to   [get_clocks clk125_i] 4
-
+    -to   [get_clocks clk125_i] 5.0
 
 ################################################################################
 ## Ipb Clock crossing
@@ -46,17 +45,17 @@ set_max_delay -datapath_only \
 # ipb to tx/rx outclk
 set_max_delay \
          -from [get_clocks I] \
-         -to [get_clocks *xoutclk_out*] 4.0
+         -to [get_clocks *xoutclk_out*] 5.0
 
 # tx/rx outclk to ipb
 set_max_delay \
          -from [get_clocks *xoutclk_out*] \
-         -to [get_clocks I] 4.0
+         -to [get_clocks I] 5.0
 
 # ipb to clk40
 set_max_delay \
          -from [get_clocks I] \
-         -to [get_clocks clk_40_system_clocks] 4.0
+         -to [get_clocks clk_40_system_clocks] 5.0
 
 # ipb to clk320
 set_max_delay -datapath_only \
@@ -66,7 +65,7 @@ set_max_delay -datapath_only \
 # clk40 to ipb
 set_max_delay -datapath_only \
          -from [get_clocks clk_40_system_clocks] \
-         -to [get_clocks I] 4.0
+         -to [get_clocks I] 5.0
 
 # clk320 to ipb
 set_max_delay -datapath_only \
@@ -79,7 +78,7 @@ set_max_delay -datapath_only \
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to [get_pins -hierarchical -filter { NAME =~  "*U0/PROBE_PIPE*/D" }] 4
+    -to [get_pins -hierarchical -filter { NAME =~  "*U0/PROBE_PIPE*/D" }] 5.0
 
 set_false_path -from \
     [get_pins {eth.eth_infra_inst/eth/debugilas.vio_sgmii_1/inst/*/Probe_out_reg[*]/C}]
