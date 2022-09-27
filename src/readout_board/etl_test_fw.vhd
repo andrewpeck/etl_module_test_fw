@@ -582,16 +582,16 @@ begin
     rbdata : for I in 0 to NUM_GTS-1 generate
     begin
 
-      process (txclk(I)) is
+      process (clk320) is
       begin
-        if (rising_edge(txclk(I))) then
+        if (rising_edge(clk320)) then
           mgt_data_in(I)           <= downlink_mgt_word_array(I/2);
         end if;
       end process;
 
-      process (rxclk(I)) is
+      process (clk320) is
       begin
-        if (rising_edge(rxclk(I))) then
+        if (rising_edge(clk320)) then
           rxslide(I)               <= uplink_bitslip(I);
           uplink_mgt_word_array(I) <= mgt_data_out(I);
         end if;
@@ -691,6 +691,7 @@ begin
           txn_o             => tx_n(I)
           );
 
+      -- rxclk --> clk320
       mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
         generic map (
           DEPTH    => 16,
@@ -709,6 +710,7 @@ begin
           empty  => open
           );
 
+      -- clk320 --> txclk
       mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
         generic map (
           DEPTH    => 16,
