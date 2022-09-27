@@ -315,12 +315,12 @@ begin
     end if;
   end process;
 
-  si570_usrclk_ibuf_inst : IBUFDS
-    port map(
-      i  => si570_usrclk_p,
-      ib => si570_usrclk_n,
-      o  => si570_usrclk_ibuf
-      );
+  -- si570_usrclk_ibuf_inst : IBUFDS
+  --   port map(
+  --     i  => si570_usrclk_p,
+  --     ib => si570_usrclk_n,
+  --     o  => si570_usrclk_ibuf
+  --     );
 
   osc_clk125_ibuf_inst : IBUFDS
     port map(
