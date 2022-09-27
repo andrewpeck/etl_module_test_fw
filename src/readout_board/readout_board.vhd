@@ -188,10 +188,14 @@ begin
   --------------------------------------------------------------------------------
 
   clock_strobe_inst : entity work.clock_strobe
+    generic map (
+      RATIO => 8
+      )
     port map (
       fast_clk_i => clk320,
       slow_clk_i => clk40,
-      strobe_o   => valid);
+      strobe_o   => valid
+      );
 
   --------------------------------------------------------------------------------
   -- Downlink Data Generation
