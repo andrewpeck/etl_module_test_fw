@@ -16,27 +16,27 @@ create_generated_clock -name clock_o_p \
 # 125MHz clk -> 8 ns
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks I] 7
+    -to   [get_clocks I] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks I] \
-    -to   [get_clocks clk125_i] 7
+    -to   [get_clocks clk125_i] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks clk_40_system_clocks] 7
+    -to   [get_clocks clk_40_system_clocks] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks clk_40_system_clocks] \
-    -to   [get_clocks clk125_i] 7
+    -to   [get_clocks clk125_i] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks clk125_i] \
-    -to   [get_clocks osc_clk125] 7
+    -to   [get_clocks osc_clk125] 4
 
 set_max_delay -datapath_only \
     -from [get_clocks osc_clk125] \
-    -to   [get_clocks clk125_i] 7
+    -to   [get_clocks clk125_i] 4
 
 
 ################################################################################
@@ -46,17 +46,17 @@ set_max_delay -datapath_only \
 # ipb to tx/rx outclk
 set_max_delay \
          -from [get_clocks I] \
-         -to [get_clocks *xoutclk_out*] 12.0
+         -to [get_clocks *xoutclk_out*] 4.0
 
 # tx/rx outclk to ipb
 set_max_delay \
          -from [get_clocks *xoutclk_out*] \
-         -to [get_clocks I] 12.0
+         -to [get_clocks I] 4.0
 
 # ipb to clk40
 set_max_delay \
          -from [get_clocks I] \
-         -to [get_clocks clk_40_system_clocks] 12.0
+         -to [get_clocks clk_40_system_clocks] 4.0
 
 # ipb to clk320
 set_max_delay -datapath_only \
@@ -66,7 +66,7 @@ set_max_delay -datapath_only \
 # clk40 to ipb
 set_max_delay -datapath_only \
          -from [get_clocks clk_40_system_clocks] \
-         -to [get_clocks I] 12.0
+         -to [get_clocks I] 4.0
 
 # clk320 to ipb
 set_max_delay -datapath_only \
