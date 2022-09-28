@@ -19,10 +19,11 @@
 
   </node>
 
-  <node id="ILA_SEL"        address="0x103" mask="0x3"        permission="rw" description="Select which LPGBT is connected to the ILA" />
-  <node id="ETROC_BITSLIP"  address="0x104" mask="0xffffffff" permission="w"  description="1 to bitslip an ETROC" />
-  <node id="RESET_ETROC_RX" address="0x105" mask="0xffffffff" permission="w"  description="1 to reset the ETROC rx module" />
-  <node id="ZERO_SUPRESS"   address="0x106" mask="0xffffffff" permission="rw" description="1 to zero supress fillers out from the ETROC RX" parameters="default=0xfffffff" />
+  <node id="ILA_SEL"         address="0x103" mask="0x3"        permission="rw" description="Select which LPGBT is connected to the ILA" />
+  <node id="ETROC_BITSLIP"   address="0x104" mask="0xffffffff" permission="w"  description="1 to bitslip an ETROC" />
+  <node id="RESET_ETROC_RX"  address="0x105" mask="0xffffffff" permission="w"  description="1 to reset the ETROC rx module" />
+  <node id="ZERO_SUPRESS"    address="0x106" mask="0xffffffff" permission="rw" description="1 to zero supress fillers out from the ETROC RX" parameters="default=0xfffffff" />
+  <node id="BITSLIP_AUTO_EN" address="0x107" mask="0x1"        permission="rw" description="1 to enable automatic bitslipping alignment" parameters="default=0x1"/>
 
   <!-- LPGBT-FPGA  -->
   <node id="SC"   address="0x200" module="file://GBT_SC.xml"/>

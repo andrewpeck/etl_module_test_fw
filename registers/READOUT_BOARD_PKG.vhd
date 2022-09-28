@@ -344,6 +344,7 @@ package READOUT_BOARD_CTRL is
     ETROC_BITSLIP              :std_logic_vector(31 downto 0);  -- 1 to bitslip an ETROC
     RESET_ETROC_RX             :std_logic_vector(31 downto 0);  -- 1 to reset the ETROC rx module
     ZERO_SUPRESS               :std_logic_vector(31 downto 0);  -- 1 to zero supress fillers out from the ETROC RX
+    BITSLIP_AUTO_EN            :std_logic;                      -- 1 to enable automatic bitslipping alignment
     SC                         :READOUT_BOARD_SC_CTRL_t;      
     FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
@@ -390,6 +391,7 @@ package READOUT_BOARD_CTRL is
                                                                    ETROC_BITSLIP => (others => '0'),
                                                                    RESET_ETROC_RX => (others => '0'),
                                                                    ZERO_SUPRESS => x"0fffffff",
+                                                                   BITSLIP_AUTO_EN => '1',
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL0 => (others => '0'),
                                                                    FIFO_LPGBT_SEL0 => '0',

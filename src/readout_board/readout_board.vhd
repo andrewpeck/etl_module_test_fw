@@ -744,6 +744,7 @@ begin
           reset             => reset or ctrl.reset_etroc_rx(ielink),
           data_i            => data_i,
           bitslip_i         => bitslip,
+          bitslip_auto_i    => ctrl.bitslip_auto_en,
           zero_supress      => zero_supress,
           fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
           fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),

@@ -62,6 +62,9 @@ entity etroc_rx is
     -- assert 1 to force a bitslip
     bitslip_i : in std_logic;
 
+    -- assert 1 to to allow automatic bitslipping
+    bitslip_auto_i : in std_logic;
+
     -- expose the sm state for debugging
     state_mon_o : out std_logic_vector (2 downto 0);
 
@@ -221,7 +224,7 @@ begin
 
   -- take bitslip from the outside, but also have an internal signal so we can
   -- develop a firmware statemachine to do alignment
-  bitslip <= bitslip_i or bitslip_auto;
+  bitslip <= bitslip_i or (bitslip_auto_i and bitslip_auto);
 
   --------------------------------------------------------------------------------
   -- Data Parser
