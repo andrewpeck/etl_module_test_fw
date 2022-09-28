@@ -42,6 +42,7 @@ entity readout_board is
     --rx_ready : in std_logic;
 
     trigger_i : in std_logic;
+    trigger_o : out std_logic;
 
     ctrl_clk : in  std_logic;
     mon      : out READOUT_BOARD_MON_t;
@@ -318,6 +319,8 @@ begin
 
   l1a        <= ctrl.l1a_pulse or l1a_gen or trigger_i;
   link_reset <= ctrl.link_reset_pulse;
+
+  trigger_o <= l1a;
 
   process (clk40) is
   begin

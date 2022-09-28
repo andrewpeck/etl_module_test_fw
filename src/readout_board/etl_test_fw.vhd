@@ -120,7 +120,7 @@ entity etl_test_fw is
     phy_interrupt : out   std_logic;    --
 
     user_sma_p : in  std_logic;
-    user_sma_n : in  std_logic;
+    user_sma_n : out std_logic;
 
     -- status LEDs
     leds : out std_logic_vector(7 downto 0);
@@ -197,6 +197,8 @@ architecture behavioral of etl_test_fw is
   signal mgt_ctrl : MGT_Ctrl_t;
 
   signal ext_trigger : std_logic := '0';
+  signal trigger_o : std_logic_vector (NUM_RBS-1 downto 0) := (others => '0');
+
 
   signal fw_info_mon : FW_INFO_Mon_t;
 
@@ -256,6 +258,8 @@ begin
       ext_trigger_i => user_sma_p,
       ext_trigger_o => ext_trigger
       );
+
+  user_sma_n <= trigger_o(0);
 
   reset <= not locked;
 
@@ -502,6 +506,7 @@ begin
           reset => reset,
 
           trigger_i => ext_trigger,
+          trigger_o => trigger_o (I),
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),
