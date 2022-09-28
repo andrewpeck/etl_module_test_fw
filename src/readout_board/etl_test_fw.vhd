@@ -95,14 +95,6 @@ entity etl_test_fw is
     sma_refclk_n : in std_logic;
 
     --------------------------------------------------------------------------------
-    -- Clock output
-    --------------------------------------------------------------------------------
-
-    -- ios are now used for the ext trigger on the user_sma
-    -- clock_o_p : out std_logic;
-    -- clock_o_n : out std_logic;
-
-    --------------------------------------------------------------------------------
     -- Transceivers
     --------------------------------------------------------------------------------
 
@@ -315,13 +307,6 @@ begin
     end if;
   end process;
 
-  -- si570_usrclk_ibuf_inst : IBUFDS
-  --   port map(
-  --     i  => si570_usrclk_p,
-  --     ib => si570_usrclk_n,
-  --     o  => si570_usrclk_ibuf
-  --     );
-
   osc_clk125_ibuf_inst : IBUFDS
     port map(
       i  => osc_clk125_p,
@@ -353,32 +338,6 @@ begin
       i => clk_osc300_ibuf,
       o => clk_osc300
       );
-
-  -- ODDRE1_inst : ODDRE1
-  --   generic map (
-  --     IS_C_INVERTED  => '0',            -- Optional inversion for C
-  --     IS_D1_INVERTED => '0',            -- Unsupported, do not use
-  --     IS_D2_INVERTED => '0',            -- Unsupported, do not use
-  --     SIM_DEVICE     => "ULTRASCALE",   -- Set the device version for simulation functionality (ULTRASCALE)
-  --     SRVAL          => '0'             -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
-  --     )
-  --   port map (
-  --     Q  => si570_usrclk_oddr,          -- 1-bit output: Data output to IOB
-  --     C  => si570_usrclk,               -- 1-bit input: High-speed clock input
-  --     D1 => '0',                        -- 1-bit input: Parallel data input 1
-  --     D2 => '1',                        -- 1-bit input: Parallel data input 2
-  --     SR => '0'                         -- 1-bit input: Active-High Async Reset
-  --     );
-
-  -- OBUFDS_inst : OBUFDS
-  --   generic map (
-  --     IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
-  --     SLEW       => "SLOW")             -- Specify the output slew rate
-  --   port map (
-  --     O  => clock_o_p,                  -- Diff_p output (connect directly to top-level port)
-  --     OB => clock_o_n,                  -- Diff_n output (connect directly to top-level port)
-  --     I  => si570_usrclk_oddr           -- Buffer input
-  --     );
 
   ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
   mac_addr(3 downto 0) <= sw(3 downto 0);
