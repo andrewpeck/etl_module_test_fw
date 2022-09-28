@@ -81,9 +81,6 @@ entity etl_test_fw is
     osc_clk300_p : in std_logic;
     osc_clk300_n : in std_logic;
 
-    si570_usrclk_p : in std_logic;
-    si570_usrclk_n : in std_logic;
-
     --------------------------------------------------------------------------------
     -- Transceiver ref-clocks
     --------------------------------------------------------------------------------
@@ -147,8 +144,6 @@ architecture behavioral of etl_test_fw is
 
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
-  -- signal si570_usrclk_ibuf, si570_usrclk  : std_logic;
-  -- signal si570_usrclk_oddr : std_logic := '0';
 
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
@@ -324,12 +319,6 @@ begin
       ib => osc_clk300_n,
       o  => clk_osc300_ibuf
       );
-
-  -- si570_bufg : BUFG
-  --   port map(
-  --     i => si570_usrclk_ibuf,
-  --     o => si570_usrclk
-  --     );
 
   osc125_bufg : BUFG
     port map(
@@ -772,16 +761,6 @@ begin
         clk_b => refclk_bufg,
         rate  => fw_info_mon.refclk_freq
         );
-
-    -- si570usr_frequency_counter_inst : entity work.frequency_counter
-    --   generic map (clk_a_freq => freq_cnt_freq)
-    --   port map (
-    --     reset => reset,
-    --     clk_a => freq_cnt_clk,
-    --     clk_b => si570_usrclk,
-    --     rate  => fw_info_mon.clkusr_freq
-    --     );
-
 
     clk125_frequency_counter_inst : entity work.frequency_counter
       generic map (clk_a_freq => freq_cnt_freq)
