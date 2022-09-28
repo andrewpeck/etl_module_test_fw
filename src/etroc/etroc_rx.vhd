@@ -202,7 +202,8 @@ begin
 
           -- counter to switch to locked after some number of good frames
           if (good_cnt_max) then
-            align_state  <= LOCKED_state;
+            align_state    <= LOCKED_state;
+            align_good_cnt <= 0;
           elsif (next_frame_en='1' and state = FILLER_state) then
             align_good_cnt <= align_good_cnt + 1;
           end if;
@@ -218,6 +219,12 @@ begin
           end if;
 
       end case;
+
+      if (reset = '1') then
+        align_state    <= ALIGNING_state;
+        align_bad_cnt  <= 0;
+        align_good_cnt <= 0;
+      end if;
 
     end if;
   end process;
