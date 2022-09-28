@@ -2,7 +2,22 @@
 #+EXPORT_EXCLUDE_TAGS: noexport
 #+TITLE: ETL Test Stand Firmware
 
-* ETL Test Stand Firmware
+** Table of Contents :TOC_4:
+  - [[#changelog][Changelog]]
+    - [[#v131][v1.3.1]]
+    - [[#v1210][v1.2.10]]
+    - [[#v127][v1.2.7]]
+  - [[#build-instructions][Build Instructions]]
+  - [[#directories][Directories]]
+  - [[#updating-register-definitions][Updating Register Definitions]]
+  - [[#block-diagram][Block Diagram]]
+    - [[#daq][DAQ]]
+    - [[#downlink][Downlink]]
+    - [[#firmware-infrastructure][Firmware Infrastructure]]
+  - [[#optical-connections][Optical Connections]]
+  - [[#hardware-setup][Hardware Setup]]
+    - [[#xdma][XDMA]]
+    - [[#ethernet][Ethernet]]
 
 ** Changelog
 
@@ -125,5 +140,5 @@ From: https://www.xilinx.com/support/documentation/user_guides/ug575-ultrascale-
 * Local Variables :noexport:
 # Local Variables:
 # fill-column: 80
-# eval: (add-hook 'after-save-hook (lambda () (org-export-to-file 'md (concat (file-name-base) ".md"))) nil 'local)
+# eval: (add-hook 'after-save-hook (lambda () (shell-command (format "pandoc %s.org -o %s.md -t gfm" (file-name-base) (file-name-base)))) nil 'local)
 # End:
