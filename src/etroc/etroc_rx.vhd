@@ -57,7 +57,9 @@ entity etroc_rx is
 
     -- set to 1 and this module will output filler words in addition to the
     -- header/payload/trailer
-    zero_supress : in std_logic;
+    zero_suppress : in std_logic;
+
+    raw_data_mode : in std_logic;
 
     -- assert 1 to force a bitslip
     bitslip_i : in std_logic;
@@ -311,7 +313,7 @@ begin
           end if;
 
           -- fifo output
-          if (frame_en = '1' and zero_supress='0') then
+          if (frame_en = '1' and zero_suppress='0') then
             fifo_data_o  <= frame;
             fifo_wr_en_o <= '1';
           end if;
@@ -413,6 +415,11 @@ begin
           state <= ERR_state;
 
       end case;
+
+      if (frame_en = '1' and raw_data_mode='1') then
+        fifo_data_o  <= frame;
+        fifo_wr_en_o <= '1';
+      end if;
 
       if (reset = '1') then
         state <= FILLER_state;

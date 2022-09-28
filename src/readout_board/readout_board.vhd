@@ -728,11 +728,11 @@ begin
 
   etroc_rx_lpgbt_gen : for ilpgbt in 0 to NUM_UPLINKS-1 generate
     etroc_rx_elink_gen : for ielink in 0 to 27 generate
-      signal locked       : std_logic := '0';
-      signal bitslip      : std_logic := '0';
-      signal zero_supress : std_logic := '1';
-      signal data_i       : std_logic_vector (31 downto 0);
-
+      signal locked        : std_logic := '0';
+      signal bitslip       : std_logic := '0';
+      signal zero_suppress : std_logic := '1';
+      signal raw_data_mode : std_logic := '0';
+      signal data_i        : std_logic_vector (31 downto 0);
     begin
 
       data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
@@ -745,7 +745,7 @@ begin
           data_i            => data_i,
           bitslip_i         => bitslip,
           bitslip_auto_i    => ctrl.bitslip_auto_en,
-          zero_supress      => zero_supress,
+          zero_suppress      => zero_suppress,
           fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
           fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),
           frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
@@ -773,13 +773,15 @@ begin
           );
 
       lpgbt0 : if (ilpgbt = 0) generate
-        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
-        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+        bitslip       <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_suppress <= ctrl.zero_supress(ilpgbt);   -- FIXME: split per lpgbt
+        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);   -- FIXME: split per lpgbt
       end generate;
 
       lpgbt1 : if (ilpgbt = 1) generate
-        bitslip                   <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
-        zero_supress              <= ctrl.zero_supress(ilpgbt);  -- FIXME: split per lpgbt
+        bitslip       <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
+        zero_suppress <= ctrl.zero_supress(ilpgbt);   -- FIXME: split per lpgbt
+        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);   -- FIXME: split per lpgbt
       end generate;
 
     end generate;

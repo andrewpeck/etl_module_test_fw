@@ -163,9 +163,11 @@ begin  -- architecture behavioral
         when 259 => --0x103
           localRdData( 1 downto  0)  <=  reg_data(259)( 1 downto  0);                 --Select which LPGBT is connected to the ILA
         when 262 => --0x106
-          localRdData(31 downto  0)  <=  reg_data(262)(31 downto  0);                 --1 to zero supress fillers out from the ETROC RX
+          localRdData(31 downto  0)  <=  reg_data(262)(31 downto  0);                 --1 to zero suppress fillers out from the ETROC RX
         when 263 => --0x107
           localRdData( 0)            <=  reg_data(263)( 0);                           --1 to enable automatic bitslipping alignment
+        when 264 => --0x108
+          localRdData(31 downto  0)  <=  reg_data(264)(31 downto  0);                 --1 to read all data from ETROC, regardless of content
         when 516 => --0x204
           localRdData(15 downto  8)  <=  reg_data(516)(15 downto  8);                 --I2C address of the GBTx
         when 517 => --0x205
@@ -361,6 +363,7 @@ begin  -- architecture behavioral
   Ctrl.ILA_SEL                                 <=  reg_data(259)( 1 downto  0);      
   Ctrl.ZERO_SUPRESS                            <=  reg_data(262)(31 downto  0);      
   Ctrl.BITSLIP_AUTO_EN                         <=  reg_data(263)( 0);                
+  Ctrl.RAW_DATA_MODE                           <=  reg_data(264)(31 downto  0);      
   Ctrl.SC.TX_GBTX_ADDR                         <=  reg_data(516)(15 downto  8);      
   Ctrl.SC.TX_REGISTER_ADDR                     <=  reg_data(517)(15 downto  0);      
   Ctrl.SC.TX_NUM_BYTES_TO_READ                 <=  reg_data(518)(15 downto  0);      
@@ -545,9 +548,11 @@ begin  -- architecture behavioral
         when 261 => --0x105
           Ctrl.RESET_ETROC_RX                     <=  localWrData(31 downto  0);     
         when 262 => --0x106
-          reg_data(262)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to zero supress fillers out from the ETROC RX
+          reg_data(262)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to zero suppress fillers out from the ETROC RX
         when 263 => --0x107
           reg_data(263)( 0)                       <=  localWrData( 0);                --1 to enable automatic bitslipping alignment
+        when 264 => --0x108
+          reg_data(264)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to read all data from ETROC, regardless of content
         when 512 => --0x200
           Ctrl.SC.TX_RESET                        <=  localWrData( 0);               
         when 513 => --0x201
@@ -742,6 +747,7 @@ begin  -- architecture behavioral
       reg_data(261)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RESET_ETROC_RX;
       reg_data(262)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ZERO_SUPRESS;
       reg_data(263)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.BITSLIP_AUTO_EN;
+      reg_data(264)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RAW_DATA_MODE;
       reg_data(512)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_RESET;
       reg_data(513)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.RX_RESET;
       reg_data(514)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.TX_START_WRITE;
