@@ -34,6 +34,7 @@ only use the versions listed here unless instructed otherwise.
     raw 40 bit frames
   - Separate the bitslip/reset/zero suppress/raw data mode between
     master and slave
+  - Add an external trigger output (mirror of the internal L1A signal)
 
 ### v1.3.2
 
