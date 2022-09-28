@@ -93,6 +93,8 @@ architecture rtl of eth_infra is
   signal locked, clk_locked, eth_locked                          : std_logic;
   signal rst_ipb, rst_aux, rst_ipb_ctrl, rst_phy, rst_eth, onehz : std_logic;
 
+  signal rst_ipb_ctrl_ff : std_logic := '0';
+
   -- ipbus to ethernet
   signal tx_data, rx_data : std_logic_vector(7 downto 0);
 
@@ -104,6 +106,14 @@ architecture rtl of eth_infra is
 
 begin
 
+  -- register the rst_ipb_ctrl signal onto the 40MHz logic clock, since it is
+  -- used in that domain
+  process (ext_clk_i) is
+  begin
+    if (rising_edge(ext_clk_i)) then
+      rst_ipb_ctrl_ff <= rst_ipb_ctrl;
+    end if;
+  end process;
 
   --  DCM clock generation for internal bus, ethernet
   clocks : entity work.eth_clocks
@@ -180,7 +190,7 @@ begin
       mac_clk      => clk_eth,
       rst_macclk   => rst_eth,
       ipb_clk      => clk_ipb,
-      rst_ipb      => rst_ipb_ctrl,
+      rst_ipb      => rst_ipb_ctrl_ff,
       mac_rx_data  => rx_data,
       mac_rx_valid => rx_valid,
       mac_rx_last  => rx_last,
