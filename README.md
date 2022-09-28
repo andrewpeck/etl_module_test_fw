@@ -1,6 +1,8 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v1.3.3](#v133)
+      - [v1.3.2](#v132)
       - [v1.3.1](#v131)
       - [v1.2.10](#v1210)
       - [v1.2.7](#v127)
@@ -23,6 +25,22 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v1.3.3
+
+  - Fix an issue with the ETROC decoder getting stuck in the locked
+    state
+  - Add a "raw data mode" to the ETROC decoder which simply writes the
+    raw 40 bit frames
+  - Separate the bitslip/reset/zero suppress/raw data mode between
+    master and slave
+
+### v1.3.2
+
+  - Add a feature to disable automatic bitslipping in the ETROC decoder
+    (for debug purposes)
+  - Start and end of packet signals should now only be 1bx wide (instead
+    of 5)
 
 ### v1.3.1
 
