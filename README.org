@@ -2,6 +2,10 @@
 #+EXPORT_EXCLUDE_TAGS: noexport
 #+TITLE: ETL Test Stand Firmware
 * Table of Contents :TOC_4:
+  - [[#changelog][Changelog]]
+    - [[#v131][~v1.3.1~]]
+    - [[#v1210][~v1.2.10~]]
+    - [[#v127][~v1.2.7~]]
   - [[#build-instructions][Build Instructions]]
   - [[#directories][Directories]]
   - [[#updating-register-definitions][Updating Register Definitions]]
@@ -13,6 +17,34 @@
   - [[#hardware-setup][Hardware Setup]]
     - [[#xdma][XDMA]]
     - [[#ethernet][Ethernet]]
+
+** Changelog
+
+This changelog describes changes made in recommended versions of the firmware.
+Versions not described here are intermediate versions which are either not tested or known to be problematic.
+Change log is inclusive of all changes from the previous recommended version; please only use the versions listed here unless instructed otherwise.
+
+*** ~v1.3.1~
+- Improve timing closure by various tweaks which should not affect functionality
+- Purge Si570 clock mirror output (was used during testing)
+- Hopefully improve reliability of UDP transactions w/ more timing constraints
+- Update docs
+- Upgrade to vivado 2021.1
+*** ~v1.2.10~
+- Support for LPGBT version 1
+- Fix lpgbt fifo reset signal which was not connected
+- Increase the number of xpm stages to improve timing
+- Add ETROC error counters
+- ILA improvements
+- Upgrade submodules
+*** ~v1.2.7~
+- Add received packet counters
+- Add an ETROC rx locked signal
+- Add a packet rate counter
+- Add per-etroc packet decoders and mux their outputs, to have counters run in parallel
+- Add device DNA readout
+- Add SFP disable to firmware control
+- Improvements to program.sh
 
 ** Build Instructions
 To build the firmware, simply clone the repository and run:
