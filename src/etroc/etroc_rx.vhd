@@ -332,12 +332,11 @@ begin
           type_o      <= zsh(frame(TYPE_RANGE));
           event_cnt_o <= zsh(frame(L1COUNTER_RANGE));
 
-          start_of_packet_o <= '1';
-
           -- fifo output
           if (frame_en = '1') then
-            fifo_data_o  <= frame;
-            fifo_wr_en_o <= '1';
+            start_of_packet_o <= '1';
+            fifo_data_o       <= frame;
+            fifo_wr_en_o      <= '1';
           end if;
 
         when DATA_state =>
@@ -395,12 +394,11 @@ begin
           hitcnt_o  <= zsh(frame(HITS_RANGE));
           stat_o    <= zsh(frame(STATUS_RANGE));
 
-          end_of_packet_o <= '1';
-
           -- fifo output
           if (frame_en = '1') then
-            fifo_data_o  <= frame;
-            fifo_wr_en_o <= '1';
+            end_of_packet_o <= '1';
+            fifo_data_o     <= frame;
+            fifo_wr_en_o    <= '1';
           end if;
 
         when others =>
