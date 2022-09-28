@@ -773,15 +773,15 @@ begin
           );
 
       lpgbt0 : if (ilpgbt = 0) generate
-        bitslip       <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
-        zero_suppress <= ctrl.zero_supress(ilpgbt);   -- FIXME: split per lpgbt
-        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);   -- FIXME: split per lpgbt
+        bitslip       <= ctrl.etroc_bitslip(ilpgbt);
+        zero_suppress <= ctrl.zero_supress(ilpgbt);
+        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);
       end generate;
 
       lpgbt1 : if (ilpgbt = 1) generate
-        bitslip       <= ctrl.etroc_bitslip(ilpgbt);  -- FIXME: split per lpgbt
-        zero_suppress <= ctrl.zero_supress(ilpgbt);   -- FIXME: split per lpgbt
-        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);   -- FIXME: split per lpgbt
+        bitslip       <= ctrl.etroc_bitslip_slave(ilpgbt);
+        zero_suppress <= ctrl.zero_supress_slave(ilpgbt);
+        raw_data_mode <= ctrl.raw_data_mode_slave(ilpgbt);
       end generate;
 
     end generate;
