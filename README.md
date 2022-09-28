@@ -1,7 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
-      - [v1.3.3](#v133)
+      - [v1.3.4](#v134)
       - [v1.3.2](#v132)
       - [v1.3.1](#v131)
       - [v1.2.10](#v1210)
@@ -26,7 +26,7 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
-### v1.3.3
+### v1.3.4
 
   - Fix an issue with the ETROC decoder getting stuck in the locked
     state
@@ -35,6 +35,7 @@ only use the versions listed here unless instructed otherwise.
   - Separate the bitslip/reset/zero suppress/raw data mode between
     master and slave
   - Add an external trigger output (mirror of the internal L1A signal)
+  - Update Hog
 
 ### v1.3.2
 
