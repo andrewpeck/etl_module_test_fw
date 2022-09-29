@@ -165,12 +165,18 @@ architecture behavioral of readout_board is
   type rx_frame_array_t is array (integer range <>) of std_logic_vector(39 downto 0);
   type rx_state_array_t is array (integer range <>) of std_logic_vector(2 downto 0);
 
-  signal rx_frame_mon_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
-  signal rx_state_mon_arr    : rx_state_array_t (28*NUM_UPLINKS-1 downto 0);
-  signal rx_fifo_data_arr    : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
-  signal rx_fifo_wr_en_arr   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_frame_mon_arr  : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_state_mon_arr  : rx_state_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_data_arr  : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_wr_en_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
 
-
+  -- ETROC CRC
+  constant CRCBITS : integer := 8;
+  type rx_crc_array_t is array (integer range <>) of std_logic_vector(CRCBITS-1 downto 0);
+  signal rx_crc_arr      : rx_crc_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_crc_calc_arr : rx_crc_array_t (28*NUM_UPLINKS-1 downto 0);
+  signal rx_crc          : std_logic_vector(CRCBITS-1 downto 0);
+  signal rx_crc_calc     : std_logic_vector(CRCBITS-1 downto 0);
 
   signal rx_locked          : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
@@ -766,8 +772,8 @@ begin
           data_en_o         => open,
           stat_o            => open,
           hitcnt_o          => open,
-          crc_o             => open,
-          crc_calc_o        => open,
+          crc_o             => rx_crc_arr(ilpgbt*28+ielink),
+          crc_calc_o        => rx_crc_calc_arr(ilpgbt*28+ielink),
           chip_id_o         => open,
           start_of_packet_o => rx_start_of_packet(ilpgbt*28+ielink),
           end_of_packet_o   => rx_end_of_packet(ilpgbt*28+ielink),
@@ -802,6 +808,8 @@ begin
       rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
       rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel(0)*28 + elink_sel(0));
       rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_crc        <= rx_crc_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_crc_calc   <= rx_crc_calc_arr(lpgbt_sel(0)*28 + elink_sel(0));
     end if;
   end process;
 
@@ -885,21 +893,23 @@ begin
 
     ila_lpgbt_inst : ila_lpgbt
       port map (
-        clk                  => clk40,
-        probe0(223 downto 0) => ila_uplink_data,
-        probe1(0)            => ila_uplink_valid,
-        probe2(0)            => ila_uplink_ready,
-        probe3(0)            => ila_uplink_reset,
-        probe4(0)            => ila_uplink_fec_err,
-        probe5(1 downto 0)   => ila_uplink_ic,
-        probe6(1 downto 0)   => ila_uplink_ec,
-        probe7(39 downto 0)  => rx_frame_mon,
-        probe8(39 downto 0)  => rx_fifo_data_mux,
-        probe9(0)            => rx_fifo_wr_en_mux,
-        probe10(2 downto 0)  => rx_state_mon,
-        probe11(0)           => rx_locked_mon,
-        probe12(0)           => rx_err_mon,
-        probe13(0)           => rx_idle_mon
+        clk                   => clk40,
+        probe0(7 downto 0)    => rx_crc,
+        probe0(15 downto 8)   => rx_crc_calc,
+        probe0(223 downto 16) => (others => '0'),
+        probe1(0)             => ila_uplink_valid,
+        probe2(0)             => ila_uplink_ready,
+        probe3(0)             => ila_uplink_reset,
+        probe4(0)             => ila_uplink_fec_err,
+        probe5(1 downto 0)    => ila_uplink_ic,
+        probe6(1 downto 0)    => ila_uplink_ec,
+        probe7(39 downto 0)   => rx_frame_mon,
+        probe8(39 downto 0)   => rx_fifo_data_mux,
+        probe9(0)             => rx_fifo_wr_en_mux,
+        probe10(2 downto 0)   => rx_state_mon,
+        probe11(0)            => rx_locked_mon,
+        probe12(0)            => rx_err_mon,
+        probe13(0)            => rx_idle_mon
         );
   end generate;
 
