@@ -182,9 +182,9 @@ architecture behavioral of etroc_rx is
   component CRC8
     generic (WORDWIDTH : integer := 40);
     port (
-      cin  : in  std_logic_vector(7 downto 0);  -- input CRC code 8 bits
-      din  : in  std_logic_vector(7 downto 0);  -- input data 40 bits
-      dout : out std_logic_vector(7 downto 0);  -- output crc 8 bits
+      cin  : in  std_logic_vector;  -- input CRC code 8 bits
+      din  : in  std_logic_vector;  -- input data 40 bits
+      dout : out std_logic_vector;  -- output crc 8 bits
       dis  : in  std_logic
       );
   end component;
@@ -466,7 +466,7 @@ begin
     end if;
   end process;
 
-  state_is_active <= HEADER_STATE or state = DATA_state or state = TRAILER_state;
+  state_is_active <= state = HEADER_STATE or state = DATA_state or state = TRAILER_state;
   crc_dis         <= '0'   when state_is_active else '1';
   crc_data        <= frame when state_is_active else (others => '0');
 
