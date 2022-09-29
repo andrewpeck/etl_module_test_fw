@@ -4,6 +4,7 @@
 
 ** Table of Contents :TOC_4:
   - [[#changelog][Changelog]]
+    - [[#v135][v1.3.5]]
     - [[#v134][v1.3.4]]
     - [[#v132][v1.3.2]]
     - [[#v131][v1.3.1]]
@@ -27,6 +28,9 @@ This changelog describes changes made in recommended versions of the firmware.
 Versions not described here are intermediate versions which are either not tested or known to be problematic.
 Change log is inclusive of all changes from the previous recommended version; please only use the versions listed here unless instructed otherwise.
 
+*** v1.3.5
+- Add auto-inversion logic to the ETROC RX decoder
+- Add an (untested) CRC8 to the ETROC RX decoder
 *** v1.3.4
 - Fix an issue with the ETROC decoder getting stuck in the locked state
 - Add a "raw data mode" to the ETROC decoder which simply writes the raw 40 bit frames

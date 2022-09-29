@@ -1,6 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v1.3.5](#v135)
       - [v1.3.4](#v134)
       - [v1.3.2](#v132)
       - [v1.3.1](#v131)
@@ -25,6 +26,11 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v1.3.5
+
+  - Add auto-inversion logic to the ETROC RX decoder
+  - Add an (untested) CRC8 to the ETROC RX decoder
 
 ### v1.3.4
 
