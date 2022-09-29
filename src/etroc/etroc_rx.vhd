@@ -41,7 +41,8 @@ use work.constants_pkg.all;
 entity etroc_rx is
   generic(
     MAX_ELINK_WIDTH : positive := 32;
-    FRAME_WIDTH     : positive := 40
+    FRAME_WIDTH     : positive := 40;
+    AUTO_INVERT     : boolean  := true
     );
   port(
 
@@ -203,7 +204,9 @@ begin
             align_bad_cnt <= 0;
             if (bitslip_cnt < 40) then
               bitslip_auto <= '1';
-              bitslip_cnt  <= bitslip_cnt + 1;
+              if (AUTO_INVERT) then
+                bitslip_cnt  <= bitslip_cnt + 1;
+              end if;
             else
               invertp     <= not invertp;
               bitslip_cnt <= 0;
