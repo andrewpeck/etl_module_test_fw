@@ -180,7 +180,7 @@ architecture behavioral of etroc_rx is
   signal data_frame_cnt : natural range 0 to 255:= 0;
 
   component CRC8
-    generic (WORDWIDTH : integer := 40)
+    generic (WORDWIDTH : integer := 40);
     port (
       cin  : in  std_logic_vector(7 downto 0);  -- input CRC code 8 bits
       din  : in  std_logic_vector(7 downto 0);  -- input data 40 bits
@@ -470,12 +470,12 @@ begin
   crc_dis         <= '0'   when state_is_active else '1';
   crc_data        <= frame when state_is_active else (others => '0');
 
-  entity crc_inst : crc8
+  crc_inst : crc8
     port map (
       cin  => crc,
       dis  => crc_dis,
       din  => crc_data,
-      dout => crc_next,
+      dout => crc_next
       );
 
 end behavioral;
