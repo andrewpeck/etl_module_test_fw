@@ -108,7 +108,10 @@ end etroc_rx;
 architecture behavioral of etroc_rx is
 
   signal bitslip      : std_logic := '0';
+  signal invertp      : boolean   := false;
   signal bitslip_auto : std_logic := '0';
+
+  signal data_inv : std_logic_vector(data_i'range);
 
   -- receive data at:
   --
@@ -164,6 +167,8 @@ architecture behavioral of etroc_rx is
   signal align_good_cnt       : natural range 0 to ALIGN_GOOD_CNT_MAX;
   signal good_cnt_max         : boolean;
 
+  signal bitslip_cnt : natural range 0 to 40;
+
   type align_state_t is (ALIGNING_state, LOCKED_state);
 
   signal align_state : align_state_t := ALIGNING_state;
@@ -196,7 +201,13 @@ begin
           -- counter to bitslip after some number of errors
           if (bad_cnt_max) then
             align_bad_cnt <= 0;
-            bitslip_auto  <= '1';
+            if (bitslip_cnt < 40) then
+              bitslip_auto <= '1';
+              bitslip_cnt  <= bitslip_cnt + 1;
+            else
+              invertp     <= not invertp;
+              bitslip_cnt <= 0;
+            end if;
           elsif (next_frame_en='1' and state=ERR_state) then -- only count once per 40 bit frame
             align_bad_cnt  <= align_bad_cnt + 1;
             align_good_cnt <= 0;
@@ -248,6 +259,8 @@ begin
   next_data_is_trailer <= (next_frame and TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
   next_data_is_data    <= (next_frame and DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
 
+  data_inv <= not data_i when invertp else data_i;
+
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
       MAX_INPUT      => MAX_ELINK_WIDTH,
@@ -258,7 +271,7 @@ begin
     port map (
       reset            => reset,
       clk40            => clock,
-      elinkdata        => data_i,
+      elinkdata        => data_inv,
       elinkaligned     => '1',
       elinkwidth       => elinkwidth,
       msbfirst         => '1',
