@@ -767,6 +767,7 @@ begin
           stat_o            => open,
           hitcnt_o          => open,
           crc_o             => open,
+          crc_calc_o        => open,
           chip_id_o         => open,
           start_of_packet_o => rx_start_of_packet(ilpgbt*28+ielink),
           end_of_packet_o   => rx_end_of_packet(ilpgbt*28+ielink),

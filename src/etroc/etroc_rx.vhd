@@ -96,6 +96,7 @@ entity etroc_rx is
     stat_o          : out std_logic_vector (STATB -1 downto 0);
     hitcnt_o        : out std_logic_vector (HITCNTB -1 downto 0);
     crc_o           : out std_logic_vector (CRCB - 1 downto 0);
+    crc_calc_o      : out std_logic_vector (CRCB - 1 downto 0);
     chip_id_o       : out std_logic_vector (CHIPIDB -1 downto 0);
     end_of_packet_o : out std_logic;    -- end of packet
 
@@ -124,6 +125,8 @@ architecture behavioral of etroc_rx is
   type state_t is (ERR_state, FILLER_state, HEADER_state, DATA_state, TRAILER_state);
 
   signal state : state_t := ERR_state;
+
+  signal state_is_active : boolean;
 
   signal next_frame_raw : std_logic_vector (FRAME_WIDTH-1 downto 0) := (others => '0');
   signal next_frame     : std_logic_vector (FRAME_WIDTH-1 downto 0) := (others => '0');
@@ -175,6 +178,21 @@ architecture behavioral of etroc_rx is
   signal align_state : align_state_t := ALIGNING_state;
 
   signal data_frame_cnt : natural range 0 to 255:= 0;
+
+  component CRC8
+    generic (WORDWIDTH : integer := 40)
+    port (
+      cin  : in  std_logic_vector(7 downto 0);  -- input CRC code 8 bits
+      din  : in  std_logic_vector(7 downto 0);  -- input data 40 bits
+      dout : out std_logic_vector(7 downto 0);  -- output crc 8 bits
+      dis  : in  std_logic
+      );
+  end component;
+
+  signal crc_data : std_logic_vector (39 downto 0) := (others => '0');
+  signal crc_next : std_logic_vector (7 downto 0)  := (others => '0');
+  signal crc      : std_logic_vector (7 downto 0)  := (others => '0');
+  signal crc_dis  : std_logic                      := '0';
 
 begin
 
@@ -362,6 +380,7 @@ begin
             start_of_packet_o <= '1';
             fifo_data_o       <= frame;
             fifo_wr_en_o      <= '1';
+            crc               <= crc_next;
           end if;
 
         when DATA_state =>
@@ -374,7 +393,8 @@ begin
                 state <= ERR_state;
               end if;
             elsif (next_data_is_trailer) then
-              state <= TRAILER_state;
+              state      <= TRAILER_state;
+              crc_calc_o <= crc;
             else
               state <= ERR_state;
             end if;
@@ -393,6 +413,7 @@ begin
               fifo_data_o    <= frame;
               fifo_wr_en_o   <= '1';
               data_frame_cnt <= data_frame_cnt + 1;
+              crc            <= crc_next;
             end if;
 
         when TRAILER_state =>
@@ -424,6 +445,7 @@ begin
             end_of_packet_o <= '1';
             fifo_data_o     <= frame;
             fifo_wr_en_o    <= '1';
+            crc             <= (others => '0');
           end if;
 
         when others =>
@@ -443,5 +465,17 @@ begin
 
     end if;
   end process;
+
+  state_is_active <= HEADER_STATE or state = DATA_state or state = TRAILER_state;
+  crc_dis         <= '0'   when state_is_active else '1';
+  crc_data        <= frame when state_is_active else (others => '0');
+
+  entity crc_inst : crc8
+    port map (
+      cin  => crc,
+      dis  => crc_dis,
+      din  => crc_data,
+      dout => crc_next,
+      );
 
 end behavioral;

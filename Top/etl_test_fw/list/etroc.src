@@ -3,3 +3,4 @@ src/etroc/configs/fast_commands.vhd
 src/etroc/etroc_rx.vhd
 src/etroc/decoding_gearbox.vhd
 src/etroc/etroc_tx.vhd
+src/etroc/crc8.v
