@@ -778,15 +778,15 @@ begin
           );
 
       lpgbt0 : if (ilpgbt = 0) generate
-        bitslip       <= ctrl.etroc_bitslip(ilpgbt);
-        zero_suppress <= ctrl.zero_supress(ilpgbt);
-        raw_data_mode <= ctrl.raw_data_mode(ilpgbt);
+        bitslip       <= ctrl.etroc_bitslip(ielink);
+        zero_suppress <= ctrl.zero_supress(ielink);
+        raw_data_mode <= ctrl.raw_data_mode(ielink);
       end generate;
 
       lpgbt1 : if (ilpgbt = 1) generate
-        bitslip       <= ctrl.etroc_bitslip_slave(ilpgbt);
-        zero_suppress <= ctrl.zero_supress_slave(ilpgbt);
-        raw_data_mode <= ctrl.raw_data_mode_slave(ilpgbt);
+        bitslip       <= ctrl.etroc_bitslip_slave(ielink);
+        zero_suppress <= ctrl.zero_supress_slave(ielink);
+        raw_data_mode <= ctrl.raw_data_mode_slave(ielink);
       end generate;
 
     end generate;
