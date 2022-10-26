@@ -187,6 +187,7 @@ architecture behavioral of readout_board is
 
 begin
 
+
   --------------------------------------------------------------------------------
   -- create 1/8 strobe synced to 40MHz clock
   --------------------------------------------------------------------------------
@@ -752,16 +753,18 @@ begin
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
-      DEPTH => 32768*4
+      DEPTH => 32768*4,
+      LOST_CNT_WIDTH => mon.rx_fifo_lost_word_cnt'length
       )
     port map (
-      clk40        => clk40,
-      reset        => reset,
-      fifo_reset_i => ctrl.fifo_reset,
-      fifo_data_i  => rx_fifo_data_mux,
-      fifo_wr_en   => rx_fifo_wr_en_mux,
-      fifo_wb_in   => daq_wb_in(0),
-      fifo_wb_out  => daq_wb_out(0)
+      clk40         => clk40,
+      reset         => reset,
+      fifo_reset_i  => ctrl.fifo_reset,
+      lost_word_cnt => mon.rx_fifo_lost_word_cnt,
+      fifo_data_i   => rx_fifo_data_mux,
+      fifo_wr_en    => rx_fifo_wr_en_mux,
+      fifo_wb_in    => daq_wb_in(0),
+      fifo_wb_out   => daq_wb_out(0)
       );
 
   -- --------------------------------------------------------------------------------

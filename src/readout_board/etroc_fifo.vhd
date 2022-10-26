@@ -15,6 +15,7 @@ use ipbus.ipbus.all;
 entity etroc_fifo is
   generic(
     WIDTH : positive := 40;
+    LOST_CNT_WIDTH : positive := 16;
     DEPTH : positive := 32768
     );
   port(
@@ -25,6 +26,7 @@ entity etroc_fifo is
     fifo_data_i : in std_logic_vector(WIDTH-1 downto 0);
     fifo_wr_en  : in std_logic;
 
+    lost_word_cnt : out std_logic_vector (LOST_CNT_WIDTH-1 downto 0) := (others => '0');
     fifo_wb_in  : in  ipb_wbus;
     fifo_wb_out : out ipb_rbus
     );
@@ -39,9 +41,22 @@ architecture behavioral of etroc_fifo is
   signal fifo_full  : std_logic                      := '0';
 
   signal fifo_reset_cnt : integer range 0 to 15 := 0;
-  signal fifo_reset     : std_logic := '0';
+  signal fifo_reset     : std_logic             := '0';
 
 begin
+
+  lost_word_counter : entity work.counter
+    generic map (
+      width => lost_word_cnt'length
+      )
+    port map (
+      clk    => clk40,
+      reset  => reset,
+      enable => '1',
+      event  => fifo_full and fifo_wr_en,
+      count  => lost_word_cnt,
+      at_max => open
+      );
 
   process (clk40) is
   begin
@@ -53,7 +68,7 @@ begin
         fifo_reset <= '0';
       end if;
 
-      if (fifo_reset_i='1') then
+      if (fifo_reset_i = '1') then
         fifo_reset_cnt <= 15;
       elsif (fifo_reset_cnt > 0) then
         fifo_reset_cnt <= fifo_reset_cnt - 1;
@@ -65,14 +80,14 @@ begin
 
   fifo_sync_inst : entity work.fifo_sync
     generic map (
-      DEPTH               => DEPTH,
-      USE_ALMOST_FULL     => 1,
-      WR_WIDTH            => 64,
-      RD_WIDTH            => 32,
-      USE_WR_DATA_COUNT   => 0
+      DEPTH             => DEPTH,
+      USE_ALMOST_FULL   => 1,
+      WR_WIDTH          => 64,
+      RD_WIDTH          => 32,
+      USE_WR_DATA_COUNT => 0
       )
     port map (
-      rst           => fifo_reset,      -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+      rst           => fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
