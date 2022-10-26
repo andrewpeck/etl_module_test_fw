@@ -58,9 +58,11 @@ begin
       if (rising_edge(clock_320)) then
 
         if (armed and trigger_or = '1') then
+          armed           <= false;
           trigger_cnt     <= 7;
           ext_trigger_320 <= '1';
         elsif (trigger_cnt > 0) then
+          armed           <= false;
           trigger_cnt     <= trigger_cnt - 1;
         elsif (trigger_or = '0') then
           armed <= true;
