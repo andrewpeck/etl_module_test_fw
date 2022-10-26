@@ -49,7 +49,7 @@ begin
 
   full_o <= fifo_full;
 
-  lost_word__counter : entity work.counter
+  lost_word_counter : entity work.counter
     generic map (
       width => lost_word_cnt'length
       )
