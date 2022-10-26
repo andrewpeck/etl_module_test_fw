@@ -761,6 +761,7 @@ begin
       reset         => reset,
       fifo_reset_i  => ctrl.fifo_reset,
       lost_word_cnt => mon.rx_fifo_lost_word_cnt,
+      full_o        => mon.rx_fifo_full,
       fifo_data_i   => rx_fifo_data_mux,
       fifo_wr_en    => rx_fifo_wr_en_mux,
       fifo_wb_in    => daq_wb_in(0),

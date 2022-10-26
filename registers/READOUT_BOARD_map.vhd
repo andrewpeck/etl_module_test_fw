@@ -217,6 +217,8 @@ begin  -- architecture behavioral
           localRdData( 8)            <=  reg_data(768)( 8);                           --Choose which lpgbt the readout fifo connects to (0-1)
         when 786 => --0x312
           localRdData(15 downto  0)  <=  Mon.RX_FIFO_LOST_WORD_CNT;                   --# of words lost to a full FIFO
+        when 787 => --0x313
+          localRdData( 0)            <=  Mon.RX_FIFO_FULL;                            --RX FIFO is full
         when 1056 => --0x420
           localRdData( 0)            <=  reg_data(1056)( 0);                          --0=etroc data, 1=fixed pattern for ETROC data fifo
         when 1057 => --0x421

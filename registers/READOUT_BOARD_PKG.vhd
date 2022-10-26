@@ -324,6 +324,7 @@ package READOUT_BOARD_CTRL is
     LPGBT                      :READOUT_BOARD_LPGBT_MON_t;
     SC                         :READOUT_BOARD_SC_MON_t;   
     RX_FIFO_LOST_WORD_CNT      :std_logic_vector(15 downto 0);  -- # of words lost to a full FIFO
+    RX_FIFO_FULL               :std_logic;                      -- RX FIFO is full
     ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     ETROC_LOCKED_SLAVE         :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz

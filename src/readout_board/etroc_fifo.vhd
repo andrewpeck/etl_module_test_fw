@@ -27,6 +27,8 @@ entity etroc_fifo is
     fifo_wr_en  : in std_logic;
 
     lost_word_cnt : out std_logic_vector (LOST_CNT_WIDTH-1 downto 0) := (others => '0');
+    full_o        : out std_logic;
+
     fifo_wb_in  : in  ipb_wbus;
     fifo_wb_out : out ipb_rbus
     );
@@ -45,7 +47,9 @@ architecture behavioral of etroc_fifo is
 
 begin
 
-  lost_word_counter : entity work.counter
+  full_o <= fifo_full;
+
+  lost_word__counter : entity work.counter
     generic map (
       width => lost_word_cnt'length
       )
