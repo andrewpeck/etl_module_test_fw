@@ -182,9 +182,6 @@ architecture behavioral of etl_test_fw is
   signal readout_board_mon  : READOUT_BOARD_Mon_array_t (NUM_RBS-1 downto 0);
   signal readout_board_ctrl : READOUT_BOARD_Ctrl_array_t (NUM_RBS-1 downto 0);
 
-  signal fifo_ipb_w_array : ipb_wbus_array(2*NUM_RBS - 1 downto 0);
-  signal fifo_ipb_r_array : ipb_rbus_array(2*NUM_RBS - 1 downto 0);
-
   signal daq_ipb_w_array : ipb_wbus_array(NUM_RBS - 1 downto 0);
   signal daq_ipb_r_array : ipb_rbus_array(NUM_RBS - 1 downto 0);
 
@@ -420,9 +417,6 @@ begin
       eth_ipb_w          => eth_ipb_w,
       eth_ipb_r          => eth_ipb_r,
 
-      elink_ipb_w_array => fifo_ipb_w_array,
-      elink_ipb_r_array => fifo_ipb_r_array,
-
       daq_ipb_w_array => daq_ipb_w_array,
       daq_ipb_r_array => daq_ipb_r_array
 
@@ -500,9 +494,6 @@ begin
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),
           --trig_rxready => rx_ready(I*2+1),
-
-          fifo_wb_in => fifo_ipb_w_array(I*2+1 downto I*2),
-          fifo_wb_out => fifo_ipb_r_array(I*2+1 downto I*2),
 
           daq_wb_in => daq_ipb_w_array(I downto I),
           daq_wb_out => daq_ipb_r_array(I downto I),

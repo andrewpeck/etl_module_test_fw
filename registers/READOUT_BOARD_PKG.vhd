@@ -323,12 +323,6 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_MON_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_MON_t;
     SC                         :READOUT_BOARD_SC_MON_t;   
-    FIFO_FULL0                 :std_logic;                  -- FIFO is full
-    FIFO_ARMED0                :std_logic;                  -- FIFO armed
-    FIFO_EMPTY0                :std_logic;                  -- FIFO empty
-    FIFO_FULL1                 :std_logic;                  -- FIFO is full
-    FIFO_ARMED1                :std_logic;                  -- FIFO armed
-    FIFO_EMPTY1                :std_logic;                  -- FIFO empty
     ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     ETROC_LOCKED_SLAVE         :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
@@ -353,35 +347,8 @@ package READOUT_BOARD_CTRL is
     SC                         :READOUT_BOARD_SC_CTRL_t;      
     FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
-    FIFO_ELINK_SEL1            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
-    FIFO_LPGBT_SEL1            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
-    FIFO_TRIG0                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 0
-    FIFO_TRIG1                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 1
-    FIFO_TRIG2                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 2
-    FIFO_TRIG3                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 3
-    FIFO_TRIG4                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 4
-    FIFO_TRIG5                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 5
-    FIFO_TRIG6                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 6
-    FIFO_TRIG7                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 7
-    FIFO_TRIG8                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 8
-    FIFO_TRIG9                 :std_logic_vector(31 downto 0);  -- FIFO trigger word 9
-    FIFO_TRIG0_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 0 enable mask
-    FIFO_TRIG1_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 1 enable mask
-    FIFO_TRIG2_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 2 enable mask
-    FIFO_TRIG3_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 3 enable mask
-    FIFO_TRIG4_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 4 enable mask
-    FIFO_TRIG5_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 5 enable mask
-    FIFO_TRIG6_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 6 enable mask
-    FIFO_TRIG7_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 7 enable mask
-    FIFO_TRIG8_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 8 enable mask
-    FIFO_TRIG9_MASK            :std_logic_vector(31 downto 0);  -- FIFO trigger word 9 enable mask
-    FIFO_FORCE_TRIG            :std_logic;                      -- Force trigger
-    FIFO_CAPTURE_DEPTH         :std_logic_vector(23 downto 0);  -- # of words to capture in the fifo
-    FIFO_REVERSE_BITS          :std_logic;                      -- Reverse the bits going into the FIFO
     RX_FIFO_DATA_SRC           :std_logic;                      -- 0=etroc data, 1=fixed pattern for ETROC data fifo
-    ELINK_FIFO0_DATA_SRC       :std_logic;                      -- 0=etroc data, 1=fixed pattern for ELINK data fifo 0
-    ELINK_FIFO1_DATA_SRC       :std_logic;                      -- 0=etroc data, 1=fixed pattern for ELINK data fifo 1
     L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
     LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
     L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
@@ -405,35 +372,8 @@ package READOUT_BOARD_CTRL is
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL0 => (others => '0'),
                                                                    FIFO_LPGBT_SEL0 => '0',
-                                                                   FIFO_ELINK_SEL1 => (others => '0'),
-                                                                   FIFO_LPGBT_SEL1 => '0',
                                                                    FIFO_RESET => '0',
-                                                                   FIFO_TRIG0 => (others => '0'),
-                                                                   FIFO_TRIG1 => (others => '0'),
-                                                                   FIFO_TRIG2 => (others => '0'),
-                                                                   FIFO_TRIG3 => (others => '0'),
-                                                                   FIFO_TRIG4 => (others => '0'),
-                                                                   FIFO_TRIG5 => (others => '0'),
-                                                                   FIFO_TRIG6 => (others => '0'),
-                                                                   FIFO_TRIG7 => (others => '0'),
-                                                                   FIFO_TRIG8 => (others => '0'),
-                                                                   FIFO_TRIG9 => (others => '0'),
-                                                                   FIFO_TRIG0_MASK => x"ffffffff",
-                                                                   FIFO_TRIG1_MASK => x"ffffffff",
-                                                                   FIFO_TRIG2_MASK => x"ffffffff",
-                                                                   FIFO_TRIG3_MASK => x"ffffffff",
-                                                                   FIFO_TRIG4_MASK => x"ffffffff",
-                                                                   FIFO_TRIG5_MASK => x"ffffffff",
-                                                                   FIFO_TRIG6_MASK => x"ffffffff",
-                                                                   FIFO_TRIG7_MASK => x"ffffffff",
-                                                                   FIFO_TRIG8_MASK => x"ffffffff",
-                                                                   FIFO_TRIG9_MASK => x"ffffffff",
-                                                                   FIFO_FORCE_TRIG => '0',
-                                                                   FIFO_CAPTURE_DEPTH => x"003fff",
-                                                                   FIFO_REVERSE_BITS => '1',
                                                                    RX_FIFO_DATA_SRC => '0',
-                                                                   ELINK_FIFO0_DATA_SRC => '0',
-                                                                   ELINK_FIFO1_DATA_SRC => '0',
                                                                    L1A_PULSE => '0',
                                                                    LINK_RESET_PULSE => '0',
                                                                    L1A_RATE => x"00000000",

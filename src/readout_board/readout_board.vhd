@@ -48,9 +48,6 @@ entity readout_board is
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
 
-    fifo_wb_in  : in  ipb_wbus_array(1 downto 0);
-    fifo_wb_out : out ipb_rbus_array(1 downto 0);
-
     daq_wb_in  : in  ipb_wbus_array(0 downto 0);
     daq_wb_out : out ipb_rbus_array(0 downto 0);
 
@@ -131,8 +128,8 @@ architecture behavioral of readout_board is
 
   type int_array_t is array (integer range <>) of integer;
 
-  signal elink_sel : int_array_t (1 downto 0);
-  signal lpgbt_sel : int_array_t (1 downto 0);
+  signal elink_sel : integer range 0 to 27;
+  signal lpgbt_sel : integer range 0 to 1;
 
   --------------------------------------------------------------------------------
   -- TTC
@@ -392,8 +389,8 @@ begin
 
   mon.l1a_rate_cnt   <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
-  mon.packet_cnt     <= packet_cnt(lpgbt_sel(0)*28 + elink_sel(0));
-  mon.error_cnt      <= err_cnt(lpgbt_sel(0)*28 + elink_sel(0));
+  mon.packet_cnt     <= packet_cnt(lpgbt_sel*28 + elink_sel);
+  mon.error_cnt      <= err_cnt(lpgbt_sel*28 + elink_sel);
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -558,86 +555,11 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- DAQ FIFO + Reader
-  --
-  -- Multiplex all elinks into a single FIFO that can be read from the DAQ
-  --
+  -- Elink Multiplexer
   --------------------------------------------------------------------------------
 
-  elink_sel(0) <= to_integer(unsigned(ctrl.fifo_elink_sel0));
-  lpgbt_sel(0) <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel0)));  -- vhdl qualify operator
-  elink_sel(1) <= to_integer(unsigned(ctrl.fifo_elink_sel1));
-  lpgbt_sel(1) <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel1)));  -- vhdl qualify operator
-
-  mon.fifo_full0  <= fifo_full(0);
-  mon.fifo_full1  <= fifo_full(1);
-  mon.fifo_armed0 <= fifo_armed(0);
-  mon.fifo_armed1 <= fifo_armed(1);
-  mon.fifo_empty0 <= fifo_empty(0);
-  mon.fifo_empty1 <= fifo_empty(1);
-
-  daq_gen : for I in 0 to 1 generate
-    signal data_src : std_logic := '0';
-  begin
-
-    gen0 : if (I=0) generate
-      data_src <= ctrl.elink_fifo0_data_src;
-    end generate;
-    gen1 : if (I=1) generate
-      data_src <= ctrl.elink_fifo1_data_src;
-    end generate;
-
-    elink_daq_inst : entity work.elink_daq
-      generic map (
-        UPWIDTH     => UPWIDTH,
-        NUM_UPLINKS => NUM_UPLINKS
-        )
-      port map (
-
-        clk40        => clk40,
-        reset        => reset,
-        fifo_reset_i => ctrl.fifo_reset,
-
-        fixed_pattern => data_src,
-
-        trig0 => ctrl.fifo_trig0(UPWIDTH-1 downto 0),
-        trig1 => ctrl.fifo_trig1(UPWIDTH-1 downto 0),
-        trig2 => ctrl.fifo_trig2(UPWIDTH-1 downto 0),
-        trig3 => ctrl.fifo_trig3(UPWIDTH-1 downto 0),
-        trig4 => ctrl.fifo_trig4(UPWIDTH-1 downto 0),
-        trig5 => ctrl.fifo_trig5(UPWIDTH-1 downto 0),
-        trig6 => ctrl.fifo_trig6(UPWIDTH-1 downto 0),
-        trig7 => ctrl.fifo_trig7(UPWIDTH-1 downto 0),
-        trig8 => ctrl.fifo_trig8(UPWIDTH-1 downto 0),
-        trig9 => ctrl.fifo_trig9(UPWIDTH-1 downto 0),
-
-        mask0 => ctrl.fifo_trig0_mask(UPWIDTH-1 downto 0),
-        mask1 => ctrl.fifo_trig1_mask(UPWIDTH-1 downto 0),
-        mask2 => ctrl.fifo_trig2_mask(UPWIDTH-1 downto 0),
-        mask3 => ctrl.fifo_trig3_mask(UPWIDTH-1 downto 0),
-        mask4 => ctrl.fifo_trig4_mask(UPWIDTH-1 downto 0),
-        mask5 => ctrl.fifo_trig5_mask(UPWIDTH-1 downto 0),
-        mask6 => ctrl.fifo_trig6_mask(UPWIDTH-1 downto 0),
-        mask7 => ctrl.fifo_trig7_mask(UPWIDTH-1 downto 0),
-        mask8 => ctrl.fifo_trig8_mask(UPWIDTH-1 downto 0),
-        mask9 => ctrl.fifo_trig9_mask(UPWIDTH-1 downto 0),
-
-        fifo_capture_depth => to_integer(unsigned(ctrl.fifo_capture_depth)),
-        force_trig         => ctrl.fifo_force_trig,
-        reverse_bits       => ctrl.fifo_reverse_bits,
-
-        elink_sel => elink_sel(I),
-        lpgbt_sel => lpgbt_sel(I),
-
-        armed => fifo_armed(I),
-        full  => fifo_full(I),
-        empty => fifo_empty(I),
-
-        data_i      => uplink_data_aligned,
-        fifo_wb_in  => fifo_wb_in(I),
-        fifo_wb_out => fifo_wb_out(I)
-        );
-  end generate;
+  elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel0));
+  lpgbt_sel <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel0)));  -- vhdl qualify operator
 
   --------------------------------------------------------------------------------
   -- PRBS/Upcnt Pattern Checking
@@ -804,12 +726,12 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      rx_state_mon  <= rx_state_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
-      rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel(0)*28 + elink_sel(0));
-      rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel(0)*28 + elink_sel(0));
-      rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel(0)*28 + elink_sel(0));
-      rx_crc        <= rx_crc_arr(lpgbt_sel(0)*28 + elink_sel(0));
-      rx_crc_calc   <= rx_crc_calc_arr(lpgbt_sel(0)*28 + elink_sel(0));
+      rx_state_mon  <= rx_state_mon_arr(lpgbt_sel*28 + elink_sel);
+      rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel*28 + elink_sel);
+      rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel*28 + elink_sel);
+      rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel*28 + elink_sel);
+      rx_crc        <= rx_crc_arr(lpgbt_sel*28 + elink_sel);
+      rx_crc_calc   <= rx_crc_calc_arr(lpgbt_sel*28 + elink_sel);
     end if;
   end process;
 
@@ -887,9 +809,9 @@ begin
     ila_uplink_ic      <= uplink_data(ila_sel).ic;
     ila_uplink_ec      <= uplink_data(ila_sel).ec;
 
-    rx_locked_mon <= rx_locked(lpgbt_sel(0)*28+elink_sel(0));
-    rx_err_mon  <= rx_err(lpgbt_sel(0)*28+elink_sel(0));
-    rx_idle_mon <= rx_idle(lpgbt_sel(0)*28+elink_sel(0));
+    rx_locked_mon <= rx_locked(lpgbt_sel*28+elink_sel);
+    rx_err_mon  <= rx_err(lpgbt_sel*28+elink_sel);
+    rx_idle_mon <= rx_idle(lpgbt_sel*28+elink_sel);
 
     ila_lpgbt_inst : ila_lpgbt
       port map (

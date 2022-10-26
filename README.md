@@ -1,6 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v1.3.6](#v136)
       - [v1.3.5](#v135)
       - [v1.3.4](#v134)
       - [v1.3.2](#v132)
@@ -26,6 +27,16 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v1.3.6
+
+  - Fix bitslip / zero\_suppress / raw\_data\_mode bitmask connection
+    (previously bit0 was connected to all 28 elinks, now it will be a
+    bitmask)
+  - Connect the CRC8 to an ILA
+  - Increase the depth of the ETROC FIFO from 32768 (\~1 Mb) to 131072
+    words (\~8.4 Mb) to decrease overflow probability
+  - Remove elink daq
 
 ### v1.3.5
 

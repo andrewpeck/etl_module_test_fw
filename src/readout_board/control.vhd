@@ -26,9 +26,6 @@ entity control is
     reset_i : in std_logic;
     clock   : in std_logic;
 
-    elink_ipb_w_array : out ipb_wbus_array(NUM_RBS*2 - 1 downto 0);
-    elink_ipb_r_array : in  ipb_rbus_array(NUM_RBS*2 - 1 downto 0);
-
     daq_ipb_w_array : out ipb_wbus_array(NUM_RBS - 1 downto 0);
     daq_ipb_r_array : in  ipb_rbus_array(NUM_RBS - 1 downto 0);
 
@@ -197,24 +194,6 @@ begin
                                          = BASE+I
                                          else '0';
     ipb_r_array(BASE+I).ipb_err <= daq_ipb_r_array(I).ipb_err;
-  end generate;
-
-  --------------------------------------------------------------------------------
-  -- Dumb DAQ
-  --------------------------------------------------------------------------------
-
-  elinkgen : for I in 0 to 2*NUM_RBS-1 generate
-    constant BASE : integer := N_SLV_DAQ_0;
-  begin
-    elink_ipb_w_array(I) <= ipb_w_array(BASE+I);
-
-    ipb_r_array(BASE+I).ipb_rdata <= elink_ipb_r_array(I).ipb_rdata;
-    ipb_r_array(BASE+I).ipb_ack   <= elink_ipb_r_array(I).ipb_ack
-                                         when
-                                         to_integer(unsigned(ipbus_sel_etl_test_fw(ipb_w.ipb_addr)))
-                                         = BASE+I
-                                         else '0';
-    ipb_r_array(BASE+I).ipb_err <= elink_ipb_r_array(I).ipb_err;
   end generate;
 
   --------------------------------------------------------------------------------
