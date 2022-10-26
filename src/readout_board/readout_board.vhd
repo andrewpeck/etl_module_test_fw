@@ -830,7 +830,7 @@ begin
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
-      DEPTH => 32768
+      DEPTH => 32768*4
       )
     port map (
       clk40        => clk40,
