@@ -55,7 +55,7 @@ begin
       )
     port map (
       clk    => clk40,
-      reset  => reset,
+      reset  => reset or fifo_reset,
       enable => '1',
       event  => fifo_full and fifo_wr_en,
       count  => lost_word_cnt,
