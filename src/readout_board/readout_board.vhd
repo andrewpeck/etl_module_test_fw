@@ -116,7 +116,7 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of prbs_ff  : signal is "true";
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
-  signal fast_cmd_fw, fast_cmd_sw : std_logic_vector (7 downto 0) := (others => '0');
+  signal fast_cmd_fw : std_logic_vector (7 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- FIFO
@@ -281,7 +281,7 @@ begin
           when 2 =>
             downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
           when 3 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_sw);
+            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
           when others =>
             downlink_data(I).data <= repeat_byte(fast_cmd_fw);
 
@@ -289,15 +289,6 @@ begin
       end if;
     end process;
   end generate;
-
-  -- Fast command pulse
-  --  + make it so that the fast commands are just one pulse wide
-  --    (gated by the strobe)
-
-  fast_cmd_sw <= ctrl.lpgbt.daq.downlink.fast_cmd_data
-                 when
-                 ctrl.lpgbt.daq.downlink.fast_cmd_pulse = '1' else
-                 ctrl.lpgbt.daq.downlink.fast_cmd_idle;
 
   etroc_tx_inst : entity etroc.etroc_tx
     port map (

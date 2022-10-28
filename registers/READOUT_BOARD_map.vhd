@@ -103,10 +103,7 @@ begin  -- architecture behavioral
           localRdData(10 downto  8)  <=  reg_data(18)(10 downto  8);                  --Downlink bitslip alignment for Group 2
           localRdData(14 downto 12)  <=  reg_data(18)(14 downto 12);                  --Downlink bitslip alignment for Group 3
         when 19 => --0x13
-          localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
-        when 20 => --0x14
-          localRdData(15 downto  8)  <=  reg_data(20)(15 downto  8);                  --Data to send on fast_cmd
-          localRdData(23 downto 16)  <=  reg_data(20)(23 downto 16);                  --Data to send on fast_cmd
+          localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs
         when 33 => --0x21
           localRdData( 0)            <=  Mon.LPGBT.TRIGGER.UPLINK.READY;              --LPGBT Uplink Ready
           localRdData(31 downto 16)  <=  Mon.LPGBT.TRIGGER.UPLINK.FEC_ERR_CNT;        --Data Corrected Count
@@ -278,8 +275,6 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_2              <=  reg_data(18)(10 downto  8);       
   Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_3              <=  reg_data(18)(14 downto 12);       
   Ctrl.LPGBT.DAQ.DOWNLINK.DL_SRC               <=  reg_data(19)( 3 downto  0);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_IDLE        <=  reg_data(20)(15 downto  8);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_DATA        <=  reg_data(20)(23 downto 16);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_0            <=  reg_data(34)( 2 downto  0);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_1            <=  reg_data(34)( 6 downto  4);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_2            <=  reg_data(34)(10 downto  8);       
@@ -344,7 +339,6 @@ begin  -- architecture behavioral
       -- action resets
       Ctrl.LPGBT.DAQ.UPLINK.RESET <= '0';
       Ctrl.LPGBT.DAQ.DOWNLINK.RESET <= '0';
-      Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE <= '0';
       Ctrl.LPGBT.FEC_ERR_RESET <= '0';
       Ctrl.LPGBT.TRIGGER.UPLINK.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.RESET <= '0';
@@ -415,12 +409,7 @@ begin  -- architecture behavioral
           reg_data(18)(10 downto  8)              <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
           reg_data(18)(14 downto 12)              <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
         when 19 => --0x13
-          reg_data(19)( 3 downto  0)              <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
-        when 20 => --0x14
-          reg_data(20)(15 downto  8)              <=  localWrData(15 downto  8);      --Data to send on fast_cmd
-          reg_data(20)(23 downto 16)              <=  localWrData(23 downto 16);      --Data to send on fast_cmd
-        when 21 => --0x15
-          Ctrl.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE  <=  localWrData( 0);               
+          reg_data(19)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs
         when 31 => --0x1f
           Ctrl.LPGBT.FEC_ERR_RESET                <=  localWrData( 0);               
         when 32 => --0x20
@@ -589,9 +578,6 @@ begin  -- architecture behavioral
       reg_data(18)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_2;
       reg_data(18)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_3;
       reg_data(19)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.DL_SRC;
-      reg_data(20)(15 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_IDLE;
-      reg_data(20)(23 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_DATA;
-      reg_data(21)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.FAST_CMD_PULSE;
       reg_data(31)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.FEC_ERR_RESET;
       reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.RESET;
       reg_data(34)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.ALIGN_0;

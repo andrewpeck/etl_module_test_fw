@@ -86,10 +86,7 @@ package READOUT_BOARD_CTRL is
     ALIGN_1                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 1
     ALIGN_2                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 2
     ALIGN_3                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 3
-    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=sw fast command
-    FAST_CMD_IDLE              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
-    FAST_CMD_DATA              :std_logic_vector( 7 downto 0);  -- Data to send on fast_cmd
-    FAST_CMD_PULSE             :std_logic;                      -- Write 1 to pulse fast_cmd
+    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs
   end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
 
 
@@ -99,10 +96,7 @@ package READOUT_BOARD_CTRL is
                                                                                                          ALIGN_1 => (others => '0'),
                                                                                                          ALIGN_2 => (others => '0'),
                                                                                                          ALIGN_3 => (others => '0'),
-                                                                                                         DL_SRC => (others => '0'),
-                                                                                                         FAST_CMD_IDLE => x"f0",
-                                                                                                         FAST_CMD_DATA => (others => '0'),
-                                                                                                         FAST_CMD_PULSE => '0'
+                                                                                                         DL_SRC => (others => '0')
                                                                                                         );
   type READOUT_BOARD_LPGBT_DAQ_MON_t is record
     UPLINK                     :READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t;
