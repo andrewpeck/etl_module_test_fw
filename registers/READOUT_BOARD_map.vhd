@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1286);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1286) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1287);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1287) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -157,8 +157,6 @@ begin  -- architecture behavioral
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.UPCNT_ERRORS;      --Errors on Upcnt
         when 58 => --0x3a
           localRdData(31 downto  0)  <=  Mon.LPGBT.PATTERN_CHECKER.PRBS_ERRORS;       --Errors on Prbs
-        when 259 => --0x103
-          localRdData( 1 downto  0)  <=  reg_data(259)( 1 downto  0);                 --Select which LPGBT is connected to the ILA
         when 262 => --0x106
           localRdData(31 downto  0)  <=  reg_data(262)(31 downto  0);                 --1 to zero suppress fillers out from the ETROC RX
         when 263 => --0x107
@@ -231,6 +229,8 @@ begin  -- architecture behavioral
         when 1285 => --0x505
           localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
           localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
+        when 1287 => --0x507
+          localRdData( 0)            <=  reg_data(1287)( 0);                          --1 to enable the external SMA trigger
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -308,7 +308,6 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1   <=  reg_data(52)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1  <=  reg_data(53)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.SEL               <=  reg_data(56)(31 downto 16);       
-  Ctrl.ILA_SEL                                 <=  reg_data(259)( 1 downto  0);      
   Ctrl.ZERO_SUPRESS                            <=  reg_data(262)(31 downto  0);      
   Ctrl.BITSLIP_AUTO_EN                         <=  reg_data(263)( 0);                
   Ctrl.RAW_DATA_MODE                           <=  reg_data(264)(31 downto  0);      
@@ -329,6 +328,7 @@ begin  -- architecture behavioral
   Ctrl.FIFO_LPGBT_SEL0                         <=  reg_data(768)( 8);                
   Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 0);               
   Ctrl.L1A_RATE                                <=  reg_data(1282)(31 downto  0);     
+  Ctrl.EN_EXT_TRIGGER                          <=  reg_data(1287)( 0);               
 
 
   -- writes to slave
@@ -368,173 +368,173 @@ begin  -- architecture behavioral
       if strobe_pulse='1' and wb_write = '1' then
         case to_integer(unsigned(wb_addr(10 downto 0))) is
         when 0 => --0x0
-          Ctrl.LPGBT.DAQ.UPLINK.RESET             <=  localWrData( 0);               
+          Ctrl.LPGBT.DAQ.UPLINK.RESET           <=  localWrData( 0);               
         when 2 => --0x2
-          reg_data( 2)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data( 2)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data( 2)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data( 2)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data( 2)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data( 2)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data( 2)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data( 2)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data( 2)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data( 2)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data( 2)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data( 2)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data( 2)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data( 2)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data( 2)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data( 2)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 3 => --0x3
-          reg_data( 3)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data( 3)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data( 3)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data( 3)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data( 3)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data( 3)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data( 3)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data( 3)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data( 3)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data( 3)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data( 3)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data( 3)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data( 3)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data( 3)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data( 3)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data( 3)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 4 => --0x4
-          reg_data( 4)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data( 4)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data( 4)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data( 4)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data( 4)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data( 4)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data( 4)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data( 4)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data( 4)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data( 4)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data( 4)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data( 4)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data( 4)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data( 4)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data( 4)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data( 4)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 5 => --0x5
-          reg_data( 5)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data( 5)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data( 5)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data( 5)(14 downto 12)              <=  localWrData(14 downto 12);      --
+          reg_data( 5)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data( 5)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data( 5)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data( 5)(14 downto 12)            <=  localWrData(14 downto 12);      --
         when 16 => --0x10
-          Ctrl.LPGBT.DAQ.DOWNLINK.RESET           <=  localWrData( 0);               
+          Ctrl.LPGBT.DAQ.DOWNLINK.RESET         <=  localWrData( 0);               
         when 18 => --0x12
-          reg_data(18)( 2 downto  0)              <=  localWrData( 2 downto  0);      --Downlink bitslip alignment for Group 0
-          reg_data(18)( 6 downto  4)              <=  localWrData( 6 downto  4);      --Downlink bitslip alignment for Group 1
-          reg_data(18)(10 downto  8)              <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
-          reg_data(18)(14 downto 12)              <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
+          reg_data(18)( 2 downto  0)            <=  localWrData( 2 downto  0);      --Downlink bitslip alignment for Group 0
+          reg_data(18)( 6 downto  4)            <=  localWrData( 6 downto  4);      --Downlink bitslip alignment for Group 1
+          reg_data(18)(10 downto  8)            <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
+          reg_data(18)(14 downto 12)            <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
         when 19 => --0x13
           reg_data(19)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs
         when 31 => --0x1f
-          Ctrl.LPGBT.FEC_ERR_RESET                <=  localWrData( 0);               
+          Ctrl.LPGBT.FEC_ERR_RESET              <=  localWrData( 0);               
         when 32 => --0x20
-          Ctrl.LPGBT.TRIGGER.UPLINK.RESET         <=  localWrData( 0);               
+          Ctrl.LPGBT.TRIGGER.UPLINK.RESET       <=  localWrData( 0);               
         when 34 => --0x22
-          reg_data(34)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data(34)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data(34)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data(34)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data(34)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data(34)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data(34)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data(34)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data(34)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data(34)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data(34)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data(34)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data(34)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data(34)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data(34)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data(34)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 35 => --0x23
-          reg_data(35)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data(35)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data(35)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data(35)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data(35)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data(35)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data(35)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data(35)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data(35)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data(35)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data(35)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data(35)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data(35)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data(35)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data(35)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data(35)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 36 => --0x24
-          reg_data(36)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data(36)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data(36)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data(36)(14 downto 12)              <=  localWrData(14 downto 12);      --
-          reg_data(36)(18 downto 16)              <=  localWrData(18 downto 16);      --
-          reg_data(36)(22 downto 20)              <=  localWrData(22 downto 20);      --
-          reg_data(36)(26 downto 24)              <=  localWrData(26 downto 24);      --
-          reg_data(36)(30 downto 28)              <=  localWrData(30 downto 28);      --
+          reg_data(36)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data(36)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data(36)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data(36)(14 downto 12)            <=  localWrData(14 downto 12);      --
+          reg_data(36)(18 downto 16)            <=  localWrData(18 downto 16);      --
+          reg_data(36)(22 downto 20)            <=  localWrData(22 downto 20);      --
+          reg_data(36)(26 downto 24)            <=  localWrData(26 downto 24);      --
+          reg_data(36)(30 downto 28)            <=  localWrData(30 downto 28);      --
         when 37 => --0x25
-          reg_data(37)( 2 downto  0)              <=  localWrData( 2 downto  0);      --
-          reg_data(37)( 6 downto  4)              <=  localWrData( 6 downto  4);      --
-          reg_data(37)(10 downto  8)              <=  localWrData(10 downto  8);      --
-          reg_data(37)(14 downto 12)              <=  localWrData(14 downto 12);      --
+          reg_data(37)( 2 downto  0)            <=  localWrData( 2 downto  0);      --
+          reg_data(37)( 6 downto  4)            <=  localWrData( 6 downto  4);      --
+          reg_data(37)(10 downto  8)            <=  localWrData(10 downto  8);      --
+          reg_data(37)(14 downto 12)            <=  localWrData(14 downto 12);      --
         when 48 => --0x30
-          Ctrl.LPGBT.PATTERN_CHECKER.RESET        <=  localWrData( 0);               
+          Ctrl.LPGBT.PATTERN_CHECKER.RESET      <=  localWrData( 0);               
         when 49 => --0x31
-          Ctrl.LPGBT.PATTERN_CHECKER.CNT_RESET    <=  localWrData( 0);               
+          Ctrl.LPGBT.PATTERN_CHECKER.CNT_RESET  <=  localWrData( 0);               
         when 50 => --0x32
-          reg_data(50)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
+          reg_data(50)(31 downto  0)            <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 51 => --0x33
-          reg_data(51)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
+          reg_data(51)(31 downto  0)            <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 52 => --0x34
-          reg_data(52)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
+          reg_data(52)(31 downto  0)            <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 53 => --0x35
-          reg_data(53)(31 downto  0)              <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
+          reg_data(53)(31 downto  0)            <=  localWrData(31 downto  0);      --Bitmask 1 to enable checking
         when 56 => --0x38
-          reg_data(56)(31 downto 16)              <=  localWrData(31 downto 16);      --Channel to select for error counting
-        when 259 => --0x103
-          reg_data(259)( 1 downto  0)             <=  localWrData( 1 downto  0);      --Select which LPGBT is connected to the ILA
+          reg_data(56)(31 downto 16)            <=  localWrData(31 downto 16);      --Channel to select for error counting
         when 260 => --0x104
-          Ctrl.ETROC_BITSLIP                      <=  localWrData(31 downto  0);     
+          Ctrl.ETROC_BITSLIP                    <=  localWrData(31 downto  0);     
         when 261 => --0x105
-          Ctrl.RESET_ETROC_RX                     <=  localWrData(31 downto  0);     
+          Ctrl.RESET_ETROC_RX                   <=  localWrData(31 downto  0);     
         when 262 => --0x106
-          reg_data(262)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to zero suppress fillers out from the ETROC RX
+          reg_data(262)(31 downto  0)           <=  localWrData(31 downto  0);      --1 to zero suppress fillers out from the ETROC RX
         when 263 => --0x107
-          reg_data(263)( 0)                       <=  localWrData( 0);                --1 to enable automatic bitslipping alignment
+          reg_data(263)( 0)                     <=  localWrData( 0);                --1 to enable automatic bitslipping alignment
         when 264 => --0x108
-          reg_data(264)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to read all data from ETROC, regardless of content
+          reg_data(264)(31 downto  0)           <=  localWrData(31 downto  0);      --1 to read all data from ETROC, regardless of content
         when 265 => --0x109
-          Ctrl.ETROC_BITSLIP_SLAVE                <=  localWrData(31 downto  0);     
+          Ctrl.ETROC_BITSLIP_SLAVE              <=  localWrData(31 downto  0);     
         when 266 => --0x10a
-          Ctrl.RESET_ETROC_RX_SLAVE               <=  localWrData(31 downto  0);     
+          Ctrl.RESET_ETROC_RX_SLAVE             <=  localWrData(31 downto  0);     
         when 267 => --0x10b
-          reg_data(267)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to zero suppress fillers out from the ETROC RX
+          reg_data(267)(31 downto  0)           <=  localWrData(31 downto  0);      --1 to zero suppress fillers out from the ETROC RX
         when 268 => --0x10c
-          reg_data(268)(31 downto  0)             <=  localWrData(31 downto  0);      --1 to read all data from ETROC, regardless of content
+          reg_data(268)(31 downto  0)           <=  localWrData(31 downto  0);      --1 to read all data from ETROC, regardless of content
         when 512 => --0x200
-          Ctrl.SC.TX_RESET                        <=  localWrData( 0);               
+          Ctrl.SC.TX_RESET                      <=  localWrData( 0);               
         when 513 => --0x201
-          Ctrl.SC.RX_RESET                        <=  localWrData( 1);               
+          Ctrl.SC.RX_RESET                      <=  localWrData( 1);               
         when 514 => --0x202
-          Ctrl.SC.TX_START_WRITE                  <=  localWrData( 0);               
+          Ctrl.SC.TX_START_WRITE                <=  localWrData( 0);               
         when 515 => --0x203
-          Ctrl.SC.TX_START_READ                   <=  localWrData( 0);               
+          Ctrl.SC.TX_START_READ                 <=  localWrData( 0);               
         when 516 => --0x204
-          reg_data(516)(15 downto  8)             <=  localWrData(15 downto  8);      --I2C address of the GBTx
+          reg_data(516)(15 downto  8)           <=  localWrData(15 downto  8);      --I2C address of the GBTx
         when 517 => --0x205
-          reg_data(517)(15 downto  0)             <=  localWrData(15 downto  0);      --Address of the first register to be accessed
+          reg_data(517)(15 downto  0)           <=  localWrData(15 downto  0);      --Address of the first register to be accessed
         when 518 => --0x206
-          reg_data(518)(15 downto  0)             <=  localWrData(15 downto  0);      --Number of words/bytes to be read (only for read transactions)
-          reg_data(518)(28)                       <=  localWrData(28);                --IC Frame format: 0 = lpGBT v0; 1 = lpGBT v1
+          reg_data(518)(15 downto  0)           <=  localWrData(15 downto  0);      --Number of words/bytes to be read (only for read transactions)
+          reg_data(518)(28)                     <=  localWrData(28);                --IC Frame format: 0 = lpGBT v0; 1 = lpGBT v1
         when 519 => --0x207
-          reg_data(519)( 7 downto  0)             <=  localWrData( 7 downto  0);      --Data to be written into the internal FIFO
+          reg_data(519)( 7 downto  0)           <=  localWrData( 7 downto  0);      --Data to be written into the internal FIFO
         when 521 => --0x209
-          Ctrl.SC.TX_WR                           <=  localWrData( 0);               
+          Ctrl.SC.TX_WR                         <=  localWrData( 0);               
         when 525 => --0x20d
-          reg_data(525)( 7 downto  0)             <=  localWrData( 7 downto  0);      --Command: The Command field is present in the frames received by the SCA and indicates the operation to be performed. Meaning is specific to the channel.
+          reg_data(525)( 7 downto  0)           <=  localWrData( 7 downto  0);      --Command: The Command field is present in the frames received by the SCA and indicates the operation to be performed. Meaning is specific to the channel.
         when 526 => --0x20e
-          reg_data(526)(15 downto  8)             <=  localWrData(15 downto  8);      --Command: It represents the packet destination address. The address is one-byte long. By default, the GBT-SCA use address 0x00.
+          reg_data(526)(15 downto  8)           <=  localWrData(15 downto  8);      --Command: It represents the packet destination address. The address is one-byte long. By default, the GBT-SCA use address 0x00.
         when 527 => --0x20f
-          reg_data(527)(23 downto 16)             <=  localWrData(23 downto 16);      --Command: Specifies the message identification number. The reply messages generated by the SCA have the same transaction identifier of the request message allowing to associate the transmitted commands with the corresponding replies, permitting the concurrent use of all the SCA channels.  It is not required that ID values are ordered. ID values 0x00 and 0xff are reserved for interrupt packets generated spontaneously by the SCA and should not be used in requests.
+          reg_data(527)(23 downto 16)           <=  localWrData(23 downto 16);      --Command: Specifies the message identification number. The reply messages generated by the SCA have the same transaction identifier of the request message allowing to associate the transmitted commands with the corresponding replies, permitting the concurrent use of all the SCA channels.  It is not required that ID values are ordered. ID values 0x00 and 0xff are reserved for interrupt packets generated spontaneously by the SCA and should not be used in requests.
         when 528 => --0x210
-          reg_data(528)(31 downto 24)             <=  localWrData(31 downto 24);      --Command: The channel field specifies the destination interface of the request message (ctrl/spi/gpio/i2c/jtag/adc/dac).
+          reg_data(528)(31 downto 24)           <=  localWrData(31 downto 24);      --Command: The channel field specifies the destination interface of the request message (ctrl/spi/gpio/i2c/jtag/adc/dac).
         when 529 => --0x211
-          reg_data(529)(31 downto  0)             <=  localWrData(31 downto  0);      --Command: data field (According to the SCA manual)
+          reg_data(529)(31 downto  0)           <=  localWrData(31 downto  0);      --Command: data field (According to the SCA manual)
         when 540 => --0x21c
-          reg_data(540)( 0)                       <=  localWrData( 0);                --Enable flag to select SCAs
+          reg_data(540)( 0)                     <=  localWrData( 0);                --Enable flag to select SCAs
         when 541 => --0x21d
-          Ctrl.SC.START_RESET                     <=  localWrData( 0);               
+          Ctrl.SC.START_RESET                   <=  localWrData( 0);               
         when 543 => --0x21f
-          Ctrl.SC.START_CONNECT                   <=  localWrData( 0);               
+          Ctrl.SC.START_CONNECT                 <=  localWrData( 0);               
         when 544 => --0x220
-          Ctrl.SC.START_COMMAND                   <=  localWrData( 0);               
+          Ctrl.SC.START_COMMAND                 <=  localWrData( 0);               
         when 545 => --0x221
-          Ctrl.SC.INJ_CRC_ERR                     <=  localWrData( 0);               
+          Ctrl.SC.INJ_CRC_ERR                   <=  localWrData( 0);               
         when 768 => --0x300
-          reg_data(768)( 4 downto  0)             <=  localWrData( 4 downto  0);      --Choose which e-link the readout fifo connects to (0-27)
-          reg_data(768)( 8)                       <=  localWrData( 8);                --Choose which lpgbt the readout fifo connects to (0-1)
+          reg_data(768)( 4 downto  0)           <=  localWrData( 4 downto  0);      --Choose which e-link the readout fifo connects to (0-27)
+          reg_data(768)( 8)                     <=  localWrData( 8);                --Choose which lpgbt the readout fifo connects to (0-1)
         when 785 => --0x311
-          Ctrl.FIFO_RESET                         <=  localWrData( 0);               
+          Ctrl.FIFO_RESET                       <=  localWrData( 0);               
         when 1056 => --0x420
-          reg_data(1056)( 0)                      <=  localWrData( 0);                --0=etroc data, 1=fixed pattern for ETROC data fifo
+          reg_data(1056)( 0)                    <=  localWrData( 0);                --0=etroc data, 1=fixed pattern for ETROC data fifo
         when 1280 => --0x500
-          Ctrl.L1A_PULSE                          <=  localWrData( 0);               
+          Ctrl.L1A_PULSE                        <=  localWrData( 0);               
         when 1281 => --0x501
-          Ctrl.LINK_RESET_PULSE                   <=  localWrData( 0);               
+          Ctrl.LINK_RESET_PULSE                 <=  localWrData( 0);               
         when 1282 => --0x502
-          reg_data(1282)(31 downto  0)            <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
+          reg_data(1282)(31 downto  0)          <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1286 => --0x506
-          Ctrl.PACKET_CNT_RESET                   <=  localWrData( 0);               
-          Ctrl.ERR_CNT_RESET                      <=  localWrData( 1);               
+          Ctrl.PACKET_CNT_RESET                 <=  localWrData( 0);               
+          Ctrl.ERR_CNT_RESET                    <=  localWrData( 1);               
+        when 1287 => --0x507
+          reg_data(1287)( 0)                    <=  localWrData( 0);                --1 to enable the external SMA trigger
 
         when others => null;
 
@@ -615,7 +615,6 @@ begin  -- architecture behavioral
       reg_data(52)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1;
       reg_data(53)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_1;
       reg_data(56)(31 downto 16)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.SEL;
-      reg_data(259)( 1 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ILA_SEL;
       reg_data(260)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_BITSLIP;
       reg_data(261)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RESET_ETROC_RX;
       reg_data(262)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ZERO_SUPRESS;
@@ -654,6 +653,7 @@ begin  -- architecture behavioral
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
       reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
+      reg_data(1287)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.EN_EXT_TRIGGER;
 
       end if; -- reset
     end if; -- clk

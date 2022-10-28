@@ -4,6 +4,7 @@
 
 ** Table of Contents :TOC_4:
   - [[#changelog][Changelog]]
+    - [[#v141][v1.4.1]]
     - [[#v140][v1.4.0]]
     - [[#v135][v1.3.5]]
     - [[#v134][v1.3.4]]
@@ -29,6 +30,10 @@ This changelog describes changes made in recommended versions of the firmware.
 Versions not described here are intermediate versions which are either not tested or known to be problematic.
 Change log is inclusive of all changes from the previous recommended version; please only use the versions listed here unless instructed otherwise.
 
+*** v1.4.1
+- Deprecate software fast commands
+- ILA additions, disable wishbone ILA by default
+- Add enable signal for external SMA trigger
 *** v1.4.0
 - Fix bitslip / zero_suppress / raw_data_mode bitmask connection (previously
   bit0 was connected to all 28 elinks, now it will be a bitmask)

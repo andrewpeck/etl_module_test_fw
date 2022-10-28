@@ -330,7 +330,6 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_CTRL_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_CTRL_t;
-    ILA_SEL                    :std_logic_vector( 1 downto 0);  -- Select which LPGBT is connected to the ILA
     ETROC_BITSLIP              :std_logic_vector(31 downto 0);  -- 1 to bitslip an ETROC
     RESET_ETROC_RX             :std_logic_vector(31 downto 0);  -- 1 to reset the ETROC rx module
     ZERO_SUPRESS               :std_logic_vector(31 downto 0);  -- 1 to zero suppress fillers out from the ETROC RX
@@ -350,12 +349,12 @@ package READOUT_BOARD_CTRL is
     L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
+    EN_EXT_TRIGGER             :std_logic;                      -- 1 to enable the external SMA trigger
   end record READOUT_BOARD_CTRL_t;
 
 
   constant DEFAULT_READOUT_BOARD_CTRL_t : READOUT_BOARD_CTRL_t := (
                                                                    LPGBT => DEFAULT_READOUT_BOARD_LPGBT_CTRL_t,
-                                                                   ILA_SEL => (others => '0'),
                                                                    ETROC_BITSLIP => (others => '0'),
                                                                    RESET_ETROC_RX => (others => '0'),
                                                                    ZERO_SUPRESS => x"0fffffff",
@@ -374,7 +373,8 @@ package READOUT_BOARD_CTRL is
                                                                    LINK_RESET_PULSE => '0',
                                                                    L1A_RATE => x"00000000",
                                                                    PACKET_CNT_RESET => '0',
-                                                                   ERR_CNT_RESET => '0'
+                                                                   ERR_CNT_RESET => '0',
+                                                                   EN_EXT_TRIGGER => '0'
                                                                   );
 
 

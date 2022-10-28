@@ -1,6 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v1.4.1](#v141)
       - [v1.4.0](#v140)
       - [v1.3.5](#v135)
       - [v1.3.4](#v134)
@@ -27,6 +28,12 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v1.4.1
+
+  - Deprecate software fast commands
+  - ILA additions, disable wishbone ILA by default
+  - Add enable signal for external SMA trigger
 
 ### v1.4.0
 

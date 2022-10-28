@@ -130,6 +130,7 @@ architecture behavioral of readout_board is
 
   signal elink_sel : integer range 0 to 27;
   signal lpgbt_sel : integer range 0 to 1;
+  signal link_sel  : integer range 0 to 28*2-1;
 
   --------------------------------------------------------------------------------
   -- TTC
@@ -147,17 +148,8 @@ architecture behavioral of readout_board is
   signal bxn        : natural range 0 to 3563 := 0;
 
   --------------------------------------------------------------------------------
-  -- ILA
-  --------------------------------------------------------------------------------
-
-  signal ila_sel : integer := 0;
-
-  --------------------------------------------------------------------------------
   -- ETROC RX
   --------------------------------------------------------------------------------
-
-  signal rx_frame_mon : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_state_mon : std_logic_vector (2 downto 0) := (others => '0');
 
   type rx_frame_array_t is array (integer range <>) of std_logic_vector(39 downto 0);
   type rx_state_array_t is array (integer range <>) of std_logic_vector(2 downto 0);
@@ -174,6 +166,7 @@ architecture behavioral of readout_board is
   signal rx_crc_calc_arr : rx_crc_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_crc          : std_logic_vector(CRCBITS-1 downto 0);
   signal rx_crc_calc     : std_logic_vector(CRCBITS-1 downto 0);
+  signal rx_crc_match    : std_logic := '0';
 
   signal rx_locked          : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
@@ -204,9 +197,6 @@ begin
 
   --------------------------------------------------------------------------------
   -- Downlink Data Generation
-  --
-  -- TODO: move this into its own block
-  --
   --------------------------------------------------------------------------------
 
   -- up counter
@@ -312,7 +302,7 @@ begin
 
   bc0 <= '1' when bxn = 0 else '0';
 
-  l1a        <= ctrl.l1a_pulse or l1a_gen or trigger_i;
+  l1a        <= ctrl.l1a_pulse or l1a_gen or (trigger_i and ctrl.en_ext_trigger);
   link_reset <= ctrl.link_reset_pulse;
 
   trigger_o <= l1a;
@@ -381,8 +371,8 @@ begin
 
   mon.l1a_rate_cnt   <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
-  mon.packet_cnt     <= packet_cnt(lpgbt_sel*28 + elink_sel);
-  mon.error_cnt      <= err_cnt(lpgbt_sel*28 + elink_sel);
+  mon.packet_cnt     <= packet_cnt(link_sel);
+  mon.error_cnt      <= err_cnt(link_sel);
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -481,9 +471,6 @@ begin
 
   --------------------------------------------------------------------------------
   -- Downlink Frame Aligner
-  --
-  -- TODO: move this into its own block
-  --
   --------------------------------------------------------------------------------
 
   dlvalid : for I in 0 to NUM_DOWNLINKS-1 generate
@@ -529,7 +516,6 @@ begin
 
   --------------------------------------------------------------------------------
   -- Uplink Frame Aligner
-  --
   --------------------------------------------------------------------------------
 
   uplink_aligner_inst : entity work.uplink_aligner
@@ -550,8 +536,14 @@ begin
   -- Elink Multiplexer
   --------------------------------------------------------------------------------
 
-  elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel0));
-  lpgbt_sel <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel0)));  -- vhdl qualify operator
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      elink_sel <= to_integer(unsigned(ctrl.fifo_elink_sel0));
+      lpgbt_sel <= to_integer(unsigned(std_logic_vector'("" & ctrl.fifo_lpgbt_sel0)));  -- vhdl qualify operator
+      link_sel  <= lpgbt_sel*28+elink_sel;
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- PRBS/Upcnt Pattern Checking
@@ -718,14 +710,15 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      rx_state_mon  <= rx_state_mon_arr(lpgbt_sel*28 + elink_sel);
-      rx_frame_mon  <= rx_frame_mon_arr(lpgbt_sel*28 + elink_sel);
-      rx_fifo_data  <= rx_fifo_data_arr(lpgbt_sel*28 + elink_sel);
-      rx_fifo_wr_en <= rx_fifo_wr_en_arr(lpgbt_sel*28 + elink_sel);
-      rx_crc        <= rx_crc_arr(lpgbt_sel*28 + elink_sel);
-      rx_crc_calc   <= rx_crc_calc_arr(lpgbt_sel*28 + elink_sel);
+
+      rx_fifo_data  <= rx_fifo_data_arr(link_sel);
+      rx_fifo_wr_en <= rx_fifo_wr_en_arr(link_sel);
+      rx_crc        <= rx_crc_arr(link_sel);
+      rx_crc_calc   <= rx_crc_calc_arr(link_sel);
     end if;
   end process;
+
+  rx_crc_match <= '1' when rx_crc = rx_crc_calc else '0';
 
   process (clk40) is
   begin
@@ -782,6 +775,7 @@ begin
   --------------------------------------------------------------------------------
 
   debug : if (C_DEBUG) generate
+
     signal ila_uplink_data    : std_logic_vector (223 downto 0);
     signal ila_uplink_valid   : std_logic;
     signal ila_uplink_ready   : std_logic;
@@ -789,31 +783,53 @@ begin
     signal ila_uplink_fec_err : std_logic;
     signal ila_uplink_ic      : std_logic_vector (1 downto 0);
     signal ila_uplink_ec      : std_logic_vector (1 downto 0);
-    signal rx_locked_mon      : std_logic;
-    signal rx_err_mon         : std_logic;
-    signal rx_idle_mon        : std_logic;
+
+    signal rx_locked_mon          : std_logic;
+    signal rx_err_mon             : std_logic;
+    signal rx_idle_mon            : std_logic;
+    signal rx_start_of_packet_mon : std_logic;
+    signal rx_end_of_packet_mon   : std_logic;
+    signal rx_frame_mon           : std_logic_vector (39 downto 0) := (others => '0');
+    signal rx_state_mon           : std_logic_vector (2 downto 0)  := (others => '0');
+
   begin
 
-    ila_sel <= to_integer(unsigned(ctrl.ila_sel));
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
 
-    ila_uplink_data    <= uplink_data_aligned(ila_sel).data;
-    ila_uplink_valid   <= uplink_data_aligned(ila_sel).valid;
-    ila_uplink_ready   <= uplink_ready(ila_sel);
-    ila_uplink_reset   <= uplink_reset(ila_sel);
-    ila_uplink_fec_err <= uplink_fec_err(ila_sel);
-    ila_uplink_ic      <= uplink_data(ila_sel).ic;
-    ila_uplink_ec      <= uplink_data(ila_sel).ec;
+        ila_uplink_data    <= uplink_data_aligned(lpgbt_sel).data;
+        ila_uplink_valid   <= uplink_data_aligned(lpgbt_sel).valid;
+        ila_uplink_ready   <= uplink_ready(lpgbt_sel);
+        ila_uplink_reset   <= uplink_reset(lpgbt_sel);
+        ila_uplink_fec_err <= uplink_fec_err(lpgbt_sel);
+        ila_uplink_ic      <= uplink_data(lpgbt_sel).ic;
+        ila_uplink_ec      <= uplink_data(lpgbt_sel).ec;
 
-    rx_locked_mon <= rx_locked(lpgbt_sel*28+elink_sel);
-    rx_err_mon  <= rx_err(lpgbt_sel*28+elink_sel);
-    rx_idle_mon <= rx_idle(lpgbt_sel*28+elink_sel);
+        rx_state_mon           <= rx_state_mon_arr(link_sel);
+        rx_frame_mon           <= rx_frame_mon_arr(link_sel);
+        rx_locked_mon          <= rx_locked(link_sel);
+        rx_err_mon             <= rx_err(link_sel);
+        rx_idle_mon            <= rx_idle(link_sel);
+        rx_start_of_packet_mon <= rx_start_of_packet(link_sel);
+        rx_end_of_packet_mon   <= rx_end_of_packet(link_sel);
+
+      end if;
+    end process;
 
     ila_lpgbt_inst : ila_lpgbt
       port map (
         clk                   => clk40,
         probe0(7 downto 0)    => rx_crc,
         probe0(15 downto 8)   => rx_crc_calc,
-        probe0(223 downto 16) => (others => '0'),
+        probe0(16)            => l1a,
+        probe0(17)            => l1a_gen,
+        probe0(18)            => ctrl.l1a_pulse,
+        probe0(19)            => trigger_i,
+        probe0(20)            => rx_start_of_packet_mon,
+        probe0(21)            => rx_end_of_packet_mon,
+        probe0(22)            => rx_crc_match,
+        probe0(223 downto 23) => (others => '0'),
         probe1(0)             => ila_uplink_valid,
         probe2(0)             => ila_uplink_ready,
         probe3(0)             => ila_uplink_reset,
