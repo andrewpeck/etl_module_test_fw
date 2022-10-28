@@ -60,6 +60,11 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
+  signal fifo_reset     : std_logic            := '0';
+  signal fifo_reset_cnt : integer range 0 to 7 := 0;
+
+  constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0055555";
+
   constant NUM_UPLINKS : integer := NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG;
 
   constant FREQ : integer := 320;       -- uplink frequency
@@ -144,7 +149,6 @@ architecture behavioral of readout_board is
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
   signal bc0        : std_logic               := '0';
-  signal link_reset : std_logic               := '0';
   signal bxn        : natural range 0 to 3563 := 0;
 
   --------------------------------------------------------------------------------
@@ -179,6 +183,26 @@ architecture behavioral of readout_board is
   signal rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
 
 begin
+
+  process (clk40) is
+  begin
+
+    if (rising_edge(clk40)) then
+
+      if (ctrl.fifo_reset = '1') then
+        fifo_reset_cnt <= 7;
+      elsif (fifo_reset_cnt > 0) then
+        fifo_reset_cnt <= fifo_reset_cnt - 1;
+      end if;
+
+      if (fifo_reset_cnt = 0) then
+        fifo_reset <= '0';
+      else
+        fifo_reset <= '1';
+      end if;
+
+    end if;
+  end process;
 
 
   --------------------------------------------------------------------------------
@@ -286,7 +310,7 @@ begin
       reset      => reset,
       l1a        => l1a,
       bc0        => bc0,
-      link_reset => link_reset,
+      link_reset => ctrl.link_reset_pulse,
       data_o     => fast_cmd_fw
       );
 
@@ -299,14 +323,15 @@ begin
       trig       => l1a_gen
       );
 
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      l1a       <= ctrl.l1a_pulse or l1a_gen or (trigger_i and ctrl.en_ext_trigger);
+      trigger_o <= l1a;
+    end if;
+  end process;
 
   bc0 <= '1' when bxn = 0 else '0';
-
-  l1a        <= ctrl.l1a_pulse or l1a_gen or (trigger_i and ctrl.en_ext_trigger);
-  link_reset <= ctrl.link_reset_pulse;
-
-  trigger_o <= l1a;
-
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -643,64 +668,104 @@ begin
 
   etroc_rx_lpgbt_gen : for ilpgbt in 0 to NUM_UPLINKS-1 generate
     etroc_rx_elink_gen : for ielink in 0 to 27 generate
-      signal locked        : std_logic := '0';
-      signal bitslip       : std_logic := '0';
-      signal zero_suppress : std_logic := '1';
-      signal raw_data_mode : std_logic := '0';
-      signal data_i        : std_logic_vector (31 downto 0);
-    begin
+      en_gen : if (ELINK_EN_MASK(ielink) = '1') generate
 
-      data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
+        signal data_i : std_logic_vector (31 downto 0);
+        signal data   : std_logic_vector (39 downto 0) := (others => '0');
 
-      etroc_rx_1 : entity etroc.etroc_rx
-        port map (
-          clock             => clk40,
-        -- FIXME: this should not be shared across both lpgbts
-          reset             => reset or ctrl.reset_etroc_rx(ielink),
-          data_i            => data_i,
-          bitslip_i         => bitslip,
-          bitslip_auto_i    => ctrl.bitslip_auto_en,
-          zero_suppress     => zero_suppress,
-          raw_data_mode     => raw_data_mode,
-          fifo_wr_en_o      => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
-          fifo_data_o       => rx_fifo_data_arr(ilpgbt*28+ielink),
-          frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
-          state_mon_o       => rx_state_mon_arr(ilpgbt*28+ielink),
-          bcid_o            => open,
-          type_o            => open,
-          event_cnt_o       => open,
-          cal_o             => open,
-          tot_o             => open,
-          toa_o             => open,
-          col_o             => open,
-          row_o             => open,
-          ea_o              => open,
-          data_en_o         => open,
-          stat_o            => open,
-          hitcnt_o          => open,
-          crc_o             => rx_crc_arr(ilpgbt*28+ielink),
-          crc_calc_o        => rx_crc_calc_arr(ilpgbt*28+ielink),
-          chip_id_o         => open,
-          start_of_packet_o => rx_start_of_packet(ilpgbt*28+ielink),
-          end_of_packet_o   => rx_end_of_packet(ilpgbt*28+ielink),
-          err_o             => rx_err(ilpgbt*28+ielink),
-          busy_o            => rx_busy(ilpgbt*28+ielink),
-          idle_o            => rx_idle(ilpgbt*28+ielink),
-          locked_o          => rx_locked(ilpgbt*28+ielink)
-          );
+        signal locked          : std_logic := '0';
+        signal bitslip         : std_logic := '0';
+        signal zero_suppress   : std_logic := '1';
+        signal raw_data_mode   : std_logic := '0';
+        signal start_of_packet : std_logic := '0';
+        signal end_of_packet   : std_logic := '0';
+        signal wr_en           : std_logic := '0';
+        signal rd_en           : std_logic := '0';
 
-      lpgbt0 : if (ilpgbt = 0) generate
-        bitslip       <= ctrl.etroc_bitslip(ielink);
-        zero_suppress <= ctrl.zero_supress(ielink);
-        raw_data_mode <= ctrl.raw_data_mode(ielink);
+      begin
+
+        data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
+
+        etroc_rx_1 : entity etroc.etroc_rx
+          port map (
+            clock             => clk40,
+            -- FIXME: this should not be shared across both lpgbts
+            reset             => reset or ctrl.reset_etroc_rx(ielink),
+            data_i            => data_i,
+            bitslip_i         => bitslip,
+            bitslip_auto_i    => ctrl.bitslip_auto_en,
+            zero_suppress     => zero_suppress,
+            raw_data_mode     => raw_data_mode,
+            fifo_wr_en_o      => wr_en,
+            fifo_data_o       => data,
+            frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
+            state_mon_o       => rx_state_mon_arr(ilpgbt*28+ielink),
+            bcid_o            => open,
+            type_o            => open,
+            event_cnt_o       => open,
+            cal_o             => open,
+            tot_o             => open,
+            toa_o             => open,
+            col_o             => open,
+            row_o             => open,
+            ea_o              => open,
+            data_en_o         => open,
+            stat_o            => open,
+            hitcnt_o          => open,
+            crc_o             => rx_crc_arr(ilpgbt*28+ielink),
+            crc_calc_o        => rx_crc_calc_arr(ilpgbt*28+ielink),
+            chip_id_o         => open,
+            start_of_packet_o => start_of_packet,
+            end_of_packet_o   => end_of_packet,
+            err_o             => rx_err(ilpgbt*28+ielink),
+            busy_o            => rx_busy(ilpgbt*28+ielink),
+            idle_o            => rx_idle(ilpgbt*28+ielink),
+            locked_o          => locked
+            );
+
+        rx_locked(ilpgbt*28+ielink) <= locked;
+        rd_en <= '1' when ilpgbt*28+ielink = link_sel else '0';
+
+        -- buffer data from THIS etroc before it goes into the main mux
+        etroc_fifo_inst : entity work.fifo_async
+          generic map (
+            DEPTH          => 512,
+            WR_WIDTH       => 42,
+            RD_WIDTH       => 42,
+            RELATED_CLOCKS => 1
+            )
+          port map (
+            rst => reset or fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+
+            wr_clk => clk40,
+            rd_clk => clk40,
+
+            wr_en => wr_en,
+            rd_en => rd_en,
+
+            din               => start_of_packet & end_of_packet & data,
+            dout(39 downto 0) => rx_fifo_data_arr(ilpgbt*28+ielink),
+            dout(40)          => rx_end_of_packet(ilpgbt*28+ielink),
+            dout(41)          => rx_start_of_packet(ilpgbt*28+ielink),
+
+            valid         => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
+            full          => open,
+            empty         => open
+            );
+
+        lpgbt0 : if (ilpgbt = 0) generate
+          bitslip       <= ctrl.etroc_bitslip(ielink);
+          zero_suppress <= ctrl.zero_supress(ielink);
+          raw_data_mode <= ctrl.raw_data_mode(ielink);
+        end generate;
+
+        lpgbt1 : if (ilpgbt = 1) generate
+          bitslip       <= ctrl.etroc_bitslip_slave(ielink);
+          zero_suppress <= ctrl.zero_supress_slave(ielink);
+          raw_data_mode <= ctrl.raw_data_mode_slave(ielink);
+        end generate;
+
       end generate;
-
-      lpgbt1 : if (ilpgbt = 1) generate
-        bitslip       <= ctrl.etroc_bitslip_slave(ielink);
-        zero_suppress <= ctrl.zero_supress_slave(ielink);
-        raw_data_mode <= ctrl.raw_data_mode_slave(ielink);
-      end generate;
-
     end generate;
   end generate;
 
@@ -743,7 +808,7 @@ begin
     port map (
       clk40         => clk40,
       reset         => reset,
-      fifo_reset_i  => ctrl.fifo_reset,
+      fifo_reset_i  => fifo_reset,
       lost_word_cnt => mon.rx_fifo_lost_word_cnt,
       full_o        => mon.rx_fifo_full,
       fifo_data_i   => rx_fifo_data_mux,

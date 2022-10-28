@@ -34,6 +34,11 @@ only use the versions listed here unless instructed otherwise.
   - Deprecate software fast commands
   - ILA additions, disable wishbone ILA by default
   - Add enable signal for external SMA trigger
+  - FIFO reset will be 8 clocks long automatically, no need to double
+    clock in software
+  - Added a compile-time mask to disable unconnected elinks
+  - Added shallow FIFOs at the output of each ETROC decoder which feed
+    into the main DAQ FIFO, in preparation for an event merger
 
 ### v1.4.0
 

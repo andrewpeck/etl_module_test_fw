@@ -34,6 +34,9 @@ Change log is inclusive of all changes from the previous recommended version; pl
 - Deprecate software fast commands
 - ILA additions, disable wishbone ILA by default
 - Add enable signal for external SMA trigger
+- FIFO reset will be 8 clocks long automatically, no need to double clock in software
+- Added a compile-time mask to disable unconnected elinks
+- Added shallow FIFOs at the output of each ETROC decoder which feed into the main DAQ FIFO, in preparation for an event merger
 *** v1.4.0
 - Fix bitslip / zero_suppress / raw_data_mode bitmask connection (previously
   bit0 was connected to all 28 elinks, now it will be a bitmask)
