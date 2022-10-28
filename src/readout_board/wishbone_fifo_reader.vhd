@@ -56,23 +56,23 @@ architecture rtl of wishbone_fifo_reader is
 
 begin
 
-  ila_0_1 : ila_0
-    port map (
-      clk                  => clk,
-      probe0               => din,
-      probe1               => ipbus_out.ipb_rdata,
-      probe2(0)            => ipbus_in.ipb_strobe,
-      probe3(0)            => ipbus_out.ipb_ack,
-      probe4               => ipbus_in.ipb_wdata,
-      probe5(0)            => rd_en,
-      probe6(0)            => valid,
-      probe7(0)            => empty,
-      probe8               => std_logic_vector(to_unsigned(words_todo, 10)),
-      probe9(0)            => strobe_os,
-      probe9(1)            => strobe_r,
-      probe9(11 downto 2)  => std_logic_vector(to_unsigned(words_todo_buf, 10)),
-      probe9(31 downto 12) => (others => '0')
-      );
+  -- ila_0_1 : ila_0
+  --   port map (
+  --     clk                  => clk,
+  --     probe0               => din,
+  --     probe1               => ipbus_out.ipb_rdata,
+  --     probe2(0)            => ipbus_in.ipb_strobe,
+  --     probe3(0)            => ipbus_out.ipb_ack,
+  --     probe4               => ipbus_in.ipb_wdata,
+  --     probe5(0)            => rd_en,
+  --     probe6(0)            => valid,
+  --     probe7(0)            => empty,
+  --     probe8               => std_logic_vector(to_unsigned(words_todo, 10)),
+  --     probe9(0)            => strobe_os,
+  --     probe9(1)            => strobe_r,
+  --     probe9(11 downto 2)  => std_logic_vector(to_unsigned(words_todo_buf, 10)),
+  --     probe9(31 downto 12) => (others => '0')
+  --     );
 
   -- some tricks to allow this to run at full-throughput,
   -- reading a FIFO word every clock tick
