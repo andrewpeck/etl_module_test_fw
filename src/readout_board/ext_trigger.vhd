@@ -25,7 +25,7 @@ begin
     signal trigger_neg_r1  : std_logic := '0';
     signal trigger_or      : std_logic;
     signal ext_trigger_320 : std_logic;
-    signal trigger_cnt     : integer range 0 to 7;
+    signal trigger_cnt     : integer range 0 to 7 := 0;
     signal armed           : boolean;
   begin
 
@@ -51,7 +51,9 @@ begin
       end if;
     end process;
 
-    trigger_or <= trigger_pos_r1 or trigger_neg_r1;
+    trigger_or      <= trigger_pos_r1 or trigger_neg_r1;
+
+    ext_trigger_320 <= '1' when trigger_cnt > 0 else '0';
 
     process (clock_320) is
     begin
@@ -60,7 +62,6 @@ begin
         if (armed and trigger_or = '1') then
           armed           <= false;
           trigger_cnt     <= 7;
-          ext_trigger_320 <= '1';
         elsif (trigger_cnt > 0) then
           armed           <= false;
           trigger_cnt     <= trigger_cnt - 1;
