@@ -3,11 +3,13 @@
 ################################################################################
 
 # si570 user clock
-create_clock -period 3.124 -name si570_usrclk_p [get_ports {si570_usrclk_p}]
+# create_clock -period 3.124 -name si570_usrclk_p [get_ports {si570_usrclk_p}]
 
-create_generated_clock -name clock_o_p \
-    -source [get_pins {ODDRE1_inst/CLKDIV}] \
-    -divide_by 1 -invert [get_ports {clock_o_p}]
+# create_generated_clock -name clock_o_p \
+#     -source [get_pins {ODDRE1_inst/CLKDIV}] \
+#     -divide_by 1 -invert [get_ports {clock_o_p}]
+
+# M88E1111 Ethernet Phy
 
 ################################################################################
 # UDP Clock crossing
