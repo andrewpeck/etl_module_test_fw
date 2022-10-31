@@ -133,9 +133,10 @@ architecture behavioral of readout_board is
 
   type int_array_t is array (integer range <>) of integer;
 
-  signal elink_sel : integer range 0 to 27;
-  signal lpgbt_sel : integer range 0 to 1;
-  signal link_sel  : integer range 0 to 28*2-1;
+  signal elink_sel     : integer range 0 to 27;
+  signal lpgbt_sel     : integer range 0 to 1;
+  signal link_sel      : integer range 0 to 28*2-1;
+  signal link_sel_daq  : integer range 0 to 28*2-1;
 
   --------------------------------------------------------------------------------
   -- TTC
@@ -161,7 +162,8 @@ architecture behavioral of readout_board is
   signal rx_frame_mon_arr  : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_state_mon_arr  : rx_state_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_fifo_data_arr  : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
-  signal rx_fifo_wr_en_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_valid_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_empty_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
 
   -- ETROC CRC
   constant CRCBITS : integer := 8;
@@ -180,7 +182,12 @@ architecture behavioral of readout_board is
   signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
 
   signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0) := (others => '0');
-  signal rx_fifo_wr_en, rx_fifo_wr_en_mux : std_logic;
+  signal rx_fifo_valid, rx_fifo_valid_mux : std_logic;
+  signal rx_fifo_empty                    : std_logic;
+
+  signal rx_fifo_rd_en_selector : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_valid_selector : std_logic                      := '0';
+  signal rx_fifo_data_selector  : std_logic_vector (39 downto 0) := (others => '0');
 
 begin
 
@@ -679,6 +686,12 @@ begin
         signal raw_data_mode   : std_logic := '0';
         signal start_of_packet : std_logic := '0';
         signal end_of_packet   : std_logic := '0';
+
+        signal start_of_packet_xfifo : std_logic := '0';
+        signal end_of_packet_xfifo   : std_logic := '0';
+        signal valid_xfifo           : std_logic := '0';
+        signal empty_xfifo           : std_logic := '0';
+
         signal wr_en           : std_logic := '0';
         signal rd_en           : std_logic := '0';
 
@@ -724,7 +737,7 @@ begin
             );
 
         rx_locked(ilpgbt*28+ielink) <= locked;
-        rd_en <= '1' when ilpgbt*28+ielink = link_sel else '0';
+        rd_en <= rx_fifo_rd_en_selector(ilpgbt*28+ielink);
 
         -- buffer data from THIS etroc before it goes into the main mux
         etroc_fifo_inst : entity work.fifo_async
@@ -745,13 +758,18 @@ begin
 
             din               => start_of_packet & end_of_packet & data,
             dout(39 downto 0) => rx_fifo_data_arr(ilpgbt*28+ielink),
-            dout(40)          => rx_end_of_packet(ilpgbt*28+ielink),
-            dout(41)          => rx_start_of_packet(ilpgbt*28+ielink),
+            dout(40)          => end_of_packet_xfifo,
+            dout(41)          => start_of_packet_xfifo,
 
-            valid         => rx_fifo_wr_en_arr(ilpgbt*28+ielink),
+            valid         => valid_xfifo,
             full          => open,
-            empty         => open
+            empty         => empty_xfifo
             );
+
+        rx_fifo_empty_arr(ilpgbt*28+ielink)  <= empty_xfifo or not elink_en_mask(ielink);
+        rx_fifo_valid_arr(ilpgbt*28+ielink)  <= valid_xfifo;
+        rx_end_of_packet(ilpgbt*28+ielink)   <= valid_xfifo and end_of_packet_xfifo;
+        rx_start_of_packet(ilpgbt*28+ielink) <= valid_xfifo and start_of_packet_xfifo;
 
         lpgbt0 : if (ilpgbt = 0) generate
           bitslip       <= ctrl.etroc_bitslip(ielink);
@@ -775,9 +793,9 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-
       rx_fifo_data  <= rx_fifo_data_arr(link_sel);
-      rx_fifo_wr_en <= rx_fifo_wr_en_arr(link_sel);
+      rx_fifo_valid <= rx_fifo_valid_arr(link_sel);
+      rx_fifo_empty <= rx_fifo_empty_arr(link_sel);
       rx_crc        <= rx_crc_arr(link_sel);
       rx_crc_calc   <= rx_crc_calc_arr(link_sel);
     end if;
@@ -790,15 +808,39 @@ begin
     if (rising_edge(clk40)) then
       if (ctrl.rx_fifo_data_src = '1') then
         rx_fifo_data_mux <= x"AAAAAAAAAA";
-        rx_fifo_wr_en_mux <= '1';
-      else
-        rx_fifo_data_mux  <= rx_fifo_data;
-        rx_fifo_wr_en_mux <= rx_fifo_wr_en;
+        rx_fifo_valid_mux <= '1';
+      end if;
+      if (ctrl.rx_fifo_data_src = '0') then
+        rx_fifo_data_mux  <= rx_fifo_data_selector (39 downto 0);
+        rx_fifo_valid_mux <= rx_fifo_valid_selector;
       end if;
 
     end if;
   end process;
 
+  etroc_selector_inst : entity work.etroc_selector
+    generic map (
+      g_NUM_INPUTS => 28*2,
+      g_WIDTH      => 40
+      )
+    port map (
+      clock   => clk40,
+      reset_i => reset or fifo_reset,
+
+      ch_en_i => rx_locked and (elink_en_mask & elink_en_mask),
+
+      data_i  => rx_fifo_data_arr(link_sel_daq),  -- in:  multiplexed input data
+      sof_i   => rx_start_of_packet,
+      eof_i   => rx_end_of_packet,
+      empty_i => rx_fifo_empty_arr,     -- in:  all empty flags
+      valid_i => rx_fifo_valid_arr,     -- in:  all valid flags
+
+      data_sel => link_sel_daq,         -- out: multiplexer select 0-57
+
+      rd_en_o => rx_fifo_rd_en_selector,  -- out: fifo read enable
+      data_o  => rx_fifo_data_selector,   -- out: data, connect to daq fifo
+      wr_en_o => rx_fifo_valid_selector   -- out: wr_en, connect to daq_fifo
+      );
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
@@ -812,7 +854,7 @@ begin
       lost_word_cnt => mon.rx_fifo_lost_word_cnt,
       full_o        => mon.rx_fifo_full,
       fifo_data_i   => rx_fifo_data_mux,
-      fifo_wr_en    => rx_fifo_wr_en_mux,
+      fifo_wr_en    => rx_fifo_valid_mux,
       fifo_wb_in    => daq_wb_in(0),
       fifo_wb_out   => daq_wb_out(0)
       );
@@ -884,30 +926,34 @@ begin
 
     ila_lpgbt_inst : ila_lpgbt
       port map (
-        clk                   => clk40,
-        probe0(7 downto 0)    => rx_crc,
-        probe0(15 downto 8)   => rx_crc_calc,
-        probe0(16)            => l1a,
-        probe0(17)            => l1a_gen,
-        probe0(18)            => ctrl.l1a_pulse,
-        probe0(19)            => trigger_i,
-        probe0(20)            => rx_start_of_packet_mon,
-        probe0(21)            => rx_end_of_packet_mon,
-        probe0(22)            => rx_crc_match,
-        probe0(223 downto 23) => (others => '0'),
-        probe1(0)             => ila_uplink_valid,
-        probe2(0)             => ila_uplink_ready,
-        probe3(0)             => ila_uplink_reset,
-        probe4(0)             => ila_uplink_fec_err,
-        probe5(1 downto 0)    => ila_uplink_ic,
-        probe6(1 downto 0)    => ila_uplink_ec,
-        probe7(39 downto 0)   => rx_frame_mon,
-        probe8(39 downto 0)   => rx_fifo_data_mux,
-        probe9(0)             => rx_fifo_wr_en_mux,
-        probe10(2 downto 0)   => rx_state_mon,
-        probe11(0)            => rx_locked_mon,
-        probe12(0)            => rx_err_mon,
-        probe13(0)            => rx_idle_mon
+        clk                    => clk40,
+        probe0(7 downto 0)     => rx_crc,
+        probe0(15 downto 8)    => rx_crc_calc,
+        probe0(16)             => l1a,
+        probe0(17)             => l1a_gen,
+        probe0(18)             => ctrl.l1a_pulse,
+        probe0(19)             => trigger_i,
+        probe0(20)             => rx_start_of_packet_mon,
+        probe0(21)             => rx_end_of_packet_mon,
+        probe0(22)             => rx_crc_match,
+        probe0(28 downto 23)   => std_logic_vector(to_unsigned(link_sel_daq, 6)),
+        probe0(84 downto 29)   => rx_fifo_rd_en_selector,
+        probe0(140 downto 85)  => rx_end_of_packet,
+        probe0(196 downto 141) => rx_fifo_empty_arr,
+        probe0(223 downto 197) => (others => '0'),
+        probe1(0)              => ila_uplink_valid,
+        probe2(0)              => ila_uplink_ready,
+        probe3(0)              => ila_uplink_reset,
+        probe4(0)              => ila_uplink_fec_err,
+        probe5(1 downto 0)     => (others => '0'),
+        probe6(1 downto 0)     => (others => '0'),
+        probe7(39 downto 0)    => rx_fifo_data_arr(link_sel_daq),
+        probe8(39 downto 0)    => rx_fifo_data_mux,
+        probe9(0)              => rx_fifo_valid_mux,
+        probe10(2 downto 0)    => rx_state_mon,
+        probe11(0)             => rx_locked_mon,
+        probe12(0)             => rx_err_mon,
+        probe13(0)             => rx_idle_mon
         );
   end generate;
 
