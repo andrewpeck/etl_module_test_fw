@@ -36,6 +36,8 @@ entity etroc_selector is
     clock   : in std_logic;
     reset_i : in std_logic;
 
+    global_full : in std_logic;
+
     -- data input
     data_i : in std_logic_vector (g_WIDTH-1 downto 0);
 
@@ -45,13 +47,15 @@ entity etroc_selector is
     sof_i   : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
     eof_i   : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
     ch_en_i : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
+    full_i  : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
     empty_i : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
     valid_i : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
     rd_en_o : out std_logic_vector (g_NUM_INPUTS - 1 downto 0);
 
     -- output fifo controls
-    data_o  : out std_logic_vector (g_WIDTH-1 downto 0);
-    wr_en_o : out std_logic
+    metadata_o : out std_logic_vector (64-g_WIDTH-1 downto 0);
+    data_o     : out std_logic_vector (g_WIDTH-1 downto 0);
+    wr_en_o    : out std_logic
 
     );
 end etroc_selector;
@@ -62,11 +66,12 @@ architecture behavioral of etroc_selector is
 
   signal state : state_t := IDLE_state;
 
-  signal valid : std_logic;
-  signal empty : std_logic;
-
-  signal sof : std_logic := '0';
-  signal eof : std_logic := '0';
+  signal valid    : std_logic;
+  signal empty    : std_logic;
+  signal full     : std_logic;
+  signal any_full : std_logic := '0';
+  signal sof      : std_logic;
+  signal eof      : std_logic;
 
   function next_sel (sel       : natural;
                      en        : std_logic_vector;
@@ -87,10 +92,12 @@ architecture behavioral of etroc_selector is
 
 begin
 
-  empty <= empty_i(data_sel);
-  valid <= valid_i(data_sel);
-  sof   <= sof_i(data_sel);
-  eof   <= eof_i(data_sel);
+  empty    <= empty_i(data_sel);
+  valid    <= valid_i(data_sel);
+  full     <= full_i(data_sel);
+  sof      <= sof_i(data_sel);
+  eof      <= eof_i(data_sel);
+  any_full <= or_reduce(full_i);
 
   process (data_sel, ch_en_i, empty_i) is
   begin
@@ -109,9 +116,10 @@ begin
   begin
     if (rising_edge(clock)) then
 
-      rd_en_o <= (others => '0');
-      data_o  <= (others => '0');
-      wr_en_o <= '0';
+      rd_en_o    <= (others => '0');
+      data_o     <= (others => '0');
+      wr_en_o    <= '0';
+      metadata_o <= (others => '0');
 
       case state is
 
@@ -130,8 +138,11 @@ begin
         when READING_state =>
 
           if (valid = '1') then
-            data_o            <= data_i;
-            wr_en_o           <= valid;
+            metadata_o <= x"00" &
+                          "000" & global_full & any_full & full & eof & sof &
+                          "00" & std_logic_vector(to_unsigned(data_sel, 6));
+            data_o  <= data_i;
+            wr_en_o <= valid;
           end if;
 
           if (eof = '1') then

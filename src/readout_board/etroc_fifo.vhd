@@ -23,6 +23,7 @@ entity etroc_fifo is
     reset        : in std_logic;
     fifo_reset_i : in std_logic;
 
+    metadata_i  : in std_logic_vector(64-WIDTH-1 downto 0);
     fifo_data_i : in std_logic_vector(WIDTH-1 downto 0);
     fifo_wr_en  : in std_logic;
 
@@ -95,7 +96,7 @@ begin
       clk           => clk40,
       wr_en         => fifo_wr_en,
       rd_en         => fifo_rd_en,
-      din           => x"000000" & fifo_data_i,
+      din           => metadata_i & fifo_data_i,
       dout          => fifo_dout,
       valid         => fifo_valid,
       wr_data_count => open,

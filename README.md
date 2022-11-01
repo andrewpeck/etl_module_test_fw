@@ -1,6 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v2.0.0](#v200)
       - [v1.4.1](#v141)
       - [v1.4.0](#v140)
       - [v1.3.5](#v135)
@@ -28,6 +29,12 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v2.0.0
+
+  - Add a working dumb daq
+  - Add a system slave for global signals
+  - Add metadata into the etroc datastream
 
 ### v1.4.1
 

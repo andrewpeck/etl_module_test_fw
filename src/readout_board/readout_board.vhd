@@ -132,10 +132,10 @@ architecture behavioral of readout_board is
 
   type int_array_t is array (integer range <>) of integer;
 
-  signal elink_sel     : integer range 0 to 27;
-  signal lpgbt_sel     : integer range 0 to 1;
-  signal link_sel      : integer range 0 to 28*2-1;
-  signal link_sel_daq  : integer range 0 to 28*2-1;
+  signal elink_sel    : integer range 0 to 27;
+  signal lpgbt_sel    : integer range 0 to 1;
+  signal link_sel     : integer range 0 to 28*2-1;
+  signal link_sel_daq : integer range 0 to 28*2-1;
 
   --------------------------------------------------------------------------------
   -- TTC
@@ -146,8 +146,8 @@ architecture behavioral of readout_board is
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
 
-  signal l1a_gen    : std_logic               := '0';
-  signal l1a        : std_logic               := '0';
+  signal l1a_gen : std_logic := '0';
+  signal l1a     : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- ETROC RX
@@ -161,9 +161,10 @@ architecture behavioral of readout_board is
   signal rx_fifo_data_arr  : rx_frame_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_fifo_valid_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_fifo_empty_arr : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_fifo_full_arr  : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
 
   -- ETROC CRC
-  constant CRCBITS : integer := 8;
+  constant CRCBITS       : integer   := 8;
   type rx_crc_array_t is array (integer range <>) of std_logic_vector(CRCBITS-1 downto 0);
   signal rx_crc_arr      : rx_crc_array_t (28*NUM_UPLINKS-1 downto 0);
   signal rx_crc_calc_arr : rx_crc_array_t (28*NUM_UPLINKS-1 downto 0);
@@ -178,13 +179,19 @@ architecture behavioral of readout_board is
   signal rx_idle            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
   signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
 
-  signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0);
   signal rx_fifo_valid, rx_fifo_valid_mux : std_logic;
   signal rx_fifo_empty                    : std_logic;
 
+
   signal rx_fifo_rd_en_selector : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
-  signal rx_fifo_valid_selector : std_logic                      := '0';
-  signal rx_fifo_data_selector  : std_logic_vector (39 downto 0) := (others => '0');
+  signal rx_fifo_valid_selector : std_logic;
+  signal rx_fifo_data_selector  : std_logic_vector (39 downto 0);
+
+  signal rx_fifo_metadata_mux      : std_logic_vector (23 downto 0);
+  signal rx_fifo_metadata_selector : std_logic_vector (23 downto 0);
+
+  signal global_fifo_full : std_logic;
 
 begin
 
@@ -359,7 +366,7 @@ begin
   etroc_rx_cnt_gen : for I in rx_end_of_packet'range generate
   begin
 
-    pkt_counter  : entity work.counter
+    pkt_counter : entity work.counter
       generic map (width => 16)
       port map (
         clk    => clk40,
@@ -370,7 +377,7 @@ begin
         at_max => open
         );
 
-    err_counter  : entity work.counter
+    err_counter : entity work.counter
       generic map (width => 16)
       port map (
         clk    => clk40,
@@ -669,13 +676,14 @@ begin
         signal start_of_packet : std_logic := '0';
         signal end_of_packet   : std_logic := '0';
 
-        signal start_of_packet_xfifo : std_logic := '0';
-        signal end_of_packet_xfifo   : std_logic := '0';
-        signal valid_xfifo           : std_logic := '0';
-        signal empty_xfifo           : std_logic := '0';
+        signal start_of_packet_xfifo : std_logic;
+        signal end_of_packet_xfifo   : std_logic;
+        signal valid_xfifo           : std_logic;
+        signal full_xfifo            : std_logic;
+        signal empty_xfifo           : std_logic;
 
-        signal wr_en           : std_logic := '0';
-        signal rd_en           : std_logic := '0';
+        signal wr_en : std_logic := '0';
+        signal rd_en : std_logic := '0';
 
       begin
 
@@ -719,7 +727,7 @@ begin
             );
 
         rx_locked(ilpgbt*28+ielink) <= locked;
-        rd_en <= rx_fifo_rd_en_selector(ilpgbt*28+ielink);
+        rd_en                       <= rx_fifo_rd_en_selector(ilpgbt*28+ielink);
 
         -- buffer data from THIS etroc before it goes into the main mux
         etroc_fifo_inst : entity work.fifo_async
@@ -743,11 +751,12 @@ begin
             dout(40)          => end_of_packet_xfifo,
             dout(41)          => start_of_packet_xfifo,
 
-            valid         => valid_xfifo,
-            full          => open,
-            empty         => empty_xfifo
+            valid => valid_xfifo,
+            full  => full_xfifo,
+            empty => empty_xfifo
             );
 
+        rx_fifo_full_arr(ilpgbt*28+ielink)   <= full_xfifo and elink_en_mask(ielink);
         rx_fifo_empty_arr(ilpgbt*28+ielink)  <= empty_xfifo or not elink_en_mask(ielink);
         rx_fifo_valid_arr(ilpgbt*28+ielink)  <= valid_xfifo;
         rx_end_of_packet(ilpgbt*28+ielink)   <= valid_xfifo and end_of_packet_xfifo;
@@ -789,12 +798,14 @@ begin
   begin
     if (rising_edge(clk40)) then
       if (ctrl.rx_fifo_data_src = '1') then
-        rx_fifo_data_mux <= x"AAAAAAAAAA";
-        rx_fifo_valid_mux <= '1';
+        rx_fifo_data_mux     <= x"AAAAAAAAAA";
+        rx_fifo_valid_mux    <= '1';
+        rx_fifo_metadata_mux <= (others => '0');
       end if;
       if (ctrl.rx_fifo_data_src = '0') then
-        rx_fifo_data_mux  <= rx_fifo_data_selector (39 downto 0);
-        rx_fifo_valid_mux <= rx_fifo_valid_selector;
+        rx_fifo_metadata_mux <= (others => '0'); -- rx_fifo_metadata_selector;
+        rx_fifo_data_mux     <= rx_fifo_data_selector (39 downto 0);
+        rx_fifo_valid_mux    <= rx_fifo_valid_selector;
       end if;
 
     end if;
@@ -809,24 +820,30 @@ begin
       clock   => clk40,
       reset_i => reset or fifo_reset,
 
+      global_full => global_fifo_full,
+
       ch_en_i => rx_locked and (elink_en_mask & elink_en_mask),
 
       data_i  => rx_fifo_data_arr(link_sel_daq),  -- in:  multiplexed input data
       sof_i   => rx_start_of_packet,
       eof_i   => rx_end_of_packet,
+      full_i  => rx_fifo_full_arr,      -- in:  all full flags
       empty_i => rx_fifo_empty_arr,     -- in:  all empty flags
       valid_i => rx_fifo_valid_arr,     -- in:  all valid flags
 
       data_sel => link_sel_daq,         -- out: multiplexer select 0-57
 
-      rd_en_o => rx_fifo_rd_en_selector,  -- out: fifo read enable
-      data_o  => rx_fifo_data_selector,   -- out: data, connect to daq fifo
-      wr_en_o => rx_fifo_valid_selector   -- out: wr_en, connect to daq_fifo
+      rd_en_o    => rx_fifo_rd_en_selector,    -- out: fifo read enable
+      data_o     => rx_fifo_data_selector,     -- out: data, connect to daq fifo
+      metadata_o => rx_fifo_metadata_selector, -- out: data, connect to daq fifo
+      wr_en_o    => rx_fifo_valid_selector     -- out: wr_en, connect to daq_fifo
       );
+
+  mon.rx_fifo_full <= global_fifo_full;
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
-      DEPTH => 32768*4,
+      DEPTH          => 32768*4,
       LOST_CNT_WIDTH => mon.rx_fifo_lost_word_cnt'length
       )
     port map (
@@ -834,7 +851,8 @@ begin
       reset         => reset,
       fifo_reset_i  => fifo_reset,
       lost_word_cnt => mon.rx_fifo_lost_word_cnt,
-      full_o        => mon.rx_fifo_full,
+      full_o        => global_fifo_full,
+      metadata_i    => rx_fifo_metadata_mux,
       fifo_data_i   => rx_fifo_data_mux,
       fifo_wr_en    => rx_fifo_valid_mux,
       fifo_wb_in    => daq_wb_in(0),
