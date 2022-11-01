@@ -699,7 +699,7 @@ begin
         rx_fifo_metadata_mux <= (others => '0');
       end if;
       if (ctrl.rx_fifo_data_src = '0') then
-        rx_fifo_metadata_mux <= (others => '0'); -- rx_fifo_metadata_selector;
+        rx_fifo_metadata_mux <= rx_fifo_metadata_selector;
         rx_fifo_data_mux     <= rx_fifo_data_selector (39 downto 0);
         rx_fifo_valid_mux    <= rx_fifo_valid_selector;
       end if;
