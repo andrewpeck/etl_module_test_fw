@@ -46,6 +46,9 @@
   <node id="ETROC_LOCKED"         address="0x421" mask="0x0fffffff"   permission="r"  description="ETROC Link Locked"/>
   <node id="ETROC_LOCKED_SLAVE"   address="0x422" mask="0x0fffffff"   permission="r"  description="ETROC Link Locked"/>
 
+  <node id="ETROC_DISABLE"        address="0x423" mask="0x0fffffff"   permission="rw"  description="Write a 1 to disable this ETROC from readout"/>
+  <node id="ETROC_DISABLE_SLAVE"  address="0x424" mask="0x0fffffff"   permission="rw"  description="Write a 1 to disable this ETROC from readout"/>
+
   <node id="LINK_RESET_PULSE" address="0x501" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
 
   <node id="PACKET_RX_RATE" address="0x504" mask="0xffffffff" permission="r" description="Measured rate of generated received packets in Hz" />

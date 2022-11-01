@@ -620,6 +620,8 @@ begin
         signal wr_en : std_logic := '0';
         signal rd_en : std_logic := '0';
 
+        signal disable : std_logic := '0';
+
       begin
 
         data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
@@ -628,7 +630,7 @@ begin
           port map (
             clock             => clk40,
             -- FIXME: this should not be shared across both lpgbts
-            reset             => reset or ctrl.reset_etroc_rx(ielink),
+            reset             => reset or ctrl.reset_etroc_rx(ielink) or disable,
             data_i            => data_i,
             bitslip_i         => bitslip,
             bitslip_auto_i    => ctrl.bitslip_auto_en,
@@ -701,12 +703,14 @@ begin
           bitslip       <= ctrl.etroc_bitslip(ielink);
           zero_suppress <= ctrl.zero_supress(ielink);
           raw_data_mode <= ctrl.raw_data_mode(ielink);
+          disable       <= ctrl.etroc_disable(ielink);
         end generate;
 
         lpgbt1 : if (ilpgbt = 1) generate
           bitslip       <= ctrl.etroc_bitslip_slave(ielink);
           zero_suppress <= ctrl.zero_supress_slave(ielink);
           raw_data_mode <= ctrl.raw_data_mode_slave(ielink);
+          disable       <= ctrl.etroc_disable_slave(ielink);
         end generate;
 
       end generate;
@@ -757,7 +761,8 @@ begin
 
       global_full => global_fifo_full,
 
-      ch_en_i => rx_locked and (elink_en_mask & elink_en_mask),
+      ch_en_i => rx_locked and (elink_en_mask & elink_en_mask)
+                  and not (ctrl.etroc_disable_slave & ctrl.etroc_disable),
 
       data_i  => rx_fifo_data_arr(link_sel_daq),  -- in:  multiplexed input data
       sof_i   => rx_start_of_packet,

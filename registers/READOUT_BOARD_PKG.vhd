@@ -343,6 +343,8 @@ package READOUT_BOARD_CTRL is
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     RX_FIFO_DATA_SRC           :std_logic;                      -- 0=etroc data, 1=fixed pattern for ETROC data fifo
+    ETROC_DISABLE              :std_logic_vector(27 downto 0);  -- Write a 1 to disable this ETROC from readout
+    ETROC_DISABLE_SLAVE        :std_logic_vector(27 downto 0);  -- Write a 1 to disable this ETROC from readout
     LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
@@ -365,6 +367,8 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_LPGBT_SEL0 => '0',
                                                                    FIFO_RESET => '0',
                                                                    RX_FIFO_DATA_SRC => '0',
+                                                                   ETROC_DISABLE => (others => '0'),
+                                                                   ETROC_DISABLE_SLAVE => (others => '0'),
                                                                    LINK_RESET_PULSE => '0',
                                                                    PACKET_CNT_RESET => '0',
                                                                    ERR_CNT_RESET => '0'
