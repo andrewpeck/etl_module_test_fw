@@ -38,8 +38,8 @@ entity readout_board is
 
     strobe : in std_logic;
 
-    bc0   : in std_logic;
-    l1a_i : in std_logic;
+    bc0 : in std_logic;
+    l1a : in std_logic;
 
     --tx_ready : in std_logic;
     --rx_ready : in std_logic;
@@ -143,13 +143,9 @@ architecture behavioral of readout_board is
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal trigger_rate   : std_logic_vector (31 downto 0);
   signal packet_rx_rate : std_logic_vector (31 downto 0);
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
-
-  signal l1a_gen : std_logic := '0';
-  signal l1a     : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- ETROC RX
@@ -298,34 +294,6 @@ begin
       data_o     => fast_cmd
       );
 
-  trig_gen_inst : entity work.trig_gen
-    port map (
-      sys_clk    => clk40,
-      sys_rst    => reset,
-      sys_bx_stb => '1',
-      rate       => ctrl.l1a_rate,
-      trig       => l1a_gen
-      );
-
-  process (clk40) is
-  begin
-    if (rising_edge(clk40)) then
-      l1a <= l1a_i or ctrl.l1a_pulse or l1a_gen;
-    end if;
-  end process;
-
-  rate_counter_inst : entity work.rate_counter
-    generic map (
-      g_CLK_FREQUENCY => x"02638e98",
-      g_COUNTER_WIDTH => 32
-      )
-    port map (
-      clk_i   => clk40,
-      reset_i => reset,
-      en_i    => l1a,
-      rate_o  => trigger_rate
-      );
-
   pkt_counter_inst : entity work.rate_counter
     generic map (
       g_CLK_FREQUENCY => x"02638e98",
@@ -365,7 +333,6 @@ begin
 
   end generate;
 
-  mon.l1a_rate_cnt   <= trigger_rate;
   mon.packet_rx_rate <= packet_rx_rate;
   mon.packet_cnt     <= packet_cnt(link_sel);
   mon.error_cnt      <= err_cnt(link_sel);
@@ -904,8 +871,8 @@ begin
         probe0(7 downto 0)     => rx_crc,
         probe0(15 downto 8)    => rx_crc_calc,
         probe0(16)             => l1a,
-        probe0(17)             => l1a_gen,
-        probe0(18)             => ctrl.l1a_pulse,
+        probe0(17)             => '0',
+        probe0(18)             => '0',
         probe0(19)             => '0',
         probe0(20)             => rx_start_of_packet_mon,
         probe0(21)             => rx_end_of_packet_mon,

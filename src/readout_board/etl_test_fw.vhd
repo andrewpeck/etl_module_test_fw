@@ -524,7 +524,7 @@ begin
       clk_i   => clk40,
       reset_i => reset,
       en_i    => l1a,
-      rate_o  => mon.l1a_rate_cnt
+      rate_o  => system_mon.l1a_rate_cnt
       );
 
   rb_gen : if (EN_LPGBTS = 1) generate
@@ -548,7 +548,7 @@ begin
           strobe => strobe,
 
           bc0 => bc0,
-          l1a_i => l1a,
+          l1a => l1a,
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),

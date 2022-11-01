@@ -321,7 +321,6 @@ package READOUT_BOARD_CTRL is
     RX_FIFO_FULL               :std_logic;                      -- RX FIFO is full
     ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked
     ETROC_LOCKED_SLAVE         :std_logic_vector(27 downto 0);  -- ETROC Link Locked
-    L1A_RATE_CNT               :std_logic_vector(31 downto 0);  -- Measured rate of generated triggers in Hz
     PACKET_RX_RATE             :std_logic_vector(31 downto 0);  -- Measured rate of generated received packets in Hz
     PACKET_CNT                 :std_logic_vector(15 downto 0);  -- Count of packets received (muxed across elinks)
     ERROR_CNT                  :std_logic_vector(15 downto 0);  -- Count of packet errors (muxed across elinks)
@@ -344,9 +343,7 @@ package READOUT_BOARD_CTRL is
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     RX_FIFO_DATA_SRC           :std_logic;                      -- 0=etroc data, 1=fixed pattern for ETROC data fifo
-    L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
     LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
-    L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
   end record READOUT_BOARD_CTRL_t;
@@ -368,9 +365,7 @@ package READOUT_BOARD_CTRL is
                                                                    FIFO_LPGBT_SEL0 => '0',
                                                                    FIFO_RESET => '0',
                                                                    RX_FIFO_DATA_SRC => '0',
-                                                                   L1A_PULSE => '0',
                                                                    LINK_RESET_PULSE => '0',
-                                                                   L1A_RATE => x"00000000",
                                                                    PACKET_CNT_RESET => '0',
                                                                    ERR_CNT_RESET => '0'
                                                                   );
