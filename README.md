@@ -34,7 +34,10 @@ only use the versions listed here unless instructed otherwise.
 
   - Add a working dumb daq
   - Add a system slave for global signals
+      - L1A generators moved from RB to System block
   - Add metadata into the etroc datastream
+  - Remove downlink aligner block
+  - Cleanup code mess
 
 ### v1.4.1
 
