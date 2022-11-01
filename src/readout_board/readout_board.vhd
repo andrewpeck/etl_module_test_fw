@@ -36,6 +36,8 @@ entity readout_board is
 
     reset : in std_logic;
 
+    strobe : in std_logic;
+
     bc0   : in std_logic;
     l1a_i : in std_logic;
 
@@ -195,39 +197,12 @@ architecture behavioral of readout_board is
 
 begin
 
-  process (clk40) is
-  begin
-
-    if (rising_edge(clk40)) then
-
-      if (ctrl.fifo_reset = '1') then
-        fifo_reset_cnt <= 7;
-      elsif (fifo_reset_cnt > 0) then
-        fifo_reset_cnt <= fifo_reset_cnt - 1;
-      end if;
-
-      if (fifo_reset_cnt = 0) then
-        fifo_reset <= '0';
-      else
-        fifo_reset <= '1';
-      end if;
-
-    end if;
-  end process;
-
-
-  --------------------------------------------------------------------------------
-  -- create 1/8 strobe synced to 40MHz clock
-  --------------------------------------------------------------------------------
-
-  clock_strobe_inst : entity work.clock_strobe
-    generic map (
-      RATIO => 8
-      )
+  extender_inst : entity work.extender
+    generic map (LENGTH => 16)
     port map (
-      fast_clk_i => clk320,
-      slow_clk_i => clk40,
-      strobe_o   => valid
+      clk => clk40,
+      d   => reset or ctrl.fifo_reset,
+      q   => fifo_reset
       );
 
   --------------------------------------------------------------------------------
@@ -496,8 +471,7 @@ begin
 
   dlvalid : for I in 0 to NUM_DOWNLINKS-1 generate
   begin
-
-    downlink_data_aligned(I).valid <= valid;
+    downlink_data_aligned(I).valid <= strobe;
   end generate;
 
   downlink_aligners : for IBYTE in 0 to 3 generate

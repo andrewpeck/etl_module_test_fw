@@ -170,6 +170,7 @@ architecture behavioral of etl_test_fw is
   --------------------------------------------------------------------------------
 
   signal locked : std_logic;
+  signal strobe : std_logic;
 
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
@@ -183,7 +184,6 @@ architecture behavioral of etl_test_fw is
   signal bc0, l1a      : std_logic;
   signal ext_trigger_i : std_logic;
   signal trigger_o     : std_logic_vector (NUM_RBS-1 downto 0);
-  signal trig_gen_rate : std_logic_vector (31 downto 0);
 
   --------------------------------------------------------------------------------
   -- IPBUS
@@ -314,6 +314,18 @@ begin
   --------------------------------------------------------------------------------
   -- Clocking
   --------------------------------------------------------------------------------
+
+  -- create 1/8 strobe synced to 40MHz clock
+
+  clock_strobe_inst : entity work.clock_strobe
+    generic map (
+      RATIO => 8
+      )
+    port map (
+      fast_clk_i => clk320,
+      slow_clk_i => clk40,
+      strobe_o   => strobe
+      );
 
   osc_clk125_ibuf_inst : IBUFDS
     port map(
@@ -500,7 +512,19 @@ begin
       force_trig    => system_ctrl.l1a_pulse,
       ext_trig      => ext_trigger_i,
       ext_trig_en   => system_ctrl.en_ext_trigger,
-      trig_gen_rate => trig_gen_rate
+      trig_gen_rate => system_ctrl.l1a_rate
+      );
+
+  rate_counter_inst : entity work.rate_counter
+    generic map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => 32
+      )
+    port map (
+      clk_i   => clk40,
+      reset_i => reset,
+      en_i    => l1a,
+      rate_o  => mon.l1a_rate_cnt
       );
 
   rb_gen : if (EN_LPGBTS = 1) generate
@@ -520,6 +544,8 @@ begin
         port map (
 
           reset => reset,
+
+          strobe => strobe,
 
           bc0 => bc0,
           l1a_i => l1a,
