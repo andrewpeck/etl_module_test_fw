@@ -181,7 +181,7 @@ architecture behavioral of etl_test_fw is
   --------------------------------------------------------------------------------
 
   signal bc0, l1a      : std_logic;
-  signal ext_trigger_o : std_logic;
+  signal ext_trigger_i : std_logic;
   signal trigger_o     : std_logic_vector (NUM_RBS-1 downto 0);
   signal trig_gen_rate : std_logic_vector (31 downto 0);
 
@@ -255,10 +255,10 @@ begin
       clock         => clk40,
       clock_320     => clk320,
       ext_trigger_i => user_sma_p,
-      ext_trigger_o => ext_trigger_o
+      ext_trigger_o => ext_trigger_i
       );
 
-  user_sma_n <= trigger_o(0);
+  user_sma_n <= l1a;
 
   --------------------------------------------------------------------------------
   -- IO/LED
@@ -498,7 +498,7 @@ begin
       l1a           => l1a,
       bc0           => bc0,
       force_trig    => system_ctrl.l1a_pulse,
-      ext_trig      => ext_trigger_o,
+      ext_trig      => ext_trigger_i,
       ext_trig_en   => system_ctrl.en_ext_trigger,
       trig_gen_rate => trig_gen_rate
       );
@@ -522,9 +522,7 @@ begin
           reset => reset,
 
           bc0 => bc0,
-
-          trigger_i => ext_trigger_o,
-          trigger_o => trigger_o (I),
+          l1a_i => l1a,
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),

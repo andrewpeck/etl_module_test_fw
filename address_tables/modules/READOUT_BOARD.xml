@@ -58,6 +58,4 @@
   <node id="PACKET_CNT_RESET" address="0x506" mask="0x00000001" permission="w"  description="Write 1 to reset packet counters"/>
   <node id="ERR_CNT_RESET" address="0x506" mask="0x00000002" permission="w"  description="Write 1 to reset error counters"/>
 
-  <node id="EN_EXT_TRIGGER" address="0x507" mask="0x1" permission="rw" description="1 to enable the external SMA trigger" />
-
 </node>

@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1287);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1287) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1286);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1286) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -229,8 +229,6 @@ begin  -- architecture behavioral
         when 1285 => --0x505
           localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
           localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
-        when 1287 => --0x507
-          localRdData( 0)            <=  reg_data(1287)( 0);                          --1 to enable the external SMA trigger
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -328,7 +326,6 @@ begin  -- architecture behavioral
   Ctrl.FIFO_LPGBT_SEL0                         <=  reg_data(768)( 8);                
   Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 0);               
   Ctrl.L1A_RATE                                <=  reg_data(1282)(31 downto  0);     
-  Ctrl.EN_EXT_TRIGGER                          <=  reg_data(1287)( 0);               
 
 
   -- writes to slave
@@ -533,8 +530,6 @@ begin  -- architecture behavioral
         when 1286 => --0x506
           Ctrl.PACKET_CNT_RESET                 <=  localWrData( 0);               
           Ctrl.ERR_CNT_RESET                    <=  localWrData( 1);               
-        when 1287 => --0x507
-          reg_data(1287)( 0)                    <=  localWrData( 0);                --1 to enable the external SMA trigger
 
         when others => null;
 
@@ -653,7 +648,6 @@ begin  -- architecture behavioral
       reg_data(1282)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_RATE;
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
       reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
-      reg_data(1287)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.EN_EXT_TRIGGER;
 
       end if; -- reset
     end if; -- clk

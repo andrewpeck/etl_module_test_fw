@@ -36,13 +36,11 @@ entity readout_board is
 
     reset : in std_logic;
 
-    bc0 : in std_logic;
+    bc0   : in std_logic;
+    l1a_i : in std_logic;
 
     --tx_ready : in std_logic;
     --rx_ready : in std_logic;
-
-    trigger_i : in std_logic;
-    trigger_o : out std_logic;
 
     ctrl_clk : in  std_logic;
     mon      : out READOUT_BOARD_MON_t;
@@ -330,8 +328,7 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      l1a       <= ctrl.l1a_pulse or l1a_gen or (trigger_i and ctrl.en_ext_trigger);
-      trigger_o <= l1a;
+      l1a <= l1a_i or ctrl.l1a_pulse or l1a_gen;
     end if;
   end process;
 
@@ -917,7 +914,7 @@ begin
         probe0(16)             => l1a,
         probe0(17)             => l1a_gen,
         probe0(18)             => ctrl.l1a_pulse,
-        probe0(19)             => trigger_i,
+        probe0(19)             => '0',
         probe0(20)             => rx_start_of_packet_mon,
         probe0(21)             => rx_end_of_packet_mon,
         probe0(22)             => rx_crc_match,
