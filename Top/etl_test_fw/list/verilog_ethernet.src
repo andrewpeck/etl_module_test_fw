@@ -1,7 +1,8 @@
-verilog-ethernet/rtl/eth_mac_1g.v
 verilog-ethernet/rtl/axis_gmii_rx.v
 verilog-ethernet/rtl/axis_gmii_tx.v
 verilog-ethernet/rtl/lfsr.v
-
-#ip/ila_mac_rx/ila_mac_rx.xci
-#ip/ila_mac_tx/ila_mac_tx.xci
+verilog-ethernet/rtl/eth_mac_1g_fifo.v
+verilog-ethernet/rtl/eth_mac_1g.v
+verilog-ethernet/lib/axis/rtl/axis_async_fifo_adapter.v
+verilog-ethernet/lib/axis/rtl/axis_async_fifo.v
+verilog-ethernet/lib/axis/rtl/axis_adapter.v

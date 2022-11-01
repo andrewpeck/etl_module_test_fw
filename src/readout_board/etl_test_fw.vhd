@@ -171,7 +171,7 @@ architecture behavioral of etl_test_fw is
 
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
-  signal clk40, clk320                    : std_logic := '0';
+  signal clk40, clk320, clk125            : std_logic := '0';
   signal reset                            : std_logic := '0';
 
   --------------------------------------------------------------------------------
@@ -189,7 +189,6 @@ architecture behavioral of etl_test_fw is
 
   signal mac_addr         : std_logic_vector (47 downto 0) := MAC_ADDR_BASE;
   signal ip_addr          : ip_addr_t                      := IP_ADDR_BASE;
-  signal ipb_clk, ipb_rst : std_logic;
   signal nuke, soft_rst   : std_logic                      := '0';
   signal pcie_sys_rst_n   : std_logic;
 
@@ -449,12 +448,13 @@ begin
   -- Infrastructure
   eth : if (USE_ETH = 1) generate
     eth_infra_inst : entity ipbus.eth_infra
-      generic map (
-        C_EXT_CLOCK => true)
       port map (
-        ext_clk_i   => clk40,
-        osc_clk_300 => clk_osc300_ibuf,
+
         osc_clk_125 => clk_osc125_ibuf,
+
+        clock     => clk40,
+        reset     => reset,
+        clk125_o  => open,
 
         sgmii_clk_p => sgmii_clk_p,
         sgmii_clk_n => sgmii_clk_n,
@@ -468,13 +468,6 @@ begin
         phy_interrupt => phy_interrupt,
         phy_mdc       => phy_mdc,
 
-        clk_ipb_o => ipb_clk,
-        rst_ipb_o => ipb_rst,
-        clk_aux_o => open,
-        rst_aux_o => open,
-
-        nuke     => nuke,
-        soft_rst => soft_rst,
         mac_addr => mac_addr,
         ip_addr  => to_slv(IP_ADDR),
         ipb_in   => eth_ipb_r,
@@ -493,8 +486,8 @@ begin
         pcie_tx_p      => pcie_tx_p,
         pcie_tx_n      => pcie_tx_n,
         clk_osc        => clk_osc125_ibuf,
-        ipb_clk        => ipb_clk,
-        ipb_rst        => ipb_rst,
+        ipb_clk        => '1', -- FIXME
+        ipb_rst        => reset,
         nuke           => nuke,
         soft_rst       => soft_rst,
         leds           => leds(1 downto 0),
@@ -514,8 +507,8 @@ begin
       NUM_RBS   => NUM_RBS
       )
     port map (
-      reset_i            => ipb_rst,
-      clock              => ipb_clk,
+      reset_i            => reset,
+      clock              => clk40,
       fw_info_mon        => fw_info_mon,
       readout_board_mon  => readout_board_mon,
       readout_board_ctrl => readout_board_ctrl,
@@ -594,7 +587,7 @@ begin
           clk320 => clk320,
 
           -- slow control
-          ctrl_clk => ipb_clk,
+          ctrl_clk => clk40,
           mon      => readout_board_mon(I),
           ctrl     => readout_board_ctrl(I),
 
@@ -671,7 +664,7 @@ begin
             txpostcursor_o    => open,
             rxlpmen_o(0)      => open,
             rxoutclk_i(0)     => rxclk(I),
-            clk               => ipb_clk
+            clk               => clk40
             );
 
       end generate;
@@ -768,15 +761,15 @@ begin
 
   device_dna_inst : device_dna
     port map (
-      clock => ipb_clk,
+      clock => clk40,
       reset => reset,
       dna   => dna
       );
 
-  process (ipb_clk) is
+  process (clk40) is
     variable upcnt : unsigned (63 downto 0) := (others => '0');
   begin
-    if (rising_edge(ipb_clk)) then
+    if (rising_edge(clk40)) then
       upcnt                   := upcnt + 1;
       fw_info_mon.uptime_lsbs <= std_logic_vector(upcnt (31 downto 0));
       fw_info_mon.uptime_msbs <= std_logic_vector(upcnt (63 downto 32));
@@ -789,15 +782,6 @@ begin
   begin
 
     freq_cnt_clk <= clk_osc125;
-
-    ipb_frequency_counter_inst : entity work.frequency_counter
-      generic map (clk_a_freq => freq_cnt_freq)
-      port map (
-        reset => reset,
-        clk_a => freq_cnt_clk,
-        clk_b => ipb_clk,
-        rate  => fw_info_mon.ipbclk_freq
-        );
 
     clk40_frequency_counter_inst : entity work.frequency_counter
       generic map (clk_a_freq => freq_cnt_freq)

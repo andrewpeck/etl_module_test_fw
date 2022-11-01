@@ -1,6 +1,3 @@
--- based on https://github.com/ipbus/ipbus-firmware/blob/master/components/ipbus_eth/firmware/hdl/eth_us_1000basex.vhd
--- taken at commit e9d7ddbb8ab196fe0974213bd1feb30514619123
-
 ---------------------------------------------------------------------------------
 --
 --   Copyright 2017 - Rutherford Appleton Laboratory and University of Bristol
@@ -26,16 +23,6 @@
 --
 ---------------------------------------------------------------------------------
 
-
--- Contains the instantiation of the Xilinx MAC & 1000baseX pcs/pma & GTP transceiver cores
---
--- Do not change signal names in here without corresponding alteration to the timing contraints file
---
--- Dave Newbold, October 2016
---
--- https://forums.xilinx.com/t5/Ethernet/1G-2-5G-Ethernet-PCS-PMA-or-SGMII-auto-negotiation-issue/td-p/696244
-
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -44,12 +31,10 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity eth_sgmii_lvds is
-  generic(
-    C_DEBUG        : boolean := false;
-    USE_XILINX_MAC : boolean := false
-    );
   port(
     -- clock and data i/o (connected to external device)
+    logic_clk     : in    std_logic;
+    logic_rst     : in    std_logic;
     sgmii_clk_p   : in    std_logic;    --> 625 MHz clock
     sgmii_clk_n   : in    std_logic;
     sgmii_txp     : out   std_logic;
@@ -84,6 +69,61 @@ entity eth_sgmii_lvds is
 end eth_sgmii_lvds;
 
 architecture rtl of eth_sgmii_lvds is
+
+  component eth_mac_1g_fifo
+    port (
+      rx_clk    : in std_logic;
+      rx_rst    : in std_logic;
+      tx_clk    : in std_logic;
+      tx_rst    : in std_logic;
+      logic_clk : in std_logic;
+      logic_rst : in std_logic;
+
+      -- AXI input
+      tx_axis_tdata  : in  std_logic_vector;
+      tx_axis_tkeep  : in  std_logic_vector;
+      tx_axis_tvalid : in  std_logic;
+      tx_axis_tready : out std_logic;
+      tx_axis_tlast  : in  std_logic;
+      tx_axis_tuser  : in  std_logic_vector;
+
+      -- AXI output
+      rx_axis_tdata  : out std_logic_vector;
+      rx_axis_tkeep  : out std_logic_vector;
+      rx_axis_tready : in  std_logic;
+      rx_axis_tvalid : out std_logic;
+      rx_axis_tlast  : out std_logic;
+      rx_axis_tuser  : out std_logic_vector;
+
+      -- GMII interface
+      gmii_rxd   : in  std_logic_vector;
+      gmii_rx_dv : in  std_logic;
+      gmii_rx_er : in  std_logic;
+      gmii_txd   : out std_logic_vector;
+      gmii_tx_en : out std_logic;
+      gmii_tx_er : out std_logic;
+
+      -- Control
+      rx_clk_enable : in std_logic;
+      tx_clk_enable : in std_logic;
+      rx_mii_select : in std_logic;
+      tx_mii_select : in std_logic;
+
+      -- Status
+      tx_error_underflow : out std_logic;
+      tx_fifo_overflow   : out std_logic;
+      tx_fifo_bad_frame  : out std_logic;
+      tx_fifo_good_frame : out std_logic;
+      rx_error_bad_frame : out std_logic;
+      rx_error_bad_fcs   : out std_logic;
+      rx_fifo_overflow   : out std_logic;
+      rx_fifo_bad_frame  : out std_logic;
+      rx_fifo_good_frame : out std_logic;
+
+      -- Configuration
+      ifg_delay : in std_logic_vector (7 downto 0)
+      );
+  end component;
 
   component gig_eth_pcs_pma_gmii_to_sgmii_bridge
     port (
@@ -151,18 +191,10 @@ architecture rtl of eth_sgmii_lvds is
   signal speedis100   : std_logic;
   signal speedis10100 : std_logic;
 
-  -- vio signals
-  signal vio_global_reset                   : std_logic := '0';
-  signal vio_phy_reset                      : std_logic := '0';
-  signal vio_sgmii_reset, vio_mac_reset     : std_logic := '0';
-  signal vio_mac_rx_reset, vio_mac_tx_reset : std_logic := '0';
-  signal vio_rst_o                          : std_logic := '0';  -- out from MAC
-
   signal phy_reset, mac_reset : std_logic := '1';
   signal phy_cfg_not_done     : std_logic := '1';
 
   signal clk_en : std_logic;
-
 
   signal mdio_i, mdio_o, mdio_t : std_logic;
 
@@ -223,9 +255,9 @@ begin
   begin
     if (rising_edge(clk125_fr)) then
 
-      phy_resetb <= not (phy_reset or vio_phy_reset);
+      phy_resetb <= not (phy_reset);
 
-      if (rst = '1' or vio_global_reset = '1') then
+      if (rst = '1') then
 
         seconds := 0;
 
@@ -262,9 +294,9 @@ begin
   sgmii_resetter_proc : process (clk125_sgmii) is
   begin
     if (rising_edge(clk125_sgmii)) then
-      rst_o        <= vio_rst_o or tx_reset_out or rx_reset_out;
-      mac_rx_reset <= vio_mac_reset or mac_reset or vio_mac_rx_reset or rst125_sgmii;
-      mac_tx_reset <= vio_mac_reset or mac_reset or vio_mac_tx_reset or rst125_sgmii;
+      rst_o        <= tx_reset_out or rx_reset_out;
+      mac_rx_reset <= mac_reset or rst125_sgmii;
+      mac_tx_reset <= mac_reset or rst125_sgmii;
     end if;
   end process;
 
@@ -293,7 +325,6 @@ begin
                        others => '0'
                        );
 
-  -- https://www.xilinx.com/support/documentation/ip_documentation/gig_ethernet_pcs_pma/v16_0/pg047-gig-eth-pcs-pma.pdf
   -- Figure 3-58
   -- https://github.com/alexforencich/verilog-ethernet/blob/master/example/KC705/fpga_sgmii/rtl/fpga.v
   sgmii : gig_eth_pcs_pma_gmii_to_sgmii_bridge
@@ -334,8 +365,8 @@ begin
       ext_mdio_o          => mdio_o,    -- out
       ext_mdio_t          => mdio_t,    -- out
       phyaddr             => "00111",
-      configuration_valid => '1',       -- For triggering a fresh update of Register 0 through configuration_vector, this signal should be deasserted and then reasserted
-      an_adv_config_val   => '0',       -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
+      configuration_valid => '1',  -- For triggering a fresh update of Register 0 through configuration_vector, this signal should be deasserted and then reasserted
+      an_adv_config_val   => '0',  -- For triggering a fresh update of Register 4 through an_adv_config_vector, this signal should be deasserted and then reasserted
       an_restart_config   => '0',  -- The rising edge of this signal is the enable signal to overwrite Bit 9 or Register 0. For triggering a fresh AN Start, this signal should be deasserted and then reasserted
 
       -- Configuration
@@ -356,338 +387,66 @@ begin
 
       status_vector => sgmii_status_vector,
 
-      reset => vio_sgmii_reset or phy_cfg_not_done,  -- hold the bridge in reset until PHY is up and happy
+      reset => phy_cfg_not_done,  -- hold the bridge in reset until PHY is up and happy
 
-      signal_detect  => '1',            -- Signal must be tied to logic 1 (if not connected to an optical module).
+      signal_detect  => '1',  -- Signal must be tied to logic 1 (if not connected to an optical module).
       idelay_rdy_out => open
       );
 
-  locked <= mmcm_locked;
+  locked       <= mmcm_locked;
+  tx_reset_out <= mac_tx_reset;
+  rx_reset_out <= mac_rx_reset;
 
-  gen_xilinx : if (USE_XILINX_MAC) generate
-    component temac_gbe_v9_0
-      port (
-        gtx_clk                 : in  std_logic;
-        --clk_enable              : in  std_logic;
-        glbl_rstn               : in  std_logic;
-        rx_axi_rstn             : in  std_logic;
-        tx_axi_rstn             : in  std_logic;
-        rx_statistics_vector    : out std_logic_vector(27 downto 0);
-        rx_statistics_valid     : out std_logic;
-        rx_mac_aclk             : out std_logic;
-        rx_reset                : out std_logic;
-        rx_axis_mac_tdata       : out std_logic_vector(7 downto 0);
-        rx_axis_mac_tvalid      : out std_logic;
-        rx_axis_mac_tlast       : out std_logic;
-        rx_axis_mac_tuser       : out std_logic;
-        tx_ifg_delay            : in  std_logic_vector(7 downto 0);
-        tx_statistics_vector    : out std_logic_vector(31 downto 0);
-        tx_statistics_valid     : out std_logic;
-        tx_mac_aclk             : out std_logic;
-        tx_reset                : out std_logic;
-        tx_axis_mac_tdata       : in  std_logic_vector(7 downto 0);
-        tx_axis_mac_tvalid      : in  std_logic;
-        tx_axis_mac_tlast       : in  std_logic;
-        tx_axis_mac_tuser       : in  std_logic_vector(0 downto 0);
-        tx_axis_mac_tready      : out std_logic;
-        pause_req               : in  std_logic;
-        pause_val               : in  std_logic_vector(15 downto 0);
-        speedis100              : out std_logic;
-        speedis10100            : out std_logic;
-        gmii_txd                : out std_logic_vector(7 downto 0);
-        gmii_tx_en              : out std_logic;
-        gmii_tx_er              : out std_logic;
-        gmii_rxd                : in  std_logic_vector(7 downto 0);
-        gmii_rx_dv              : in  std_logic;
-        gmii_rx_er              : in  std_logic;
-        rx_configuration_vector : in  std_logic_vector(79 downto 0);
-        tx_configuration_vector : in  std_logic_vector(79 downto 0)
-        );
-    end component;
-  begin
+  -- https://github.com/alexforencich/verilog-ethernet/blob/master/example/KC705/fpga_sgmii/rtl/fpga_core.v
+  eth_mac_1g_inst : eth_mac_1g_fifo
+    port map (
 
-    mac : temac_gbe_v9_0
-      port map(
-        gtx_clk              => clk125_sgmii,
-        --clk_enable              => clk_en,
-        glbl_rstn            => not (mac_reset or vio_mac_reset),
-        rx_axi_rstn          => not (vio_mac_rx_reset or rst125_sgmii),
-        tx_axi_rstn          => not (vio_mac_tx_reset or rst125_sgmii),
-        rx_statistics_vector => open,
-        rx_statistics_valid  => open,
-        rx_mac_aclk          => open,
+      rx_clk => clk125_sgmii,           -- in
+      tx_clk => clk125_sgmii,           -- in
+      rx_rst => mac_rx_reset,           -- in
+      tx_rst => mac_tx_reset,           -- in
 
-        rx_reset           => rx_reset_out,
-        rx_axis_mac_tdata  => rx_data,
-        rx_axis_mac_tvalid => rx_valid,
-        rx_axis_mac_tlast  => rx_last,
-        rx_axis_mac_tuser  => rx_error,
+      logic_clk => logic_clk,
+      logic_rst => logic_rst,
 
-        tx_ifg_delay         => std_logic_vector(to_unsigned(12, 8)),
-        tx_statistics_vector => open,
-        tx_statistics_valid  => open,
-        tx_mac_aclk          => open,
+      tx_axis_tdata    => tx_data,
+      tx_axis_tvalid   => tx_valid,
+      tx_axis_tready   => tx_ready,
+      tx_axis_tlast    => tx_last,
+      tx_axis_tuser(0) => tx_error,
+      tx_axis_tkeep(0) => '0',
 
-        tx_reset             => tx_reset_out, -- Out: Active-High TX software reset from Ethernet MAC core level
-        tx_axis_mac_tdata    => tx_data,      -- In:  Frame data to be transmitted
-        tx_axis_mac_tvalid   => tx_valid,     -- In:  Control signal for tx_axis_mac_tdata port. Indicates the data is valid.
-        tx_axis_mac_tlast    => tx_last,      -- In:  Control signal for tx_axis_mac_tdataport. Indicates the final transfer in a frame
-        tx_axis_mac_tuser(0) => tx_error,     -- In:  Control signal for tx_axis_mac_tdataport. Indicates an error condition, such as FIFO underrun, in the frame allowing the MAC to send an error to the PH
-        tx_axis_mac_tready   => tx_ready,     -- Out: Handshaking signal. Asserted when the current data on tx_axis_mac_tdata has been accepted and tx_axis_mac_tvalid is High. At 10/100 Mb/s this is used to meter the data into the core at the correct rate.
+      rx_axis_tdata    => rx_data,
+      rx_axis_tvalid   => rx_valid,
+      rx_axis_tready   => '1',
+      rx_axis_tlast    => rx_last,
+      rx_axis_tuser(0) => rx_error,
+      rx_axis_tkeep(0) => open,
 
-        pause_req => '0',
-        pause_val => X"0000",
+      gmii_rxd   => gmii_rxd,
+      gmii_rx_dv => gmii_rx_dv,
+      gmii_rx_er => gmii_rx_er,
+      gmii_txd   => gmii_txd,
+      gmii_tx_en => gmii_tx_en,
+      gmii_tx_er => gmii_tx_er,
 
-        speedis10100 => speedis10100,
-        speedis100   => speedis100,
+      rx_clk_enable => '1',
+      tx_clk_enable => '1',
 
-        gmii_txd                => gmii_txd,    -- out
-        gmii_tx_en              => gmii_tx_en,  -- out
-        gmii_tx_er              => gmii_tx_er,  -- out
-        gmii_rxd                => gmii_rxd,    -- in
-        gmii_rx_dv              => gmii_rx_dv,  -- in
-        gmii_rx_er              => gmii_rx_er,  -- in
-        rx_configuration_vector => X"0000_0000_0000_0000_0812",
-        tx_configuration_vector => X"0000_0000_0000_0000_0012"
-        );
-  end generate;
+      rx_mii_select => '0',
+      tx_mii_select => '0',
 
-  gen_forencich : if (not USE_XILINX_MAC) generate
-    component eth_mac_1g
-      --generic (
-      --  DATA_WIDTH        : integer;
-      --  ENABLE_PADDING    : integer;
-      --  MIN_FRAME_LENGTH  : integer;
-      --  TX_PTP_TS_ENABLE  : integer;
-      --  TX_PTP_TS_WIDTH   : integer;
-      --  TX_PTP_TAG_ENABLE : integer;
-      --  TX_PTP_TAG_WIDTH  : integer;
-      --  RX_PTP_TS_ENABLE  : integer;
-      --  RX_PTP_TS_WIDTH   : integer;
-      --  TX_USER_WIDTH     : integer;
-      --  RX_USER_WIDTH     : integer
-      --  );
-      port (
-        rx_clk : in std_logic;
-        rx_rst : in std_logic;
-        tx_clk : in std_logic;
-        tx_rst : in std_logic;
+      tx_error_underflow => open,
+      tx_fifo_overflow   => open,
+      tx_fifo_bad_frame  => open,
+      tx_fifo_good_frame => open,
+      rx_error_bad_frame => open,
+      rx_error_bad_fcs   => open,
+      rx_fifo_overflow   => open,
+      rx_fifo_bad_frame  => open,
+      rx_fifo_good_frame => open,
 
-        -- AXI input
-        tx_axis_tdata  : in  std_logic_vector;
-        tx_axis_tvalid : in  std_logic;
-        tx_axis_tready : out std_logic;
-        tx_axis_tlast  : in  std_logic;
-        tx_axis_tuser  : in  std_logic_vector;
-
-        -- AXI output
-        rx_axis_tdata  : out std_logic_vector;
-        rx_axis_tvalid : out std_logic;
-        rx_axis_tlast  : out std_logic;
-        rx_axis_tuser  : out std_logic_vector;
-
-        -- GMII interface
-        gmii_rxd   : in  std_logic_vector;
-        gmii_rx_dv : in  std_logic;
-        gmii_rx_er : in  std_logic;
-        gmii_txd   : out std_logic_vector;
-        gmii_tx_en : out std_logic;
-        gmii_tx_er : out std_logic;
-
-        -- PTP
-        tx_ptp_ts            : in  std_logic_vector (95 downto 0);
-        rx_ptp_ts            : in  std_logic_vector (95 downto 0);
-        tx_axis_ptp_ts       : out std_logic_vector (95 downto 0);
-        tx_axis_ptp_ts_tag   : out std_logic_vector (15 downto 0);
-        tx_axis_ptp_ts_valid : out std_logic;
-
-        -- Control
-        rx_clk_enable : in std_logic;
-        tx_clk_enable : in std_logic;
-        rx_mii_select : in std_logic;
-        tx_mii_select : in std_logic;
-
-        -- Status
-        tx_start_packet    : out std_logic;
-        tx_error_underflow : out std_logic;
-        rx_start_packet    : out std_logic;
-        rx_error_bad_frame : out std_logic;
-        rx_error_bad_fcs   : out std_logic;
-
-        -- Configuration
-        ifg_delay : in std_logic_vector (7 downto 0)
-        );
-    end component;
-
-  begin
-
-    tx_reset_out <= mac_tx_reset;
-    rx_reset_out <= mac_rx_reset;
-
-    -- https://github.com/alexforencich/verilog-ethernet/blob/master/example/KC705/fpga_sgmii/rtl/fpga_core.v
-    eth_mac_1g_inst : eth_mac_1g
-      --generic map (
-      --  --DATA_WIDTH        => DATA_WIDTH,
-      --  --ENABLE_PADDING    => ENABLE_PADDING,
-      --  --MIN_FRAME_LENGTH  => MIN_FRAME_LENGTH,
-      --  --TX_PTP_TS_WIDTH   => TX_PTP_TS_WIDTH,
-      --  --TX_PTP_TAG_ENABLE => TX_PTP_TAG_ENABLE,
-      --  --TX_PTP_TAG_WIDTH  => TX_PTP_TAG_WIDTH,
-      --  --RX_PTP_TS_ENABLE  => RX_PTP_TS_ENABLE,
-      --  --RX_PTP_TS_WIDTH   => RX_PTP_TS_WIDTH,
-      --  --TX_USER_WIDTH     => TX_USER_WIDTH,
-      --  --RX_USER_WIDTH     => RX_USER_WIDTH,
-      --  TX_PTP_TS_ENABLE  => 0
-      --  )
-      port map (
-        rx_clk => clk125_sgmii,         -- in
-        tx_clk => clk125_sgmii,         -- in
-        rx_rst => mac_rx_reset,         -- in
-        tx_rst => mac_tx_reset,         -- in
-
-        tx_axis_tdata    => tx_data,
-        tx_axis_tvalid   => tx_valid,
-        tx_axis_tready   => tx_ready,
-        tx_axis_tlast    => tx_last,
-        tx_axis_tuser(0) => tx_error,
-
-        rx_axis_tdata    => rx_data,
-        rx_axis_tvalid   => rx_valid,
-        rx_axis_tlast    => rx_last,
-        rx_axis_tuser(0) => rx_error,
-
-        gmii_rxd   => gmii_rxd,
-        gmii_rx_dv => gmii_rx_dv,
-        gmii_rx_er => gmii_rx_er,
-        gmii_txd   => gmii_txd,
-        gmii_tx_en => gmii_tx_en,
-        gmii_tx_er => gmii_tx_er,
-
-        tx_ptp_ts            => (others => '0'),
-        rx_ptp_ts            => (others => '0'),
-        tx_axis_ptp_ts       => open,
-        tx_axis_ptp_ts_tag   => open,
-        tx_axis_ptp_ts_valid => open,
-
-        rx_clk_enable => '1',
-        tx_clk_enable => '1',
-
-        rx_mii_select => '0',
-        tx_mii_select => '0',
-
-        tx_start_packet    => open,
-        tx_error_underflow => open,
-        rx_start_packet    => open,
-        rx_error_bad_frame => open,
-        rx_error_bad_fcs   => open,
-        ifg_delay          => std_logic_vector(to_unsigned(12, 8))
-        );
-  end generate;
-
-  debugilas : if (C_DEBUG) generate
-    component vio_sgmii
-      port (
-        clk        : in  std_logic;
-        probe_out0 : out std_logic_vector(0 downto 0);
-        probe_out1 : out std_logic_vector(0 downto 0);
-        probe_out2 : out std_logic_vector(0 downto 0);
-        probe_out3 : out std_logic_vector(0 downto 0);
-        probe_out4 : out std_logic_vector(0 downto 0);
-        probe_out5 : out std_logic_vector(0 downto 0);
-        probe_out6 : out std_logic_vector(0 downto 0);
-        probe_out7 : out std_logic_vector(0 downto 0);
-        probe_out8 : out std_logic_vector(0 downto 0);
-        probe_out9 : out std_logic_vector(0 downto 0)
-        );
-    end component;
-
-    component ila_sgmii
-      port (
-        clk     : in std_logic;
-        probe0  : in std_logic_vector(0 downto 0);
-        probe1  : in std_logic_vector(0 downto 0);
-        probe2  : in std_logic_vector(0 downto 0);
-        probe3  : in std_logic_vector(7 downto 0);
-        probe4  : in std_logic_vector(7 downto 0);
-        probe5  : in std_logic_vector(0 downto 0);
-        probe6  : in std_logic_vector(0 downto 0);
-        probe7  : in std_logic_vector(0 downto 0);
-        probe8  : in std_logic_vector(0 downto 0);
-        probe9  : in std_logic_vector(0 downto 0);
-        probe10 : in std_logic_vector(0 downto 0);
-        probe11 : in std_logic_vector(15 downto 0);
-        probe12 : in std_logic_vector(0 downto 0);
-        probe13 : in std_logic_vector(0 downto 0);
-        probe14 : in std_logic_vector(0 downto 0);
-        probe15 : in std_logic_vector(0 downto 0);
-        probe16 : in std_logic_vector(0 downto 0);
-        probe17 : in std_logic_vector(0 downto 0);
-        probe18 : in std_logic_vector(0 downto 0);
-        probe19 : in std_logic_vector(0 downto 0);
-        probe20 : in std_logic_vector(0 downto 0);
-        probe21 : in std_logic_vector(0 downto 0);
-        probe22 : in std_logic_vector(0 downto 0);
-        probe23 : in std_logic_vector(0 downto 0);
-        probe24 : in std_logic_vector(0 downto 0);
-        probe25 : in std_logic_vector(0 downto 0);
-        probe26 : in std_logic_vector(0 downto 0);
-        probe27 : in std_logic_vector(0 downto 0);
-        probe28 : in std_logic_vector(7 downto 0);
-        probe29 : in std_logic_vector(7 downto 0)
-        );
-    end component;
-
-  begin
-
-    vio_sgmii_1 : vio_sgmii
-      port map (
-        clk           => clk125_fr,
-        probe_out0(0) => open,
-        probe_out1(0) => open,
-        probe_out2(0) => vio_phy_reset,
-        probe_out3(0) => vio_sgmii_reset,
-        probe_out4(0) => vio_mac_reset,
-        probe_out5(0) => vio_global_reset,
-        probe_out6(0) => vio_mac_rx_reset,
-        probe_out7(0) => vio_mac_tx_reset,
-        probe_out8(0) => open,
-        probe_out9(0) => vio_rst_o
-        );
-
-    ila_sgmii_inst : ila_sgmii
-      port map (
-        clk        => clk125_sgmii,
-        probe0(0)  => mmcm_locked,
-        probe1(0)  => not clk125_sgmii,
-        probe2(0)  => clk_en,
-        probe3     => gmii_txd(7 downto 0),
-        probe4     => gmii_rxd(7 downto 0),
-        probe5(0)  => gmii_tx_en,
-        probe6(0)  => gmii_tx_er,
-        probe7(0)  => gmii_rx_dv,
-        probe8(0)  => gmii_rx_er,
-        probe9(0)  => '1',
-        probe10(0) => rst125_sgmii,
-        probe11    => sgmii_status_vector (15 downto 0),
-        probe12(0) => phy_cfg_not_done,
-        probe13(0) => speedis100,
-        probe14(0) => speedis10100,
-        probe15(0) => '1',
-        probe16(0) => '1',
-        probe17(0) => tx_reset_out,
-        probe18(0) => rx_reset_out,
-        probe19(0) => rx_valid,
-        probe20(0) => rx_last,
-        probe21(0) => mdio_i,
-        probe22(0) => mdio_o,
-        probe23(0) => mdio_t,
-        probe24(0) => clk125_sgmii,
-        probe25(0) => rst,
-        probe26(0) => onehz,
-        probe27(0) => onehz_re,
-        probe28    => rx_data,
-        probe29    => tx_data
-        );
-  end generate;
+      ifg_delay => std_logic_vector(to_unsigned(12, 8))
+      );
 
 end rtl;
