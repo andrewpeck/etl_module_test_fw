@@ -95,7 +95,6 @@ architecture behavioral of readout_board is
   signal uplink_fec_err      : std_logic_vector (NUM_UPLINKS-1 downto 0);
 
   signal downlink_data         : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
-  signal downlink_data_aligned : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
   signal downlink_reset        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
   signal downlink_ready        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
 
@@ -262,6 +261,8 @@ begin
 
     dl_src <= to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src));
 
+    downlink_data(I).valid <= strobe;
+
     process (clk40) is
     begin
       if (rising_edge(clk40)) then
@@ -366,10 +367,10 @@ begin
 
       -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
       ic_data_i => uplink_data(0).ic,
-      ic_data_o => downlink_data_aligned(0).ic,
+      ic_data_o => downlink_data(0).ic,
 
       sca0_data_i => uplink_data(0).ec,
-      sca0_data_o => downlink_data_aligned(0).ec
+      sca0_data_o => downlink_data(0).ec
       );
 
   --------------------------------------------------------------------------------
@@ -391,7 +392,7 @@ begin
       downlink_reset_i => downlink_reset,
       uplink_reset_i   => uplink_reset,
 
-      downlink_data_i => downlink_data_aligned,
+      downlink_data_i => downlink_data,
       uplink_data_o   => uplink_data,
 
       downlink_mgt_word_array_o => downlink_mgt_word_array,
@@ -424,50 +425,6 @@ begin
         count  => uplink_fec_err_cnt(I),
         at_max => open
         );
-  end generate;
-
-  --------------------------------------------------------------------------------
-  -- Downlink Frame Aligner
-  --------------------------------------------------------------------------------
-
-  dlvalid : for I in 0 to NUM_DOWNLINKS-1 generate
-  begin
-    downlink_data_aligned(I).valid <= strobe;
-  end generate;
-
-  downlink_aligners : for IBYTE in 0 to 3 generate
-    signal align_cnt :
-      std_logic_vector (integer(ceil(log2(real(DOWNWIDTH))))-1 downto 0);
-    -- don't care about bus coherence here..
-    -- switching doesn't need to be glitchless
-    attribute ASYNC_REG              : string;
-    attribute ASYNC_REG of align_cnt : signal is "true";
-  begin
-
-    process (clk40) is
-    begin
-      if (rising_edge(clk40)) then
-        case IBYTE is
-          when 0 => align_cnt <= ctrl.lpgbt.daq.downlink.align_0;
-          when 1 => align_cnt <= ctrl.lpgbt.daq.downlink.align_1;
-          when 2 => align_cnt <= ctrl.lpgbt.daq.downlink.align_2;
-          when 3 => align_cnt <= ctrl.lpgbt.daq.downlink.align_3;
-        end case;
-      end if;
-    end process;
-
-    dlaligner : for IDOWN in 0 to NUM_DOWNLINKS-1 generate
-    begin
-      frame_aligner_inst : entity work.frame_aligner
-        generic map (WIDTH => DOWNWIDTH)
-        port map (
-          clock => clk40,
-          cnt   => align_cnt,
-          din   => downlink_data(IDOWN).data(DOWNWIDTH*(IBYTE+1)-1 downto DOWNWIDTH*IBYTE),
-          dout  => downlink_data_aligned(IDOWN).data(DOWNWIDTH*(IBYTE+1)-1 downto DOWNWIDTH*IBYTE)
-          );
-    end generate;
-
   end generate;
 
   --------------------------------------------------------------------------------

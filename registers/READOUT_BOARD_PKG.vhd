@@ -82,20 +82,12 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Downlink LpGBT Encoder
-    ALIGN_0                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 0
-    ALIGN_1                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 1
-    ALIGN_2                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 2
-    ALIGN_3                    :std_logic_vector( 2 downto 0);  -- Downlink bitslip alignment for Group 3
     DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs
   end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
 
 
   constant DEFAULT_READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t : READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t := (
                                                                                                          RESET => '0',
-                                                                                                         ALIGN_0 => (others => '0'),
-                                                                                                         ALIGN_1 => (others => '0'),
-                                                                                                         ALIGN_2 => (others => '0'),
-                                                                                                         ALIGN_3 => (others => '0'),
                                                                                                          DL_SRC => (others => '0')
                                                                                                         );
   type READOUT_BOARD_LPGBT_DAQ_MON_t is record

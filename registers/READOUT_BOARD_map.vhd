@@ -97,11 +97,6 @@ begin  -- architecture behavioral
           localRdData(14 downto 12)  <=  reg_data( 5)(14 downto 12);                  --
         when 17 => --0x11
           localRdData( 0)            <=  Mon.LPGBT.DAQ.DOWNLINK.READY;                --LPGBT Downlink Ready
-        when 18 => --0x12
-          localRdData( 2 downto  0)  <=  reg_data(18)( 2 downto  0);                  --Downlink bitslip alignment for Group 0
-          localRdData( 6 downto  4)  <=  reg_data(18)( 6 downto  4);                  --Downlink bitslip alignment for Group 1
-          localRdData(10 downto  8)  <=  reg_data(18)(10 downto  8);                  --Downlink bitslip alignment for Group 2
-          localRdData(14 downto 12)  <=  reg_data(18)(14 downto 12);                  --Downlink bitslip alignment for Group 3
         when 19 => --0x13
           localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs
         when 33 => --0x21
@@ -268,10 +263,6 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.DAQ.UPLINK.ALIGN_25               <=  reg_data( 5)( 6 downto  4);       
   Ctrl.LPGBT.DAQ.UPLINK.ALIGN_26               <=  reg_data( 5)(10 downto  8);       
   Ctrl.LPGBT.DAQ.UPLINK.ALIGN_27               <=  reg_data( 5)(14 downto 12);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_0              <=  reg_data(18)( 2 downto  0);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_1              <=  reg_data(18)( 6 downto  4);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_2              <=  reg_data(18)(10 downto  8);       
-  Ctrl.LPGBT.DAQ.DOWNLINK.ALIGN_3              <=  reg_data(18)(14 downto 12);       
   Ctrl.LPGBT.DAQ.DOWNLINK.DL_SRC               <=  reg_data(19)( 3 downto  0);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_0            <=  reg_data(34)( 2 downto  0);       
   Ctrl.LPGBT.TRIGGER.UPLINK.ALIGN_1            <=  reg_data(34)( 6 downto  4);       
@@ -400,11 +391,6 @@ begin  -- architecture behavioral
           reg_data( 5)(14 downto 12)            <=  localWrData(14 downto 12);      --
         when 16 => --0x10
           Ctrl.LPGBT.DAQ.DOWNLINK.RESET         <=  localWrData( 0);               
-        when 18 => --0x12
-          reg_data(18)( 2 downto  0)            <=  localWrData( 2 downto  0);      --Downlink bitslip alignment for Group 0
-          reg_data(18)( 6 downto  4)            <=  localWrData( 6 downto  4);      --Downlink bitslip alignment for Group 1
-          reg_data(18)(10 downto  8)            <=  localWrData(10 downto  8);      --Downlink bitslip alignment for Group 2
-          reg_data(18)(14 downto 12)            <=  localWrData(14 downto 12);      --Downlink bitslip alignment for Group 3
         when 19 => --0x13
           reg_data(19)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs
         when 31 => --0x1f
@@ -568,10 +554,6 @@ begin  -- architecture behavioral
       reg_data( 5)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_26;
       reg_data( 5)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.UPLINK.ALIGN_27;
       reg_data(16)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.RESET;
-      reg_data(18)( 2 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_0;
-      reg_data(18)( 6 downto  4)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_1;
-      reg_data(18)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_2;
-      reg_data(18)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.ALIGN_3;
       reg_data(19)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DAQ.DOWNLINK.DL_SRC;
       reg_data(31)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.FEC_ERR_RESET;
       reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.TRIGGER.UPLINK.RESET;
