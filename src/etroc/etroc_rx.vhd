@@ -466,7 +466,7 @@ begin
     end if;
   end process;
 
-  state_is_active <= state = HEADER_STATE or state = DATA_state or state = TRAILER_state;
+  state_is_active <= frame_en='1' and (state = HEADER_state or state = DATA_state or state = TRAILER_state);
   crc_dis         <= '0'   when state_is_active else '1';
   crc_data        <= frame when state_is_active else (others => '0');
 
