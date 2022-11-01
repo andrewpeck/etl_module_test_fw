@@ -14,9 +14,9 @@ use ipbus.ipbus.all;
 
 entity etroc_fifo is
   generic(
-    WIDTH : positive := 40;
+    WIDTH          : positive := 40;
     LOST_CNT_WIDTH : positive := 16;
-    DEPTH : positive := 32768
+    DEPTH          : positive := 32768
     );
   port(
     clk40        : in std_logic;
@@ -42,6 +42,19 @@ architecture behavioral of etroc_fifo is
   signal fifo_empty : std_logic;
   signal fifo_valid : std_logic;
   signal fifo_full  : std_logic;
+
+  -- function to replicate a std_logic bit some number of times
+  -- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
 
 begin
 
@@ -91,7 +104,7 @@ begin
       ipbus_in  => fifo_wb_in,
       ipbus_out => fifo_wb_out,
       rd_en     => fifo_rd_en,
-      din       => fifo_dout,
+      din       => repeat(fifo_valid, 32) and fifo_dout,
       valid     => fifo_valid,
       empty     => fifo_empty
       );
