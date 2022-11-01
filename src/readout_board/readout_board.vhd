@@ -1,5 +1,3 @@
--- TODO: connect tx_dis to control path
---
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -38,6 +36,8 @@ entity readout_board is
 
     reset : in std_logic;
 
+    bc0 : in std_logic;
+
     --tx_ready : in std_logic;
     --rx_ready : in std_logic;
 
@@ -63,6 +63,7 @@ architecture behavioral of readout_board is
   signal fifo_reset     : std_logic            := '0';
   signal fifo_reset_cnt : integer range 0 to 7 := 0;
 
+  -- FIXME: account for fec5/12
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0055555";
 
   constant NUM_UPLINKS : integer := NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG;
@@ -71,7 +72,7 @@ architecture behavioral of readout_board is
 
   constant DOWNWIDTH  : integer := 8;
   constant UPWIDTH    : integer := FREQ/40;
-  constant NUM_ELINKS : integer := 224/UPWIDTH;  -- FIXME: account for fec5/12
+  constant NUM_ELINKS : integer := 224/UPWIDTH;
 
   signal valid : std_logic;
 
@@ -121,7 +122,7 @@ architecture behavioral of readout_board is
   attribute ASYNC_REG of prbs_ff  : signal is "true";
   attribute ASYNC_REG of upcnt_ff : signal is "true";
 
-  signal fast_cmd_fw : std_logic_vector (7 downto 0) := (others => '0');
+  signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
   -- FIFO
@@ -149,8 +150,6 @@ architecture behavioral of readout_board is
 
   signal l1a_gen    : std_logic               := '0';
   signal l1a        : std_logic               := '0';
-  signal bc0        : std_logic               := '0';
-  signal bxn        : natural range 0 to 3563 := 0;
 
   --------------------------------------------------------------------------------
   -- ETROC RX
@@ -296,15 +295,13 @@ begin
         case dl_src is
 
           when 0 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
+            downlink_data(I).data <= repeat_byte(fast_cmd);
           when 1 =>
             downlink_data(I).data <= repeat_byte(cnt_slv);
           when 2 =>
             downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
-          when 3 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
           when others =>
-            downlink_data(I).data <= repeat_byte(fast_cmd_fw);
+            downlink_data(I).data <= repeat_byte(fast_cmd);
 
         end case;
       end if;
@@ -318,7 +315,7 @@ begin
       l1a        => l1a,
       bc0        => bc0,
       link_reset => ctrl.link_reset_pulse,
-      data_o     => fast_cmd_fw
+      data_o     => fast_cmd
       );
 
   trig_gen_inst : entity work.trig_gen
@@ -335,18 +332,6 @@ begin
     if (rising_edge(clk40)) then
       l1a       <= ctrl.l1a_pulse or l1a_gen or (trigger_i and ctrl.en_ext_trigger);
       trigger_o <= l1a;
-    end if;
-  end process;
-
-  bc0 <= '1' when bxn = 0 else '0';
-  process (clk40) is
-  begin
-    if (rising_edge(clk40)) then
-      if (bxn = 3563) then
-        bxn <= 0;
-      else
-        bxn <= bxn + 1;
-      end if;
     end if;
   end process;
 

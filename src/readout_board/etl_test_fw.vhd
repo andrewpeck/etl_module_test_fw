@@ -1,3 +1,10 @@
+----------------------------------------------------------------------------------
+-- CMS Endcap Timing Layer
+-- ETROC Readout Firmware
+-- A. Peck, D. Spitzbart
+-- Boston University
+----------------------------------------------------------------------------------
+
 library unisim;
 use unisim.vcomponents.all;
 
@@ -5,9 +12,11 @@ library ctrl_lib;
 use ctrl_lib.READOUT_BOARD_Ctrl.all;
 use ctrl_lib.FW_INFO_Ctrl.all;
 use ctrl_lib.MGT_Ctrl.all;
+use ctrl_lib.SYSTEM_Ctrl.all;
 
 library work;
 use work.types.all;
+use work.components.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -129,8 +138,9 @@ end etl_test_fw;
 
 architecture behavioral of etl_test_fw is
 
-  signal mac_addr : std_logic_vector (47 downto 0) := MAC_ADDR_BASE; 
-  signal ip_addr : ip_addr_t := IP_ADDR_BASE;
+  --------------------------------------------------------------------------------
+  -- MGTS
+  --------------------------------------------------------------------------------
 
   constant MAX_GTS : integer := 10;
   constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
@@ -139,11 +149,6 @@ architecture behavioral of etl_test_fw is
 
   signal gtwiz_userdata_tx_in  : std_logic_vector(32*NUM_GTS-1 downto 0);
   signal gtwiz_userdata_rx_out : std_logic_vector(32*NUM_GTS-1 downto 0);
-
-  signal locked : std_logic;
-
-  signal clk_osc125, clk_osc300           : std_logic;
-  signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
 
   signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
   signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
@@ -156,15 +161,38 @@ architecture behavioral of etl_test_fw is
   signal mgt_tx_reset, mgt_rx_reset : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
   signal mgt_tx_ready, mgt_rx_ready : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
 
-  signal txclk, rxclk       : std_logic_vector (9 downto 0)         := (others => '0');
-  signal rxclk_freq         : std32_array_t (9 downto 0);
-  signal txclk_freq         : std32_array_t (9 downto 0);
+  signal txclk, rxclk : std_logic_vector (9 downto 0) := (others => '0');
+  signal rxclk_freq   : std32_array_t (9 downto 0);
+  signal txclk_freq   : std32_array_t (9 downto 0);
 
-  signal clk40, clk320 : std_logic := '0';
-  signal reset         : std_logic := '0';
+  --------------------------------------------------------------------------------
+  -- Clocking
+  --------------------------------------------------------------------------------
 
+  signal locked : std_logic;
+
+  signal clk_osc125, clk_osc300           : std_logic;
+  signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
+  signal clk40, clk320                    : std_logic := '0';
+  signal reset                            : std_logic := '0';
+
+  --------------------------------------------------------------------------------
+  -- TTC
+  --------------------------------------------------------------------------------
+
+  signal bc0, l1a      : std_logic;
+  signal ext_trigger_o : std_logic;
+  signal trigger_o     : std_logic_vector (NUM_RBS-1 downto 0);
+  signal trig_gen_rate : std_logic_vector (31 downto 0);
+
+  --------------------------------------------------------------------------------
+  -- IPBUS
+  --------------------------------------------------------------------------------
+
+  signal mac_addr         : std_logic_vector (47 downto 0) := MAC_ADDR_BASE;
+  signal ip_addr          : ip_addr_t                      := IP_ADDR_BASE;
   signal ipb_clk, ipb_rst : std_logic;
-  signal nuke, soft_rst   : std_logic := '0';
+  signal nuke, soft_rst   : std_logic                      := '0';
   signal pcie_sys_rst_n   : std_logic;
 
   signal eth_ipb_w, pci_ipb_w : ipb_wbus := (ipb_strobe => '0',
@@ -188,75 +216,57 @@ architecture behavioral of etl_test_fw is
   signal mgt_mon  : MGT_Mon_t;
   signal mgt_ctrl : MGT_Ctrl_t;
 
-  signal ext_trigger : std_logic := '0';
-  signal trigger_o : std_logic_vector (NUM_RBS-1 downto 0) := (others => '0');
-
+  signal system_mon  : SYSTEM_Mon_t;
+  signal system_ctrl : SYSTEM_Ctrl_t;
 
   signal fw_info_mon : FW_INFO_Mon_t;
 
+  --------------------------------------------------------------------------------
+  -- Misc
+  --------------------------------------------------------------------------------
+
   signal dna : std_logic_vector (95 downto 0) := (others => '0');
-
-  component device_dna
-    port (
-      clock : in  std_logic;
-      reset : in  std_logic;
-      dna   : out std_logic_vector (95 downto 0)
-      );
-  end component;
-
-  component fader is
-    port (
-      clock : in  std_logic;
-      led   : out std_logic
-      );
-  end component;
-
-  component cylon1 is
-    port (
-      clock : in  std_logic;
-      rate  : in  std_logic_vector (1 downto 0);
-      q     : out std_logic_vector (7 downto 0)
-      );
-  end component;
-
-  component cylon2 is
-    port (
-      clock : in  std_logic;
-      rate  : in  std_logic_vector (1 downto 0);
-      q     : out std_logic_vector (7 downto 0)
-      );
-  end component;
 
   signal cylon1_signal : std_logic_vector (7 downto 0);
   signal cylon2_signal : std_logic_vector (7 downto 0);
   signal breath        : std_logic;
 
-  component system_clocks is
-    port (
-      reset     : in  std_logic;
-      clk_in320 : in  std_logic;
-      clk_40    : out std_logic;
-      clk_320   : out std_logic;
-      locked    : out std_logic
-      );
-  end component;
-
 begin
+
+  --------------------------------------------------------------------------------
+  -- Reset
+  --------------------------------------------------------------------------------
+
+  process (clk40, locked) is
+  begin
+    if (locked = '0') then
+      reset <= '1';
+    elsif (rising_edge(clk40)) then
+      reset <= '0';
+    end if;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- External Trigger
+  --------------------------------------------------------------------------------
 
   ext_trigger_inst : entity work.ext_trigger
     port map (
       clock         => clk40,
       clock_320     => clk320,
       ext_trigger_i => user_sma_p,
-      ext_trigger_o => ext_trigger
+      ext_trigger_o => ext_trigger_o
       );
 
   user_sma_n <= trigger_o(0);
 
-  reset <= not locked;
+  --------------------------------------------------------------------------------
+  -- IO/LED
+  --------------------------------------------------------------------------------
 
-  sfp0_tx_disable <= mgt_ctrl.sfp0_tx_dis;
-  sfp1_tx_disable <= mgt_ctrl.sfp1_tx_dis;
+  sfp0_tx_disable <= reset or mgt_ctrl.sfp0_tx_dis;
+  sfp1_tx_disable <= reset or mgt_ctrl.sfp1_tx_dis;
+  pcie_sys_rst_n  <= not pcie_sys_rst;
 
   cylon1_inst : cylon1
     port map (
@@ -278,8 +288,6 @@ begin
       led   => breath
       );
 
-  pcie_sys_rst_n <= not pcie_sys_rst;
-
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -289,7 +297,7 @@ begin
 
         leds(7 downto 0) <= cylon2_signal (7 downto 0);
 
-      elsif  (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
+      elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
 
         leds(7 downto 0) <= cylon1_signal (7 downto 0);
 
@@ -302,6 +310,10 @@ begin
 
     end if;
   end process;
+
+  --------------------------------------------------------------------------------
+  -- Clocking
+  --------------------------------------------------------------------------------
 
   osc_clk125_ibuf_inst : IBUFDS
     port map(
@@ -329,67 +341,6 @@ begin
       o => clk_osc300
       );
 
-  ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
-  mac_addr(3 downto 0) <= sw(3 downto 0);
-
-  -- Infrastructure
-  eth : if (USE_ETH = 1) generate
-    eth_infra_inst : entity ipbus.eth_infra
-      generic map (
-        C_EXT_CLOCK => true)
-      port map (
-        ext_clk_i     => clk40,
-        osc_clk_300   => clk_osc300_ibuf,
-        osc_clk_125   => clk_osc125_ibuf,
-
-        sgmii_clk_p   => sgmii_clk_p,
-        sgmii_clk_n   => sgmii_clk_n,
-        sgmii_txp     => sgmii_txp,
-        sgmii_txn     => sgmii_txn,
-        sgmii_rxp     => sgmii_rxp,
-        sgmii_rxn     => sgmii_rxn,
-
-        phy_resetb    => phy_resetb,
-        phy_mdio      => phy_mdio,
-        phy_interrupt => phy_interrupt,
-        phy_mdc       => phy_mdc,
-
-        clk_ipb_o     => ipb_clk,
-        rst_ipb_o     => ipb_rst,
-        clk_aux_o     => open,
-        rst_aux_o     => open,
-
-        nuke          => nuke,
-        soft_rst      => soft_rst,
-        mac_addr      => mac_addr,
-        ip_addr       => to_slv(IP_ADDR),
-        ipb_in        => eth_ipb_r,
-        ipb_out       => eth_ipb_w
-        );
-  end generate;
-
-  pcie : if (USE_PCIE = 1) generate
-    pcie_infra : entity ipbus.pcie_infra
-      port map(
-        pcie_sys_clk_p => pcie_sys_clk_p(0),
-        pcie_sys_clk_n => pcie_sys_clk_n(0),
-        pcie_sys_rst_n => pcie_sys_rst_n,
-        pcie_rx_p      => pcie_rx_p,
-        pcie_rx_n      => pcie_rx_n,
-        pcie_tx_p      => pcie_tx_p,
-        pcie_tx_n      => pcie_tx_n,
-        clk_osc        => clk_osc125_ibuf,
-        ipb_clk        => ipb_clk,
-        ipb_rst        => ipb_rst,
-        nuke           => nuke,
-        soft_rst       => soft_rst,
-        leds           => leds(1 downto 0),
-        ipb_in         => pci_ipb_r,
-        ipb_out        => pci_ipb_w
-        );
-
-  end generate;
-
   system_clocks_inst : system_clocks
     port map (
       reset     => std_logic0,
@@ -398,30 +349,6 @@ begin
       clk_320   => clk320,
       locked    => locked
       );
-
-  control_inst : entity work.control
-    generic map (
-      EN_LPGBTS => EN_LPGBTS,
-      NUM_RBS   => NUM_RBS
-      )
-    port map (
-      reset_i            => ipb_rst,
-      clock              => ipb_clk,
-      fw_info_mon        => fw_info_mon,
-      readout_board_mon  => readout_board_mon,
-      readout_board_ctrl => readout_board_ctrl,
-      mgt_mon            => mgt_mon,
-      mgt_ctrl           => mgt_ctrl,
-      pci_ipb_w          => pci_ipb_w,
-      pci_ipb_r          => pci_ipb_r,
-      eth_ipb_w          => eth_ipb_w,
-      eth_ipb_r          => eth_ipb_r,
-
-      daq_ipb_w_array => daq_ipb_w_array,
-      daq_ipb_r_array => daq_ipb_r_array
-
-      );
-
 
   SI570_REF_GEN : if (not USE_EXT_REF) generate
     refclk_ibufds : ibufds_gte3
@@ -467,8 +394,114 @@ begin
       );
 
   --------------------------------------------------------------------------------
+  -- Ethernet
+  --------------------------------------------------------------------------------
+
+  ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
+  mac_addr(3 downto 0) <= sw(3 downto 0);
+
+  -- Infrastructure
+  eth : if (USE_ETH = 1) generate
+    eth_infra_inst : entity ipbus.eth_infra
+      generic map (
+        C_EXT_CLOCK => true)
+      port map (
+        ext_clk_i   => clk40,
+        osc_clk_300 => clk_osc300_ibuf,
+        osc_clk_125 => clk_osc125_ibuf,
+
+        sgmii_clk_p => sgmii_clk_p,
+        sgmii_clk_n => sgmii_clk_n,
+        sgmii_txp   => sgmii_txp,
+        sgmii_txn   => sgmii_txn,
+        sgmii_rxp   => sgmii_rxp,
+        sgmii_rxn   => sgmii_rxn,
+
+        phy_resetb    => phy_resetb,
+        phy_mdio      => phy_mdio,
+        phy_interrupt => phy_interrupt,
+        phy_mdc       => phy_mdc,
+
+        clk_ipb_o => ipb_clk,
+        rst_ipb_o => ipb_rst,
+        clk_aux_o => open,
+        rst_aux_o => open,
+
+        nuke     => nuke,
+        soft_rst => soft_rst,
+        mac_addr => mac_addr,
+        ip_addr  => to_slv(IP_ADDR),
+        ipb_in   => eth_ipb_r,
+        ipb_out  => eth_ipb_w
+        );
+  end generate;
+
+  pcie : if (USE_PCIE = 1) generate
+    pcie_infra : entity ipbus.pcie_infra
+      port map(
+        pcie_sys_clk_p => pcie_sys_clk_p(0),
+        pcie_sys_clk_n => pcie_sys_clk_n(0),
+        pcie_sys_rst_n => pcie_sys_rst_n,
+        pcie_rx_p      => pcie_rx_p,
+        pcie_rx_n      => pcie_rx_n,
+        pcie_tx_p      => pcie_tx_p,
+        pcie_tx_n      => pcie_tx_n,
+        clk_osc        => clk_osc125_ibuf,
+        ipb_clk        => ipb_clk,
+        ipb_rst        => ipb_rst,
+        nuke           => nuke,
+        soft_rst       => soft_rst,
+        leds           => leds(1 downto 0),
+        ipb_in         => pci_ipb_r,
+        ipb_out        => pci_ipb_w
+        );
+
+  end generate;
+
+  --------------------------------------------------------------------------------
+  -- IPBUS Control
+  --------------------------------------------------------------------------------
+
+  control_inst : entity work.control
+    generic map (
+      EN_LPGBTS => EN_LPGBTS,
+      NUM_RBS   => NUM_RBS
+      )
+    port map (
+      reset_i            => ipb_rst,
+      clock              => ipb_clk,
+      fw_info_mon        => fw_info_mon,
+      readout_board_mon  => readout_board_mon,
+      readout_board_ctrl => readout_board_ctrl,
+      mgt_mon            => mgt_mon,
+      mgt_ctrl           => mgt_ctrl,
+      system_mon         => system_mon,
+      system_ctrl        => system_ctrl,
+      pci_ipb_w          => pci_ipb_w,
+      pci_ipb_r          => pci_ipb_r,
+      eth_ipb_w          => eth_ipb_w,
+      eth_ipb_r          => eth_ipb_r,
+
+      daq_ipb_w_array => daq_ipb_w_array,
+      daq_ipb_r_array => daq_ipb_r_array
+
+      );
+
+  --------------------------------------------------------------------------------
   -- Readout Boards
   --------------------------------------------------------------------------------
+
+  ttc_inst : entity work.ttc
+    port map (
+      clock         => clk40,
+      reset         => reset,
+      l1a           => l1a,
+      bc0           => bc0,
+      force_trig    => system_ctrl.l1a_pulse,
+      ext_trig      => ext_trigger_o,
+      ext_trig_en   => system_ctrl.en_ext_trigger,
+      trig_gen_rate => trig_gen_rate
+      );
 
   rb_gen : if (EN_LPGBTS = 1) generate
 
@@ -488,14 +521,16 @@ begin
 
           reset => reset,
 
-          trigger_i => ext_trigger,
+          bc0 => bc0,
+
+          trigger_i => ext_trigger_o,
           trigger_o => trigger_o (I),
 
           --daq_txready  => tx_ready(I*2),
           --daq_rxready  => rx_ready(I*2),
           --trig_rxready => rx_ready(I*2+1),
 
-          daq_wb_in => daq_ipb_w_array(I downto I),
+          daq_wb_in  => daq_ipb_w_array(I downto I),
           daq_wb_out => daq_ipb_r_array(I downto I),
 
           clk40  => clk40,
@@ -561,25 +596,6 @@ begin
 
       -- TODO: connect DRP to ipb control registers
       ibert : if (USE_SYSTEM_IBERT) generate
-        component system_ibert
-          port (
-            drpclk_o       : out std_logic_vector(0 downto 0);
-            gt0_drpen_o    : out std_logic;
-            gt0_drpwe_o    : out std_logic;
-            gt0_drpaddr_o  : out std_logic_vector(8 downto 0);
-            gt0_drpdi_o    : out std_logic_vector(15 downto 0);
-            gt0_drprdy_i   : in  std_logic;
-            gt0_drpdo_i    : in  std_logic_vector(15 downto 0);
-            eyescanreset_o : out std_logic_vector(0 downto 0);
-            rxrate_o       : out std_logic_vector(2 downto 0);
-            txdiffctrl_o   : out std_logic_vector(3 downto 0);
-            txprecursor_o  : out std_logic_vector(4 downto 0);
-            txpostcursor_o : out std_logic_vector(4 downto 0);
-            rxlpmen_o      : out std_logic_vector(0 downto 0);
-            rxoutclk_i     : in  std_logic_vector(0 downto 0);
-            clk            : in  std_logic
-            );
-        end component;
       begin
 
         system_ibert_inst : system_ibert

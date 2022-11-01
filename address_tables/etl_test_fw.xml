@@ -14,6 +14,7 @@
   -->
 
   <node id="MGT"   module="file://modules/MGT.xml"           address="0xA000"/>
+  <node id="SYSTEM"          module="file://modules/SYSTEM.xml"        address="0xB000" />
 
   <node id="DAQ_RB0"  module="file://modules/DAQ.xml"       address="0x120000" />
 
