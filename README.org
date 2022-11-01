@@ -4,6 +4,7 @@
 
 ** Table of Contents :TOC_4:
   - [[#changelog][Changelog]]
+    - [[#v201][v2.0.1]]
     - [[#v200][v2.0.0]]
     - [[#v141][v1.4.1]]
     - [[#v140][v1.4.0]]
@@ -31,6 +32,8 @@ This changelog describes changes made in recommended versions of the firmware.
 Versions not described here are intermediate versions which are either not tested or known to be problematic.
 Change log is inclusive of all changes from the previous recommended version; please only use the versions listed here unless instructed otherwise.
 
+*** v2.0.1
+- Supercharge the leds
 *** v2.0.0
 - Add a working dumb daq
 - Add a system slave for global signals

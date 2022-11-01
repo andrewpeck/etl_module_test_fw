@@ -181,6 +181,7 @@ architecture behavioral of etl_test_fw is
   signal bc0, l1a      : std_logic;
   signal ext_trigger_i : std_logic;
   signal trigger_o     : std_logic_vector (NUM_RBS-1 downto 0);
+  signal l1a_rate      : std_logic_vector (31 downto 0);
 
   --------------------------------------------------------------------------------
   -- IPBUS
@@ -227,6 +228,10 @@ architecture behavioral of etl_test_fw is
   signal cylon1_signal : std_logic_vector (7 downto 0);
   signal cylon2_signal : std_logic_vector (7 downto 0);
   signal breath        : std_logic;
+
+  signal l1a_led, ipb_led : std_logic;
+  signal led_status       : std_logic_vector (leds'range);
+  signal led_rate         : std_logic_vector (leds'range);
 
 begin
 
@@ -285,28 +290,60 @@ begin
       led   => breath
       );
 
+  x_flashsm_l1a : x_flashsm
+    port map (
+      trigger => l1a,
+      hold    => '0',
+      clock   => clk40,
+      dout    => l1a_led
+      );
+
+  x_flashsm_ipb : x_flashsm
+    port map (
+      trigger => eth_ipb_w.ipb_strobe,
+      hold    => '0',
+      clock   => clk40,
+      dout    => ipb_led
+      );
+
+  leds <= led_status xor (ipb_led & l1a_led & "000000" );
+
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
 
-      if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
+      if (l1a_rate/=x"00000000") then
+        led_status(7 downto 0) <= led_rate;
+      elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
           readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
-
-        leds(7 downto 0) <= cylon2_signal (7 downto 0);
-
+        led_status(7 downto 0) <= cylon2_signal (7 downto 0);
       elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
-
-        leds(7 downto 0) <= cylon1_signal (7 downto 0);
-
+        led_status(7 downto 0) <= cylon1_signal (7 downto 0);
       else
-
-        leds(7 downto 0) <= breath & breath & breath & breath &
-                            breath & breath & breath & breath;
-
+        led_status(7 downto 0) <= breath & breath & breath & breath &
+                                  breath & breath & breath & breath;
       end if;
 
     end if;
   end process;
+
+  progress_bar_1: entity work.progress_bar
+    generic map (
+      g_LOGARITHMIC        => 1,
+      g_CLK_FREQUENCY      => 40079000,
+      g_COUNTER_WIDTH      => 32,
+      g_INCREMENTER_WIDTH  => 1,
+      g_PROGRESS_BAR_WIDTH => 8, -- we'll have 8 LEDs as a rate progress bar
+      g_PROGRESS_BAR_STEP  => 100,  -- each bar is 100 Hz
+      g_SPEEDUP_FACTOR     => 4 -- update @ 4hz
+      )
+    port map (
+      clk_i          => clk40,
+      reset_i        => reset,
+      increment_i(0) => l1a,
+      rate_o         => l1a_rate,
+      progress_bar_o => led_rate
+      );
 
   --------------------------------------------------------------------------------
   -- Clocking

@@ -1,6 +1,7 @@
 ## Table of Contents <span class="tag" data-tag-name="TOC_4"><span class="smallcaps">TOC\_4</span></span>
 
   - [Changelog](#changelog)
+      - [v2.0.1](#v201)
       - [v2.0.0](#v200)
       - [v1.4.1](#v141)
       - [v1.4.0](#v140)
@@ -29,6 +30,10 @@ firmware. Versions not described here are intermediate versions which
 are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
+
+### v2.0.1
+
+  - Supercharge the leds
 
 ### v2.0.0
 

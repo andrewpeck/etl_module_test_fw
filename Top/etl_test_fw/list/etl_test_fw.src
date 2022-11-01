@@ -9,6 +9,8 @@ src/utils/device_dna.v
 src/utils/fader.v
 src/utils/cylon2.v
 src/utils/extender.vhd
+src/utils/progress_bar.vhd
+src/utils/x_flashsm.v
 src/utils/prbs_any.vhd
 src/utils/fifo_async.vhd
 src/utils/fifo_sync.vhd

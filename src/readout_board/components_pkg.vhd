@@ -128,6 +128,15 @@ package components is
       );
   end component;
 
+  component x_flashsm is
+    port (
+      trigger : in  std_logic;
+      hold    : in  std_logic;
+      clock   : in  std_logic;
+      dout    : out std_logic
+      );
+  end component;
+
   component system_clocks is
     port (
       reset     : in  std_logic;
