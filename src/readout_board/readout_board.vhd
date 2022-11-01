@@ -24,8 +24,7 @@ entity readout_board is
   generic(
     INST            : integer := 0;
     C_DEBUG         : boolean := true;
-    NUM_LPGBTS_DAQ  : integer := 1;
-    NUM_LPGBTS_TRIG : integer := 1;
+    NUM_UPLINKS     : integer := 2;
     NUM_DOWNLINKS   : integer := 1;
     NUM_SCAS        : integer := 1
     );
@@ -51,8 +50,8 @@ entity readout_board is
     daq_wb_in  : in  ipb_wbus_array(0 downto 0);
     daq_wb_out : out ipb_rbus_array(0 downto 0);
 
-    uplink_bitslip          : out std_logic_vector (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
-    uplink_mgt_word_array   : in  std32_array_t (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG-1 downto 0);
+    uplink_bitslip          : out std_logic_vector (NUM_UPLINKS-1 downto 0);
+    uplink_mgt_word_array   : in  std32_array_t (NUM_UPLINKS-1 downto 0);
     downlink_mgt_word_array : out std32_array_t (NUM_DOWNLINKS-1 downto 0)
 
     );
@@ -65,8 +64,6 @@ architecture behavioral of readout_board is
 
   -- FIXME: account for fec5/12
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0055555";
-
-  constant NUM_UPLINKS : integer := NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG;
 
   constant FREQ : integer := 320;       -- uplink frequency
 
@@ -349,10 +346,7 @@ begin
   mon.lpgbt.trigger.uplink.ready <= uplink_ready(1);
   downlink_reset(0)              <= ctrl.lpgbt.daq.downlink.reset;
   uplink_reset(0)                <= ctrl.lpgbt.daq.uplink.reset;
-
-  trg : if (NUM_LPGBTS_TRIG > 0) generate
-    uplink_reset(NUM_LPGBTS_DAQ) <= ctrl.lpgbt.trigger.uplink.reset;
-  end generate;
+  uplink_reset(1)                <= ctrl.lpgbt.trigger.uplink.reset;
 
   --------------------------------------------------------------------------------
   -- GBT Slow Control

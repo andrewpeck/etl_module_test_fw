@@ -44,14 +44,10 @@ entity etl_test_fw is
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
-    NUM_RBS : integer := 1;
-
-    NUM_LPGBTS_DAQ  : integer := 1;     -- Number of DAQ / Rb
-    NUM_LPGBTS_TRIG : integer := 1;     -- Number of Trig / Rb
-    NUM_DOWNLINKS   : integer := 1;     -- Number of Downlinks / Rb
-    NUM_SCAS        : integer := 1;     -- Number of SCAs / Downlink
-
-    NUM_REFCLK : integer := 2;
+    NUM_RBS       : integer := 1;
+    NUM_UPLINKS   : integer := 2;       -- Number of Uplinks / RB
+    NUM_DOWNLINKS : integer := 1;       -- Number of Downlinks / RB
+    NUM_SCAS      : integer := 1;       -- Number of SCAs / RB
 
     -- these generics get set by hog at synthesis
     GLOBAL_DATE : std_logic_vector (31 downto 0) := x"DEFFFFFF";
@@ -104,10 +100,10 @@ entity etl_test_fw is
     -- Transceivers
     --------------------------------------------------------------------------------
 
-    tx_p : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
-    tx_n : out std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
-    rx_p : in  std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
-    rx_n : in  std_logic_vector(EN_LPGBTS*NUM_RBS*(NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG) - 1 downto 0);
+    tx_p : out std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    tx_n : out std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    rx_p : in  std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    rx_n : in  std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
 
     sfp0_tx_disable  : out std_logic := '0';
     sfp1_tx_disable  : out std_logic := '0';
@@ -142,21 +138,22 @@ architecture behavioral of etl_test_fw is
   -- MGTS
   --------------------------------------------------------------------------------
 
+  constant TOTAL_UPLINKS   : integer := NUM_RBS * NUM_UPLINKS;
+  constant TOTAL_DOWNLINKS : integer := NUM_RBS * NUM_DOWNLINKS;
+
   constant MAX_GTS : integer := 10;
-  constant NUM_GTS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
+  constant NUM_GTS : integer := TOTAL_UPLINKS;
 
-  constant NUM_UPLINKS : integer := NUM_RBS * (NUM_LPGBTS_DAQ + NUM_LPGBTS_TRIG);
+  signal gtwiz_userdata_tx_in  : std_logic_vector(32*TOTAL_UPLINKS-1 downto 0);
+  signal gtwiz_userdata_rx_out : std_logic_vector(32*TOTAL_UPLINKS-1 downto 0);
 
-  signal gtwiz_userdata_tx_in  : std_logic_vector(32*NUM_GTS-1 downto 0);
-  signal gtwiz_userdata_rx_out : std_logic_vector(32*NUM_GTS-1 downto 0);
+  signal mgt_data_in  : std32_array_t (TOTAL_UPLINKS-1 downto 0) := (others => (others => '0'));
+  signal mgt_data_out : std32_array_t (TOTAL_UPLINKS-1 downto 0);
 
-  signal mgt_data_in  : std32_array_t (NUM_GTS-1 downto 0) := (others => (others => '0'));
-  signal mgt_data_out : std32_array_t (NUM_GTS-1 downto 0);
-
-  signal rxslide                 : std_logic_vector (NUM_GTS-1 downto 0);
-  signal uplink_bitslip          : std_logic_vector (NUM_UPLINKS-1 downto 0);
-  signal uplink_mgt_word_array   : std32_array_t (NUM_UPLINKS-1 downto 0);
-  signal downlink_mgt_word_array : std32_array_t (NUM_DOWNLINKS-1 downto 0);
+  signal rxslide                 : std_logic_vector (TOTAL_UPLINKS-1 downto 0);
+  signal uplink_bitslip          : std_logic_vector (TOTAL_UPLINKS-1 downto 0);
+  signal uplink_mgt_word_array   : std32_array_t (TOTAL_UPLINKS-1 downto 0);
+  signal downlink_mgt_word_array : std32_array_t (TOTAL_DOWNLINKS-1 downto 0);
 
   signal mgt_tx_reset, mgt_rx_reset : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
   signal mgt_tx_ready, mgt_rx_ready : std_logic_vector (MAX_GTS-1 downto 0) := (others => '0');
@@ -530,16 +527,15 @@ begin
   rb_gen : if (EN_LPGBTS = 1) generate
 
     rbgen : for I in 0 to NUM_RBS-1 generate
-      constant NU : integer := NUM_LPGBTS_TRIG + NUM_LPGBTS_DAQ;
-      constant ND : integer := 1;
+      constant NU : integer := NUM_UPLINKS;
+      constant ND : integer := NUM_DOWNLINKS;
     begin
       readout_board_inst : entity work.readout_board
         generic map (
-          INST            => I,
-          NUM_LPGBTS_DAQ  => NUM_LPGBTS_DAQ,
-          NUM_LPGBTS_TRIG => NUM_LPGBTS_TRIG,
-          NUM_DOWNLINKS   => NUM_DOWNLINKS,
-          NUM_SCAS        => NUM_SCAS
+          INST          => I,
+          NUM_UPLINKS   => NU,
+          NUM_DOWNLINKS => ND,
+          NUM_SCAS      => NUM_SCAS
           )
         port map (
 
@@ -582,7 +578,7 @@ begin
     mgt_tx_reset <= mgt_ctrl.mgt_tx_reset;
     mgt_rx_reset <= mgt_ctrl.mgt_rx_reset;
 
-    rbdata : for I in 0 to NUM_GTS-1 generate
+    rbdata : for I in 0 to TOTAL_UPLINKS-1 generate
     begin
 
       process (clk320) is
@@ -601,7 +597,7 @@ begin
       end process;
     end generate;
 
-    datagen : for I in 0 to NUM_GTS-1 generate
+    datagen : for I in 0 to TOTAL_UPLINKS-1 generate
 
       signal txdata, rxdata : std_logic_vector (31 downto 0);
 
