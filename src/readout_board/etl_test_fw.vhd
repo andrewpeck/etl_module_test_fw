@@ -11,7 +11,6 @@ use unisim.vcomponents.all;
 library ctrl_lib;
 use ctrl_lib.READOUT_BOARD_Ctrl.all;
 use ctrl_lib.FW_INFO_Ctrl.all;
-use ctrl_lib.MGT_Ctrl.all;
 use ctrl_lib.SYSTEM_Ctrl.all;
 
 library work;
@@ -178,10 +177,12 @@ architecture behavioral of etl_test_fw is
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal bc0, l1a      : std_logic;
-  signal ext_trigger_i : std_logic;
-  signal trigger_o     : std_logic_vector (NUM_RBS-1 downto 0);
-  signal l1a_rate      : std_logic_vector (31 downto 0);
+  signal bc0, l1a        : std_logic;
+  signal ext_trigger_i   : std_logic;
+  signal trigger_o       : std_logic_vector (NUM_RBS-1 downto 0);
+  signal l1a_rate_cnt    : std_logic_vector (31 downto 0);
+  signal l1as_recent_cnt : integer range 0 to 2**28-1 := 0;
+  signal l1as_recent     : std_logic := '0';
 
   --------------------------------------------------------------------------------
   -- IPBUS
@@ -210,9 +211,6 @@ architecture behavioral of etl_test_fw is
   signal daq_ipb_w_array : ipb_wbus_array(NUM_RBS - 1 downto 0);
   signal daq_ipb_r_array : ipb_rbus_array(NUM_RBS - 1 downto 0);
 
-  signal mgt_mon  : MGT_Mon_t;
-  signal mgt_ctrl : MGT_Ctrl_t;
-
   signal system_mon  : SYSTEM_Mon_t;
   signal system_ctrl : SYSTEM_Ctrl_t;
 
@@ -229,8 +227,7 @@ architecture behavioral of etl_test_fw is
   signal breath        : std_logic;
 
   signal l1a_led, ipb_led : std_logic;
-  signal led_status       : std_logic_vector (leds'range);
-  signal led_rate         : std_logic_vector (leds'range);
+  signal led_progress     : std_logic_vector (leds'length - 2 downto 0);
 
 begin
 
@@ -265,8 +262,8 @@ begin
   -- IO/LED
   --------------------------------------------------------------------------------
 
-  sfp0_tx_disable <= reset or mgt_ctrl.sfp0_tx_dis;
-  sfp1_tx_disable <= reset or mgt_ctrl.sfp1_tx_dis;
+  sfp0_tx_disable <= reset or system_ctrl.sfp0_tx_dis;
+  sfp1_tx_disable <= reset or system_ctrl.sfp1_tx_dis;
   pcie_sys_rst_n  <= not pcie_sys_rst;
 
   cylon1_inst : cylon1
@@ -305,22 +302,21 @@ begin
       dout    => ipb_led
       );
 
-  leds <= led_status xor (ipb_led & l1a_led & "000000" );
-
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
 
-      if (l1a_rate/=x"00000000") then
-        led_status(7 downto 0) <= led_rate;
+      if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
+          and l1as_recent = '1') then
+        leds(7 downto 0) <= ipb_led & (repeat(l1a_led, 7) xor led_progress);
       elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
-          readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
-        led_status(7 downto 0) <= cylon2_signal (7 downto 0);
+             readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
+        leds(7 downto 0) <= ipb_led & cylon2_signal (6 downto 0);
       elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
-        led_status(7 downto 0) <= cylon1_signal (7 downto 0);
+        leds(7 downto 0) <= ipb_led & cylon1_signal (6 downto 0);
       else
-        led_status(7 downto 0) <= breath & breath & breath & breath &
-                                  breath & breath & breath & breath;
+        leds(7 downto 0) <= ipb_led & breath & breath & breath &
+                            breath & breath & breath & breath;
       end if;
 
     end if;
@@ -332,16 +328,16 @@ begin
       g_CLK_FREQUENCY      => 40079000,
       g_COUNTER_WIDTH      => 32,
       g_INCREMENTER_WIDTH  => 1,
-      g_PROGRESS_BAR_WIDTH => 8, -- we'll have 8 LEDs as a rate progress bar
-      g_PROGRESS_BAR_STEP  => 100,  -- each bar is 100 Hz
-      g_SPEEDUP_FACTOR     => 4 -- update @ 4hz
+      g_PROGRESS_BAR_WIDTH => 7,    -- we'll have 8 LEDs as a rate progress bar
+      g_PROGRESS_BAR_STEP  => 100,      -- each bar is 100 Hz
+      g_SPEEDUP_FACTOR     => 4         -- update @ 4hz
       )
     port map (
       clk_i          => clk40,
       reset_i        => reset,
       increment_i(0) => l1a,
-      rate_o         => l1a_rate,
-      progress_bar_o => led_rate
+      rate_o         => open,
+      progress_bar_o => led_progress
       );
 
   --------------------------------------------------------------------------------
@@ -512,8 +508,6 @@ begin
       fw_info_mon        => fw_info_mon,
       readout_board_mon  => readout_board_mon,
       readout_board_ctrl => readout_board_ctrl,
-      mgt_mon            => mgt_mon,
-      mgt_ctrl           => mgt_ctrl,
       system_mon         => system_mon,
       system_ctrl        => system_ctrl,
       pci_ipb_w          => pci_ipb_w,
@@ -551,8 +545,25 @@ begin
       clk_i   => clk40,
       reset_i => reset,
       en_i    => l1a,
-      rate_o  => system_mon.l1a_rate_cnt
+      rate_o  => l1a_rate_cnt
       );
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (l1a = '1') then
+        l1as_recent_cnt <= 2**28-1;
+        l1as_recent     <= '1';
+      elsif (l1as_recent_cnt > 0) then
+        l1as_recent_cnt <= l1as_recent_cnt - 1;
+      else
+        l1as_recent_cnt <= 0;
+        l1as_recent     <= '0';
+      end if;
+    end if;
+  end process;
+
+  system_mon.l1a_rate_cnt <= l1a_rate_cnt;
 
   rb_gen : if (EN_LPGBTS = 1) generate
 
@@ -598,15 +609,16 @@ begin
           );
     end generate;
 
+    process (clk320) is
+    begin
+      if (rising_edge(clk320)) then
+        system_mon.mgt_tx_ready <= mgt_tx_ready;
+        system_mon.mgt_rx_ready <= mgt_rx_ready;
 
-    -- TODO: check this mapping the correspondence between mgt array and daq/trig array are what
-    -- create the mapping to different sfp/firefly
-
-    mgt_mon.mgt_tx_ready <= mgt_tx_ready;
-    mgt_mon.mgt_rx_ready <= mgt_rx_ready;
-
-    mgt_tx_reset <= mgt_ctrl.mgt_tx_reset;
-    mgt_rx_reset <= mgt_ctrl.mgt_rx_reset;
+        mgt_tx_reset <= system_ctrl.mgt_tx_reset;
+        mgt_rx_reset <= system_ctrl.mgt_rx_reset;
+      end if;
+    end process;
 
     rbdata : for I in 0 to TOTAL_UPLINKS-1 generate
     begin
@@ -639,6 +651,9 @@ begin
       signal drpdo   : std_logic_vector(15 downto 0);
       signal drpwe   : std_logic;
 
+      signal tx_ready : std_logic := '0';
+      signal rx_ready : std_logic := '0';
+
     begin
 
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
@@ -668,6 +683,20 @@ begin
             );
 
       end generate;
+
+      process (clk320) is
+      begin
+        if (rising_edge(clk320)) then
+          tx_ready <= mgt_tx_ready(I);
+        end if;
+      end process;
+
+      process (rxclk(I)) is
+      begin
+        if (rising_edge(rxclk(I))) then
+          rx_ready <= mgt_rx_ready(I);
+        end if;
+      end process;
 
       xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
         port map (
@@ -713,7 +742,7 @@ begin
           rst    => reset,
           wr_clk => rxclk(I),
           rd_clk => clk320,
-          wr_en  => mgt_rx_ready(I),
+          wr_en  => rx_ready,
           rd_en  => '1',
           din    => rxdata,
           dout   => mgt_data_out(I),
@@ -734,7 +763,7 @@ begin
           rst    => reset,
           wr_clk => clk320,
           rd_clk => txclk(I),
-          wr_en  => mgt_tx_ready(I),
+          wr_en  => tx_ready,
           rd_en  => '1',
           din    => mgt_data_in(I),
           dout   => txdata,

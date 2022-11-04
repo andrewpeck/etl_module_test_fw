@@ -60,7 +60,16 @@ begin  -- architecture behavioral
       wb_err <= '0';
       if wb_strobe='1' then
         case to_integer(unsigned(wb_addr(10 downto 0))) is
-          when 1282 => --0x502
+          when 0 => --0x0
+          localRdData( 9 downto  0)  <=  reg_data( 0)( 9 downto  0);        --
+          localRdData(21 downto 12)  <=  reg_data( 0)(21 downto 12);        --
+        when 1 => --0x1
+          localRdData( 9 downto  0)  <=  Mon.MGT_TX_READY;                  --
+          localRdData(21 downto 12)  <=  Mon.MGT_RX_READY;                  --
+        when 64 => --0x40
+          localRdData( 0)            <=  reg_data(64)( 0);                  --Controls SFP0 Disable
+          localRdData( 1)            <=  reg_data(64)( 1);                  --Controls SFP1 Disable
+        when 1282 => --0x502
           localRdData(31 downto  0)  <=  reg_data(1282)(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1283 => --0x503
           localRdData(31 downto  0)  <=  Mon.L1A_RATE_CNT;                  --Measured rate of generated triggers in Hz
@@ -77,6 +86,10 @@ begin  -- architecture behavioral
 
 
   -- Register mapping to ctrl structures
+  Ctrl.MGT_TX_RESET    <=  reg_data( 0)( 9 downto  0);       
+  Ctrl.MGT_RX_RESET    <=  reg_data( 0)(21 downto 12);       
+  Ctrl.SFP0_TX_DIS     <=  reg_data(64)( 0);                 
+  Ctrl.SFP1_TX_DIS     <=  reg_data(64)( 1);                 
   Ctrl.L1A_RATE        <=  reg_data(1282)(31 downto  0);     
   Ctrl.EN_EXT_TRIGGER  <=  reg_data(1287)( 0);               
 
@@ -95,6 +108,12 @@ begin  -- architecture behavioral
       -- Write on strobe=write=1
       if strobe_pulse='1' and wb_write = '1' then
         case to_integer(unsigned(wb_addr(10 downto 0))) is
+        when 0 => --0x0
+          reg_data( 0)( 9 downto  0)    <=  localWrData( 9 downto  0);      --
+          reg_data( 0)(21 downto 12)    <=  localWrData(21 downto 12);      --
+        when 64 => --0x40
+          reg_data(64)( 0)              <=  localWrData( 0);                --Controls SFP0 Disable
+          reg_data(64)( 1)              <=  localWrData( 1);                --Controls SFP1 Disable
         when 1280 => --0x500
           Ctrl.L1A_PULSE                <=  localWrData( 0);               
         when 1281 => --0x501
@@ -111,6 +130,10 @@ begin  -- architecture behavioral
 
       -- synchronous reset (active high)
       if reset = '1' then
+      reg_data( 0)( 9 downto  0)  <= DEFAULT_SYSTEM_CTRL_t.MGT_TX_RESET;
+      reg_data( 0)(21 downto 12)  <= DEFAULT_SYSTEM_CTRL_t.MGT_RX_RESET;
+      reg_data(64)( 0)  <= DEFAULT_SYSTEM_CTRL_t.SFP0_TX_DIS;
+      reg_data(64)( 1)  <= DEFAULT_SYSTEM_CTRL_t.SFP1_TX_DIS;
       reg_data(1280)( 0)  <= DEFAULT_SYSTEM_CTRL_t.L1A_PULSE;
       reg_data(1281)( 0)  <= DEFAULT_SYSTEM_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_SYSTEM_CTRL_t.L1A_RATE;

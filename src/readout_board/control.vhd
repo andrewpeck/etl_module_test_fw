@@ -5,7 +5,6 @@ use ipbus.ipbus_decode_etl_test_fw.all;
 library ctrl_lib;
 use ctrl_lib.READOUT_BOARD_Ctrl.all;
 use ctrl_lib.FW_INFO_Ctrl.all;
-use ctrl_lib.MGT_Ctrl.all;
 use ctrl_lib.SYSTEM_Ctrl.all;
 
 library ieee;
@@ -37,9 +36,6 @@ entity control is
 
     readout_board_mon  : in  READOUT_BOARD_Mon_array_t (NUM_RBS-1 downto 0);
     readout_board_ctrl : out READOUT_BOARD_Ctrl_array_t (NUM_RBS-1 downto 0);
-
-    mgt_mon  : in  MGT_Mon_t;
-    mgt_ctrl : out MGT_Ctrl_t;
 
     pci_ipb_w : in  ipb_wbus;
     pci_ipb_r : out ipb_rbus;
@@ -139,25 +135,6 @@ begin
       sel             => ipbus_sel_etl_test_fw(ipb_w.ipb_addr),
       ipb_to_slaves   => ipb_w_array,
       ipb_from_slaves => ipb_r_array
-      );
-
-  --------------------------------------------------------------------------------
-  -- MGT Interface
-  --------------------------------------------------------------------------------
-
-  MGT_wb_map : entity ctrl_lib.MGT_wb_map
-    port map (
-      clk       => clock,
-      reset     => reset,
-      wb_addr   => ipb_w_array(N_SLV_MGT).ipb_addr,
-      wb_wdata  => ipb_w_array(N_SLV_MGT).ipb_wdata,
-      wb_strobe => ipb_w_array(N_SLV_MGT).ipb_strobe,
-      wb_write  => ipb_w_array(N_SLV_MGT).ipb_write,
-      wb_rdata  => ipb_r_array(N_SLV_MGT).ipb_rdata,
-      wb_ack    => ipb_r_array(N_SLV_MGT).ipb_ack,
-      wb_err    => ipb_r_array(N_SLV_MGT).ipb_err,
-      mon       => mgt_mon,
-      ctrl      => mgt_ctrl
       );
 
   --------------------------------------------------------------------------------
