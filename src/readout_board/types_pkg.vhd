@@ -21,6 +21,8 @@ package types is
   function to_slv (addr : ip_addr_t) return std_logic_vector;
   function reverse_vector (a: std_logic_vector) return std_logic_vector;
 
+  function repeat(B : std_logic; N : integer) return std_logic_vector;
+
 end package types;
 
 package body types is
@@ -45,5 +47,18 @@ package body types is
     end loop;
     return result;
   end; -- function reverse_vector
+
+  -- function to replicate a std_logic bit some number of times
+-- equivalent to verilog's built in {n{x}} operator
+  function repeat(B : std_logic; N : integer)
+    return std_logic_vector
+  is
+    variable result : std_logic_vector(1 to N);
+  begin
+    for i in 1 to N loop
+      result(i) := B;
+    end loop;
+    return result;
+  end;
 
 end package body types;
