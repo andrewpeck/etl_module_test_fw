@@ -226,7 +226,7 @@ architecture behavioral of etl_test_fw is
   signal breath        : std_logic;
 
   signal l1a_led, ipb_led : std_logic;
-  signal led_progress     : std_logic_vector (leds'length - 2 downto 0);
+  signal led_progress     : std_logic_vector (leds'length - 1 downto 0);
 
 begin
 
@@ -307,7 +307,7 @@ begin
 
       if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
           and l1as_recent = '1') then
-        leds(7 downto 0) <= ipb_led & (repeat(l1a_led, 7) xor led_progress);
+        leds(7 downto 0) <= ipb_led & led_progress(7 downto 1);
       elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
              readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon2_signal (6 downto 0);
@@ -327,9 +327,9 @@ begin
       g_CLK_FREQUENCY      => 40079000,
       g_COUNTER_WIDTH      => 32,
       g_INCREMENTER_WIDTH  => 1,
-      g_PROGRESS_BAR_WIDTH => 7,    -- we'll have 8 LEDs as a rate progress bar
-      g_PROGRESS_BAR_STEP  => 100,      -- each bar is 100 Hz
-      g_SPEEDUP_FACTOR     => 4         -- update @ 4hz
+      g_PROGRESS_BAR_WIDTH => 8,    -- we'll have 8 LEDs as a rate progress bar
+      g_PROGRESS_BAR_STEP  => 100,  -- not used in log mode
+      g_SPEEDUP_FACTOR     => 4     -- update @ 4hz
       )
     port map (
       clk_i          => clk40,
