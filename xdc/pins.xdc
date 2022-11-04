@@ -100,7 +100,7 @@ set_property PACKAGE_PIN F2 [get_ports {rx_p[9]}]; # bank 227 HPC_DP7_M2C_P -- X
 # refclks
 set_property PACKAGE_PIN P6 [get_ports {si570_refclk_p}]; # bank 227 REFCLK0 QUADX0Y3
 set_property PACKAGE_PIN P5 [get_ports {si570_refclk_n}]; # bank 227 REFCLK0 QUADX0Y3
-create_clock -period 3.1189 -name si570refclk [get_ports si570_refclk_p]
+create_clock -period 3.118 -name si570refclk [get_ports si570_refclk_p]
 
 set_property PACKAGE_PIN AP8 [get_ports {leds[0]}];
 set_property PACKAGE_PIN H23 [get_ports {leds[1]}];
@@ -113,7 +113,7 @@ set_property PACKAGE_PIN P23 [get_ports {leds[7]}];
 set_property IOSTANDARD LVCMOS18 [get_ports {leds*}]
 
 set_property IOSTANDARD SUB_LVDS [get_ports {sgmii_*}]
-create_clock -period 1.55 -name ethclk [get_ports sgmii_clk_p]
+create_clock -period 1.59 -name ethclk [get_ports sgmii_clk_p]
 set_property PACKAGE_PIN P26 [get_ports sgmii_clk_p ]
 set_property PACKAGE_PIN N26 [get_ports sgmii_clk_n ]
 set_property PACKAGE_PIN N24 [get_ports sgmii_txp   ]
