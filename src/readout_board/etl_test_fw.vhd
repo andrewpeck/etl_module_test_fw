@@ -182,16 +182,15 @@ architecture behavioral of etl_test_fw is
   signal trigger_o       : std_logic_vector (NUM_RBS-1 downto 0);
   signal l1a_rate_cnt    : std_logic_vector (31 downto 0);
   signal l1as_recent_cnt : integer range 0 to 2**28-1 := 0;
-  signal l1as_recent     : std_logic := '0';
+  signal l1as_recent     : std_logic                  := '0';
 
   --------------------------------------------------------------------------------
   -- IPBUS
   --------------------------------------------------------------------------------
 
-  signal mac_addr         : std_logic_vector (47 downto 0) := MAC_ADDR_BASE;
-  signal ip_addr          : ip_addr_t                      := IP_ADDR_BASE;
-  signal nuke, soft_rst   : std_logic                      := '0';
-  signal pcie_sys_rst_n   : std_logic;
+  signal mac_addr       : std_logic_vector (47 downto 0) := MAC_ADDR_BASE;
+  signal ip_addr        : ip_addr_t                      := IP_ADDR_BASE;
+  signal pcie_sys_rst_n : std_logic;
 
   signal eth_ipb_w, pci_ipb_w : ipb_wbus := (ipb_strobe => '0',
                                              ipb_addr   => (others => '0'),
@@ -322,7 +321,7 @@ begin
     end if;
   end process;
 
-  progress_bar_1: entity work.progress_bar
+  progress_bar_1 : entity work.progress_bar
     generic map (
       g_LOGARITHMIC        => 1,
       g_CLK_FREQUENCY      => 40079000,
@@ -448,9 +447,9 @@ begin
 
         osc_clk_125 => clk_osc125_ibuf,
 
-        clock     => clk40,
-        reset     => reset,
-        clk125_o  => open,
+        clock    => clk40,
+        reset    => reset,
+        clk125_o => open,
 
         sgmii_clk_p => sgmii_clk_p,
         sgmii_clk_n => sgmii_clk_n,
@@ -482,10 +481,10 @@ begin
         pcie_tx_p      => pcie_tx_p,
         pcie_tx_n      => pcie_tx_n,
         clk_osc        => clk_osc125_ibuf,
-        ipb_clk        => '1', -- FIXME
+        ipb_clk        => '1',          -- FIXME
         ipb_rst        => reset,
-        nuke           => nuke,
-        soft_rst       => soft_rst,
+        nuke           => '0',
+        soft_rst       => '0',
         leds           => leds(1 downto 0),
         ipb_in         => pci_ipb_r,
         ipb_out        => pci_ipb_w

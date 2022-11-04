@@ -264,18 +264,6 @@ begin
         probe6(0) => ipb_r_array(N_SLV_FW_INFO).ipb_err
         );
 
-    ila_mgt_inst : ila_ipb
-      port map (
-        clk       => clock,
-        probe0    => ipb_w_array(N_SLV_MGT).ipb_addr,
-        probe1    => ipb_w_array(N_SLV_MGT).ipb_wdata,
-        probe2(0) => ipb_w_array(N_SLV_MGT).ipb_strobe,
-        probe3(0) => ipb_w_array(N_SLV_MGT).ipb_write,
-        probe4    => ipb_r_array(N_SLV_MGT).ipb_rdata,
-        probe5(0) => ipb_r_array(N_SLV_MGT).ipb_ack,
-        probe6(0) => ipb_r_array(N_SLV_MGT).ipb_err
-        );
-
   end generate;
 
 end behavioral;
