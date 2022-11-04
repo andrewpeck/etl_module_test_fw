@@ -653,6 +653,9 @@ begin
       signal tx_ready : std_logic := '0';
       signal rx_ready : std_logic := '0';
 
+      signal reset_rx_clk_r0 : std_logic := '1';
+      signal reset_rx_clk_r1 : std_logic := '1';
+
     begin
 
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
@@ -729,6 +732,14 @@ begin
           txn_o             => tx_n(I)
           );
 
+      process (rxclk(I)) is
+      begin
+        if (rising_edge(rxclk(I))) then
+          reset_rx_clk_r0 <= reset;
+          reset_rx_clk_r1 <= reset_rx_clk_r0;
+        end if;
+      end process;
+
       -- rxclk --> clk320
       mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
         generic map (
@@ -738,7 +749,7 @@ begin
           RD_WIDTH          => 32
           )
         port map (
-          rst    => reset,
+          rst    => reset_rx_clk_r1,
           wr_clk => rxclk(I),
           rd_clk => clk320,
           wr_en  => rx_ready,
