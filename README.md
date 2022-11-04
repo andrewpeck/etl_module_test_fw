@@ -33,7 +33,14 @@ only use the versions listed here unless instructed otherwise.
 
 ### v2.0.1
 
-  - Supercharge the leds
+  - Supercharge the LEDs
+  - Major cleanup of the ipbus wrapper firmware, including a switch to
+    axi stream fifos for cdc, and clean up of the clocking constraints
+    for CDC
+  - Move the MGT reset signals into the SYSTEM ipb endpoint; remove the
+    mgt ipb endpoint
+  - Add flip-flops to the {tx,rx}-ready signals from the mgt to improve
+    timing slack
 
 ### v2.0.0
 

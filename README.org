@@ -33,7 +33,10 @@ Versions not described here are intermediate versions which are either not teste
 Change log is inclusive of all changes from the previous recommended version; please only use the versions listed here unless instructed otherwise.
 
 *** v2.0.1
-- Supercharge the leds
+- Supercharge the LEDs
+- Major cleanup of the ipbus wrapper firmware, including a switch to axi stream fifos for cdc, and clean up of the clocking constraints for CDC
+- Move the MGT reset signals into the SYSTEM ipb endpoint; remove the mgt ipb endpoint
+- Add flip-flops to the {tx,rx}-ready signals from the mgt to improve timing slack
 *** v2.0.0
 - Add a working dumb daq
 - Add a system slave for global signals
