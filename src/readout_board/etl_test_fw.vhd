@@ -29,7 +29,8 @@ use ipbus.ipbus_decode_etl_test_fw.all;
 entity etl_test_fw is
   generic(
 
-    USE_SYSTEM_IBERT : boolean := true;
+    USE_SYSTEM_IBERT : boolean := false;
+    USE_TCLINK       : boolean := false;
 
     USE_EXT_REF : boolean := false;
 
@@ -661,8 +662,20 @@ begin
       gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
       mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
 
-      -- TODO: connect DRP to ipb control registers
-      ibert : if (USE_SYSTEM_IBERT) generate
+      noibert : if (not USE_SYSTEM_IBERT and not USE_TCLINK) generate
+      begin
+        drpclk  <= clk40;
+        drpen   <= '0';
+        drpwe   <= '0';
+        drpaddr <= (others => '0');
+        drpdi   <= (others => '0');
+      end generate;
+
+      tclink_gen : if (not USE_SYSTEM_IBERT and USE_TCLINK) generate
+      begin
+      end generate;
+
+      ibert : if (USE_SYSTEM_IBERT and not USE_TCLINK) generate
       begin
 
         system_ibert_inst : system_ibert
