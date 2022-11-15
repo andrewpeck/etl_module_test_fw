@@ -39,7 +39,7 @@
 
   <node id="FIFO_RESET"          address="0x311" mask="0x1"          permission="w"  description="Reset the daq FIFO"/>
 
-  <node id="RX_FIFO_LOST_WORD_CNT" address="0x312" mask="0x0000ffff"   permission="r" description="# of words lost to a full FIFO"/>
+  <node id="RX_FIFO_LOST_WORD_CNT" address="0x312" mask="0xffffffff"   permission="r" description="# of words lost to a full FIFO"/>
   <node id="RX_FIFO_FULL" address="0x313" mask="0x00000001"   permission="r" description="RX FIFO is full"/>
   <node id="RX_FIFO_OCCUPANCY" address="0x314" mask="0xffffffff"   permission="r" description="RX FIFO occupancy"/>
 

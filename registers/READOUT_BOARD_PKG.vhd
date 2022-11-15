@@ -309,7 +309,7 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_MON_t is record
     LPGBT                      :READOUT_BOARD_LPGBT_MON_t;
     SC                         :READOUT_BOARD_SC_MON_t;   
-    RX_FIFO_LOST_WORD_CNT      :std_logic_vector(15 downto 0);  -- # of words lost to a full FIFO
+    RX_FIFO_LOST_WORD_CNT      :std_logic_vector(31 downto 0);  -- # of words lost to a full FIFO
     RX_FIFO_FULL               :std_logic;                      -- RX FIFO is full
     RX_FIFO_OCCUPANCY          :std_logic_vector(31 downto 0);  -- RX FIFO occupancy
     ETROC_LOCKED               :std_logic_vector(27 downto 0);  -- ETROC Link Locked

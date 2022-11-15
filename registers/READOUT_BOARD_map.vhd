@@ -206,7 +206,7 @@ begin  -- architecture behavioral
           localRdData( 4 downto  0)  <=  reg_data(768)( 4 downto  0);                 --Choose which e-link the readout fifo connects to (0-27)
           localRdData( 8)            <=  reg_data(768)( 8);                           --Choose which lpgbt the readout fifo connects to (0-1)
         when 786 => --0x312
-          localRdData(15 downto  0)  <=  Mon.RX_FIFO_LOST_WORD_CNT;                   --# of words lost to a full FIFO
+          localRdData(31 downto  0)  <=  Mon.RX_FIFO_LOST_WORD_CNT;                   --# of words lost to a full FIFO
         when 787 => --0x313
           localRdData( 0)            <=  Mon.RX_FIFO_FULL;                            --RX FIFO is full
         when 788 => --0x314
