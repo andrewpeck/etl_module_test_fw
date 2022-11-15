@@ -209,6 +209,8 @@ begin  -- architecture behavioral
           localRdData(15 downto  0)  <=  Mon.RX_FIFO_LOST_WORD_CNT;                   --# of words lost to a full FIFO
         when 787 => --0x313
           localRdData( 0)            <=  Mon.RX_FIFO_FULL;                            --RX FIFO is full
+        when 788 => --0x314
+          localRdData(31 downto  0)  <=  Mon.RX_FIFO_OCCUPANCY;                       --RX FIFO occupancy
         when 1056 => --0x420
           localRdData( 0)            <=  reg_data(1056)( 0);                          --0=etroc data, 1=fixed pattern for ETROC data fifo
         when 1057 => --0x421

@@ -27,6 +27,8 @@ entity etroc_fifo is
     fifo_data_i : in std_logic_vector(WIDTH-1 downto 0);
     fifo_wr_en  : in std_logic;
 
+    occupancy_o : out std_logic_vector (31 downto 0) := (others => '0');
+
     lost_word_cnt : out std_logic_vector (LOST_CNT_WIDTH-1 downto 0) := (others => '0');
     full_o        : out std_logic;
 
@@ -75,11 +77,12 @@ begin
 
   fifo_sync_inst : entity work.fifo_sync
     generic map (
-      DEPTH             => DEPTH,
-      USE_ALMOST_FULL   => 1,
-      WR_WIDTH          => 64,
-      RD_WIDTH          => 32,
-      USE_WR_DATA_COUNT => 0
+      DEPTH               => DEPTH,
+      USE_ALMOST_FULL     => 1,
+      WR_WIDTH            => 64,
+      RD_WIDTH            => 32,
+      USE_WR_DATA_COUNT   => 1,
+      WR_DATA_COUNT_WIDTH => integer(ceil(log2(real(DEPTH))))
       )
     port map (
       rst           => fifo_reset_i,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
@@ -89,7 +92,7 @@ begin
       din           => metadata_i & fifo_data_i,
       dout          => fifo_dout,
       valid         => fifo_valid,
-      wr_data_count => open,
+      wr_data_count => occupancy_o(integer(ceil(log2(real(DEPTH))))-1 downto 0),
       overflow      => open,
       full          => fifo_full,
       almost_full   => open,

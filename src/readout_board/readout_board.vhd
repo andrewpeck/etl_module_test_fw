@@ -751,6 +751,7 @@ begin
       full_o        => global_fifo_full,
       metadata_i    => rx_fifo_metadata_mux,
       fifo_data_i   => rx_fifo_data_mux,
+      occupancy_o   => mon.rx_fifo_occupancy,
       fifo_wr_en    => rx_fifo_valid_mux,
       fifo_wb_in    => daq_wb_in(0),
       fifo_wb_out   => daq_wb_out(0)
