@@ -32,29 +32,29 @@ set_max_delay -datapath_only \
 
 set_max_delay \
     -from [get_clocks -of_objects [get_pins system_clocks_inst/inst/mmcme3_adv_inst/CLKOUT0]] \
-    -to [get_clocks osc_clk125] 5.0
+    -to [get_clocks osc_clk125] 8.0
 
-set_max_delay  6.0 \
+set_max_delay  8.0 \
     -from [get_pins {eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/rd_ptr_gray*/C}] \
     -to [get_pins {eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/rd_ptr_gray_sync*/D}]
 
-set_max_delay  6.0 \
+set_max_delay  8.0 \
     -from [get_pins {eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_sync_gray*/C}] \
     -to [get_pins {eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_gray_sync*/D}]
 
-set_max_delay  6.0 \
+set_max_delay  8.0 \
   -from [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_update_*/C] \
   -to [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_update_sync*/D]
 
-set_max_delay  6.0 \
+set_max_delay  8.0 \
     -from [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/*_rst_sync1*/C] \
     -to [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/*_rst_sync2*/D]
 
-set_max_delay  6.0 \
+set_max_delay  8.0 \
     -from [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_update_sync*/C] \
     -to [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*_fifo/fifo_inst/wr_ptr_update_ack*/D]
 
-set_max_delay 6.0 \
+set_max_delay 8.0 \
     -to [get_pins eth.eth_infra_inst/eth/eth_mac_1g_inst/*x_fifo/fifo_inst/*rst_sync*/PRE]
     -from [get_pins reset_reg_replica_3/C]  \
 
