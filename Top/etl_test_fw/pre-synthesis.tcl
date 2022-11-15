@@ -6,3 +6,6 @@ if {[string first REPO_SHA $generic_string] != -1} {
     set generic_string "$generic_string REPO_SHA=32'h0[string range [exec git log -n1 --format=format:\"%H\"] 1 7]"
 }
 set_property generic $generic_string [current_fileset]
+
+# promote multiple drivers warnings to errors so they are caught early
+set_msg_config -id {Synth 8-6859} -new_severity {ERROR}
