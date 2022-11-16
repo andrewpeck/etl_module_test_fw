@@ -633,10 +633,17 @@ begin
       process (clk320) is
       begin
         if (rising_edge(clk320)) then
-          rxslide(I)               <= uplink_bitslip(I);
           uplink_mgt_word_array(I) <= mgt_data_out(I);
         end if;
       end process;
+
+      process (rxclk(I)) is
+      begin
+        if (rising_edge(rxclk(I))) then
+          rxslide(I) <= uplink_bitslip(I);
+        end if;
+      end process;
+
     end generate;
 
     datagen : for I in 0 to TOTAL_UPLINKS-1 generate
