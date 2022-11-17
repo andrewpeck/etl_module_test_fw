@@ -765,7 +765,7 @@ begin
         port map (
           dest_rst => reset_rx_clk,
           dest_clk => rx_clk(I),
-          src_rst  => reset,
+          src_rst  => reset
           );
 
       -- rxclk --> clk320
