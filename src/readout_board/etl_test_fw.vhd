@@ -764,7 +764,7 @@ begin
           )
         port map (
           dest_rst => reset_rx_clk,
-          dest_clk => rx_clk(I),
+          dest_clk => rxclk(I),
           src_rst  => reset
           );
 
