@@ -26,6 +26,9 @@ library ipbus;
 use ipbus.ipbus.all;
 use ipbus.ipbus_decode_etl_test_fw.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity etl_test_fw is
   generic(
 
@@ -661,8 +664,8 @@ begin
       signal tx_ready : std_logic := '0';
       signal rx_ready : std_logic := '0';
 
-      signal reset_rx_clk_r0 : std_logic := '1';
-      signal reset_rx_clk_r1 : std_logic := '1';
+
+      signal reset_rx_clk : std_logic := '1';
 
     begin
 
@@ -752,13 +755,18 @@ begin
           txn_o             => tx_n(I)
           );
 
-      process (rxclk(I)) is
-      begin
-        if (rising_edge(rxclk(I))) then
-          reset_rx_clk_r0 <= reset;
-          reset_rx_clk_r1 <= reset_rx_clk_r0;
-        end if;
-      end process;
+      xpm_cdc_sync_rst_inst : xpm_cdc_sync_rst
+        generic map (
+          DEST_SYNC_FF   => 2,
+          INIT           => 1,
+          INIT_SYNC_FF   => 0,
+          SIM_ASSERT_CHK => 0
+          )
+        port map (
+          dest_rst => reset_rx_clk,
+          dest_clk => rx_clk(I),
+          src_rst  => reset,
+          );
 
       -- rxclk --> clk320
       mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
@@ -769,7 +777,7 @@ begin
           RD_WIDTH          => 32
           )
         port map (
-          rst    => reset_rx_clk_r1,
+          rst    => reset_rx_clk,
           wr_clk => rxclk(I),
           rd_clk => clk320,
           wr_en  => rx_ready,
