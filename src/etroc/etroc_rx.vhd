@@ -330,12 +330,16 @@ begin
 
         when ERR_state =>
 
+          data_frame_cnt <= 0;
+
           -- state
           if (next_data_is_filler) then
             state <= FILLER_state;
           end if;
 
         when FILLER_state =>
+
+          data_frame_cnt <= 0;
 
           -- state
           if (next_data_is_filler) then
@@ -353,6 +357,8 @@ begin
           end if;
 
         when HEADER_state =>
+
+          data_frame_cnt <= 0;
 
           -- state
           if (next_data_is_header) then
@@ -417,6 +423,8 @@ begin
             end if;
 
         when TRAILER_state =>
+
+          data_frame_cnt <= 0;
 
           -- state
           if (next_data_is_header) then
