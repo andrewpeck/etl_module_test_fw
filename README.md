@@ -37,6 +37,7 @@ only use the versions listed here unless instructed otherwise.
   - Add a FIFO occupancy signal for more efficient DAQ readout
   - Lost word counter increased to 32 bits for throughput testing
   - Make the system IBERT an optional component and disable by default
+  - Fix max data frame counting in the ETROC
 
 ### v2.1.0
 

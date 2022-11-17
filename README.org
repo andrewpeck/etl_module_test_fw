@@ -37,6 +37,7 @@ Change log is inclusive of all changes from the previous recommended version; pl
 - Add a FIFO occupancy signal for more efficient DAQ readout
 - Lost word counter increased to 32 bits for throughput testing
 - Make the system IBERT an optional component and disable by default
+- Fix max data frame counting in the ETROC
 *** v2.1.0
 - Supercharge the LEDs
 - Major cleanup of the ipbus wrapper firmware, including a switch to axi stream fifos for cdc, and clean up of the clocking constraints for CDC
