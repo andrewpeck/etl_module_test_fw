@@ -84,7 +84,7 @@ foreach target $targets {
     puts " > Programming $target"
     get_hw_targets
     open_hw_target $target
-    set device [get_hw_devices ${part}*]
+    set device [dict get $devices $target]
     if {[llength $device] > 0} {
         current_hw_device [get_hw_devices $device]
         refresh_hw_device -update_hw_probes false $device
