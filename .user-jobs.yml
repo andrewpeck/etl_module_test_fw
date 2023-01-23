@@ -31,8 +31,7 @@ dataformat-update-job:
   <<: *tag-hog
   stage: user_pre
   script:
-    - git submodule update --init -- regmap
-    - make -C src/etroc/configs && git diff --exit-code
+    - git submodule update --init regmap && make -C src/etroc/configs && git diff --exit-code
 
 registers-update-job:
   variables:
