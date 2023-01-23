@@ -31,7 +31,7 @@ dataformat-update-job:
   <<: *tag-hog
   stage: user_pre
   script:
-    - git submodule update --init regmap && make -C src/etroc/configs && git diff --exit-code
+    - make -C src/etroc/configs && git diff --exit-code
 
 registers-update-job:
   variables:
@@ -39,4 +39,7 @@ registers-update-job:
   <<: *only-default
   <<: *tag-hog
   stage: user_pre
-  script: "make reg && git checkout registers/ipbus_decode_etl_test_fw.vhd && git diff --exit-code"
+  script:
+    - git submodule update --init regmap
+    - make reg
+    - git checkout registers/ipbus_decode_etl_test_fw.vhd && git diff --exit-code
