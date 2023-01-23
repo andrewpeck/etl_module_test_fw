@@ -20,6 +20,12 @@ package dataformat_pkg is
   subtype BCID_RANGE is natural range 11 downto 0;
   subtype TYPE_RANGE is natural range 13 downto 12;
   subtype L1COUNTER_RANGE is natural range 21 downto 14;
+  subtype GLOBAL_FULL_RANGE is natural range 55 downto 52;
+  subtype ANY_FULL_RANGE is natural range 51 downto 51;
+  subtype FULL_RANGE is natural range 50 downto 50;
+  subtype EOF_RANGE is natural range 49 downto 49;
+  subtype SOF_RANGE is natural range 48 downto 48;
+  subtype ELINK_RANGE is natural range 47 downto 40;
 
   -- data
   subtype TOT_RANGE is natural range 8 downto 0;
@@ -33,11 +39,23 @@ package dataformat_pkg is
   subtype ROW_ID_RANGE is natural range 32 downto 29;
   subtype COL_ID_RANGE is natural range 36 downto 33;
   subtype EA_RANGE is natural range 38 downto 37;
+  subtype GLOBAL_FULL_RANGE is natural range 55 downto 52;
+  subtype ANY_FULL_RANGE is natural range 51 downto 51;
+  subtype FULL_RANGE is natural range 50 downto 50;
+  subtype EOF_RANGE is natural range 49 downto 49;
+  subtype SOF_RANGE is natural range 48 downto 48;
+  subtype ELINK_RANGE is natural range 47 downto 40;
 
   -- trailer
   subtype CRC_RANGE is natural range 7 downto 0;
   subtype HITS_RANGE is natural range 15 downto 8;
   subtype STATUS_RANGE is natural range 21 downto 16;
   subtype CHIPID_RANGE is natural range 38 downto 22;
+  subtype GLOBAL_FULL_RANGE is natural range 55 downto 52;
+  subtype ANY_FULL_RANGE is natural range 51 downto 51;
+  subtype FULL_RANGE is natural range 50 downto 50;
+  subtype EOF_RANGE is natural range 49 downto 49;
+  subtype SOF_RANGE is natural range 48 downto 48;
+  subtype ELINK_RANGE is natural range 47 downto 40;
 
 end package dataformat_pkg;
