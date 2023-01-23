@@ -30,30 +30,31 @@ def defConstants(dat):
         for typ in data[const]:
             vhd.write(
                 "  constant %s_IDENTIFIER_%s%s : std_logic_vector (39 downto 0) := %s;\n"
-                % (
-                    str.upper(const),
-                    str.upper(typ),
-                    " " * (max - len(str.upper(const) + str.upper(typ))),
-                    toVHDhex(data[const][typ], 10),
-                )
-            )
-
+                % (str.upper(const),
+                   str.upper(typ),
+                   " " * (max - len(str.upper(const) + str.upper(typ))),
+                   toVHDhex(data[const][typ], 10)))
 
 def defSubTypes(dat, name):
+
+    allowed_subtypes = ["bcid", "type", "l1counter", "tot", "cal", "toa", "data",
+                        "counter_a", "bcid", "ea",
+                        "col_id", "row_id",
+                        "col_id2", "row_id2",
+                        "crc", "hits", "status", "chipid"]
+
     data = dat["data"][name]
     vhd.write("  -- " + name + "\n")
     for const in reversed(data):
-        if name == "data" and const == "bcid":
-            constname = "RANDOM_DATA_BCID"
-        else:
-            constname = const
-        vhd.write(
-            "  subtype %s_RANGE is natural range %s;\n"
-            % (
-                str.upper(constname),
-                mask2range(data[const]["mask"])
-            )
-        )
+        if const in allowed_subtypes:
+            if name == "data" and const == "bcid":
+                constname = "RANDOM_DATA_BCID"
+            else:
+                constname = const
+            vhd.write(
+                "  subtype %s_RANGE is natural range %s;\n"
+                % (str.upper(constname),
+                mask2range(data[const]["mask"])))
     vhd.write("\n")
 
 
