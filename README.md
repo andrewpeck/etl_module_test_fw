@@ -32,6 +32,12 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
+### v2.1.2
+
+  - Compress bitstream
+  - Enable SCA debugging ILA
+  - Upgrade Hog
+
 ### v2.1.1
 
   - Add a FIFO occupancy signal for more efficient DAQ readout
