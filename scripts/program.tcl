@@ -62,7 +62,8 @@ if {[llength $targets] == 1} {
     if {[string equal $select "all"]} {
         set targets $targets
     } elseif {![string is integer $select] || $select > $num_targets-1} {
-        error "Invalid target selected"
+        puts "Invalid target selected"
+        exit 0
     } else {
         set targets [lindex $targets $select]
         puts " > selected $targets"
