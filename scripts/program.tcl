@@ -7,6 +7,9 @@ open_hw_manager -quiet
 connect_hw_server -quiet -url localhost:3121
 refresh_hw_server -quiet
 
+set known_boards [dict create 210308AB9AC5 "BU Right" \
+                                210308AB9ACD "BU Left"]
+
 set targets [get_hw_targets -quiet]
 set num_targets [llength $targets]
 
@@ -28,7 +31,6 @@ if {$num_targets == 0} {
             close_hw_target -quiet
         }
     }
-
 }
 
 set targets [dict keys $devices]
@@ -49,7 +51,14 @@ if {[llength $targets] == 1} {
         set target [lindex $targets $i]
         puts "  > $i $target"
         puts "      [dict get $devices $target]"
+
+        set dsn [lindex [split "$target" "/"] end]
+        if {[dict exists $known_boards $dsn]} {
+        puts "      ([dict get $known_boards $dsn])"
+
+        }
     }
+
     puts "  > \"all\" to program all"
     puts "  > anything else to quit"
 
