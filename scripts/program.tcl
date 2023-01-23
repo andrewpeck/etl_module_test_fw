@@ -34,9 +34,15 @@ if {$num_targets == 0} {
 set targets [dict keys $devices]
 
 if {[llength $targets] == 1} {
-    puts "Target $target [dict get $devices $target] found, press any key to continue."
-    puts "   > Device: "
+    set target $targets
+    puts "Target $target [dict get $devices $target] found, press y key to continue."
     gets stdin select
+    if {[string equal $select "y"]} {
+        set targets $target
+    } else {
+        puts "No target selected"
+        exit 0
+    }
 } elseif {[llength $targets] > 1} {
     puts "Multiple hardware targets found"
     for {set i 0} {$i < [llength $targets]} {incr i} {
