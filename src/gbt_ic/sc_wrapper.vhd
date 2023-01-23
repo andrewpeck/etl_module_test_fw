@@ -17,7 +17,7 @@ entity gbt_controller_wrapper is
     g_CLK_FREQ       : integer := 40;
     g_SCAS_PER_LPGBT : integer := 3;
     g_DEBUG_IC       : boolean := false;
-    g_DEBUG_SCA      : boolean := false
+    g_DEBUG_SCA      : boolean := true
     );
   port(
     -- reset
