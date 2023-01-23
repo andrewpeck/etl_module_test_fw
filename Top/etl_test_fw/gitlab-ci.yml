@@ -1,4 +1,4 @@
-gen:etl_test_fw_devel:
+gen:etl_test_fw:
     extends: .generate_project
     variables:
       extends: .vars
