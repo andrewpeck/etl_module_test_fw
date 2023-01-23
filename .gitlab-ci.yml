@@ -1,7 +1,7 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: 'Hog2022.2-8'
+      ref: '9a08237'
     - local: '/Top/etl_test_fw/gitlab-ci-master.yml'
     - local: '/Top/etl_test_fw/gitlab-ci-devel.yml'
     - local: '/.user-jobs.yml'
