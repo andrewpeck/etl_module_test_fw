@@ -1,5 +1,6 @@
 set basename [file rootname [lindex [glob *.bit] 0]]
 set bitfile ${basename}.bit
+set binfile ${basename}.bin
 set ltxfile ${basename}.ltx
 set part     xcku040
 
@@ -7,8 +8,9 @@ open_hw_manager -quiet
 connect_hw_server -quiet -url localhost:3121
 refresh_hw_server -quiet
 
-set known_boards [dict create 210308AB9AC5 "BU Right" \
-                                210308AB9ACD "BU Left"]
+set known_boards [dict create \
+                      210308AB9AC5 "BU Right" \
+                      210308AB9ACD "BU Left"]
 
 set targets [get_hw_targets -quiet]
 set num_targets [llength $targets]
@@ -17,13 +19,11 @@ if {$num_targets == 0} {
     puts "ERROR: No hardware targets found"
     exit 0
 } else {
-
     # make a dictionary of the device names (e.g. xc7v...)
     set devices [dict create]
     foreach target $targets {
         close_hw_target -quiet
         open_hw_target -quiet $target
-        #set device [get_hw_devices]
         set device [get_hw_devices -quiet ${part}*]
         if {[llength $device] > 0} {
             puts "Device=$device"
@@ -77,7 +77,6 @@ if {[llength $targets] == 1} {
         set targets [lindex $targets $select]
         puts " > selected $targets"
     }
-
 }
 
 foreach target $targets {
@@ -86,12 +85,29 @@ foreach target $targets {
     open_hw_target $target
     set device [dict get $devices $target]
     if {[llength $device] > 0} {
-        current_hw_device [get_hw_devices $device]
-        refresh_hw_device -update_hw_probes false $device
-        set_property PROGRAM.FILE $bitfile $device
-        set_property PROBES.FILE $ltxfile $device
-        set_property FULL_PROBES.FILE $ltxfile $device
-        program_hw_devices $device
-        close_hw_target
+
+        set programmed "False"
+
+        if {[string equal $device $device]} {
+            puts "do you want to program the Flash? y/n"
+            gets stdin select
+            if {[string equal $select "y"]} {
+                puts " > Programming Flash"
+                program_flash $binfile $device "mt25qu256-spi-x1_x2_x4"
+                boot_hw_device  [lindex [get_hw_devices $device] 0]
+                set programmed "True"
+            }
+        }
+
+        if {[string equal $programmed "True"] == 0} {
+            puts " > Programming FPGA"
+            current_hw_device [get_hw_devices $device]
+            refresh_hw_device -update_hw_probes false $device
+            set_property PROGRAM.FILE $bitfile $device
+            set_property PROBES.FILE $ltxfile $device
+            set_property FULL_PROBES.FILE $ltxfile $device
+            program_hw_devices $device
+            close_hw_target
+        }
     }
 }
