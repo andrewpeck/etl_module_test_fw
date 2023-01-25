@@ -311,11 +311,14 @@ begin
 
       if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
           and l1as_recent = '1') then
-        leds(7 downto 0) <= ipb_led & led_progress(7 downto 1);
-      elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
+        leds(7 downto 0) <= (breath or ipb_led) & (led_progress(7 downto 1) and repeat(not l1a_led, 7));
+      elsif (mgt_rx_ready(0) = '1' and
+             mgt_rx_ready(1) = '1' and
+             readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
              readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon2_signal (6 downto 0);
-      elsif (readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
+      elsif (mgt_rx_ready(0) = '1' and
+             readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon1_signal (6 downto 0);
       else
         leds(7 downto 0) <= ipb_led & breath & breath & breath &
