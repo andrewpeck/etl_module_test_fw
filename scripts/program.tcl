@@ -4,6 +4,39 @@ set binfile ${basename}.bin
 set ltxfile ${basename}.ltx
 set part     xcku040
 
+proc program_flash {binfile devicename flash} {
+
+    puts " > Programming Flash"
+
+    set device [lindex [get_hw_devices $devicename] 0]
+    set program_hw_cfgmem [get_property PROGRAM.HW_CFGMEM $device]
+
+    create_hw_cfgmem -hw_device $device [lindex [get_cfgmem_parts $flash] 0]
+
+    set_property PROGRAM.BLANK_CHECK 0 [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.ERASE       1 [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.CFG_PROGRAM 1 [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.VERIFY      1 [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.CHECKSUM    0 [get_property PROGRAM.HW_CFGMEM $device]
+
+    refresh_hw_device -quiet $device
+
+    set_property PROGRAM.ADDRESS_RANGE          {use_file}  [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.FILES           [list "$binfile" ] [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.PRM_FILE               {}          [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.UNUSED_PIN_TERMINATION {pull-none} [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.BLANK_CHECK            0           [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.ERASE                  1           [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.CFG_PROGRAM            1           [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.VERIFY                 1           [get_property PROGRAM.HW_CFGMEM $device]
+    set_property PROGRAM.CHECKSUM               0           [get_property PROGRAM.HW_CFGMEM $device]
+
+    create_hw_bitstream -hw_device $device [get_property PROGRAM.HW_CFGMEM_BITFILE $device];
+    program_hw_devices $device;
+    refresh_hw_device -quiet $device;
+    program_hw_cfgmem -hw_cfgmem [get_property PROGRAM.HW_CFGMEM $device]
+}
+
 open_hw_manager -quiet
 connect_hw_server -quiet -url localhost:3121
 refresh_hw_server -quiet
@@ -93,7 +126,6 @@ foreach target $targets {
             puts "do you want to program the Flash? y/n"
             gets stdin select
             if {[string equal $select "y"]} {
-                puts " > Programming Flash"
                 program_flash $binfile $device "mt25qu256-spi-x1_x2_x4"
                 boot_hw_device  [lindex [get_hw_devices $device] 0]
                 set programmed "True"
