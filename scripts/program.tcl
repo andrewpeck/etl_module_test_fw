@@ -9,8 +9,9 @@ connect_hw_server -quiet -url localhost:3121
 refresh_hw_server -quiet
 
 set known_boards [dict create \
-                      210308AB9AC5 "BU Right" \
-                      210308AB9ACD "BU Left"]
+    210308AB9AC5 "BU Right 192.168.0.11" \
+    210308AB9ACD "BU Left 192.168.0.10" \
+    210308B0B4F5 "CI 192.168.0.12"]
 
 set targets [get_hw_targets -quiet]
 set num_targets [llength $targets]
