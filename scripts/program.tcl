@@ -69,47 +69,63 @@ if {$num_targets == 0} {
 
 set targets [dict keys $devices]
 
-if {[llength $targets] == 1} {
-    set target $targets
-    puts "Target $target [dict get $devices $target] found, press y key to continue."
-    gets stdin select
-    if {[string equal $select "y"]} {
-        set targets $target
-    } else {
-        puts "No target selected"
-        exit 0
-    }
-} elseif {[llength $targets] > 1} {
-    puts "Multiple hardware targets found"
-    for {set i 0} {$i < [llength $targets]} {incr i} {
-        set target [lindex $targets $i]
-        puts "  > $i $target"
-        puts "      [dict get $devices $target]"
-
-        set dsn [lindex [split "$target" "/"] end]
-        if {[dict exists $known_boards $dsn]} {
-        puts "      ([dict get $known_boards $dsn])"
-
+# allow specifying the target from the command line
+if {[llength $argv] > 0} {
+    set clisel [lindex $argv 0]
+    set targetsel ""
+    if {[dict exists $known_boards $clisel]} {
+        puts "Target $clisel"
+        foreach target $targets {
+            if {[string first  "Digilent/$clisel" $target] != -1} {
+                puts $target
+                lappend targetsel $target
+            }
         }
     }
+    set targets $targetsel
+} else {
+    if {[llength $targets] == 1} {
+        set target $targets
+        puts "Target $target [dict get $devices $target] found, press y key to continue."
+        gets stdin select
+        if {[string equal $select "y"]} {
+            set targets $target
+        } else {
+            puts "No target selected"
+            exit 0
+        }
+    } elseif {[llength $targets] > 1} {
+        puts "Multiple hardware targets found"
+        for {set i 0} {$i < [llength $targets]} {incr i} {
+            set target [lindex $targets $i]
+            puts "  > $i $target"
+            puts "      [dict get $devices $target]"
 
-    puts "  > \"all\" to program all"
-    puts "  > anything else to quit"
+            set dsn [lindex [split "$target" "/"] end]
+            if {[dict exists $known_boards $dsn]} {
+                puts "      ([dict get $known_boards $dsn])"
 
-    puts "Please select a target:"
+            }
+        }
 
-    gets stdin select
+        puts "  > \"all\" to program all"
+        puts "  > anything else to quit"
 
-    puts "$select selected"
+        puts "Please select a target:"
 
-    if {[string equal $select "all"]} {
-        set targets $targets
-    } elseif {![string is integer $select] || $select > $num_targets-1} {
-        puts "Invalid target selected"
-        exit 0
-    } else {
-        set targets [lindex $targets $select]
-        puts " > selected $targets"
+        gets stdin select
+
+        puts "$select selected"
+
+        if {[string equal $select "all"]} {
+            set targets $targets
+        } elseif {![string is integer $select] || $select > $num_targets-1} {
+            puts "Invalid target selected"
+            exit 0
+        } else {
+            set targets [lindex $targets $select]
+            puts " > selected $targets"
+        }
     }
 }
 
@@ -123,12 +139,16 @@ foreach target $targets {
         set programmed "False"
 
         if {[string equal $device $device]} {
-            puts "do you want to program the Flash? y/n"
-            gets stdin select
-            if {[string equal $select "y"]} {
-                program_flash $binfile $device "mt25qu256-spi-x1_x2_x4"
-                boot_hw_device  [lindex [get_hw_devices $device] 0]
-                set programmed "True"
+            if {[llength $argv] == 2 && [string equal [lindex $argv 1] "noflash"]} {
+                continue
+            } else {
+                puts "do you want to program the Flash? y/n"
+                gets stdin select
+                if {[string equal $select "y"]} {
+                    program_flash $binfile $device "mt25qu256-spi-x1_x2_x4"
+                    boot_hw_device  [lindex [get_hw_devices $device] 0]
+                    set programmed "True"
+                }
             }
         }
 
