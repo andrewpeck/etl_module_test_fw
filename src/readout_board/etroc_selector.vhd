@@ -19,8 +19,6 @@
 -- TODO: Without much effort the round-robin search can be modified to a priority
 -- encoded search
 --
--- TODO: need a timeout
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_misc.all;
@@ -90,6 +88,9 @@ architecture behavioral of etroc_selector is
 
   signal next_channel : natural range 0 to g_NUM_INPUTS-1;
 
+  constant timeout_cnt_max : natural := 258;
+  signal timeout_cnt : natural range 0 to timeout_cnt_max := 0;
+
 begin
 
   empty    <= empty_i(data_sel);
@@ -141,17 +142,18 @@ begin
             metadata_o <= x"00" &
                           "000" & global_full & any_full & full & eof & sof &
                           "00" & std_logic_vector(to_unsigned(data_sel, 6));
-            data_o  <= data_i;
-            wr_en_o <= valid;
+            data_o      <= data_i;
+            wr_en_o     <= valid;
+            timeout_cnt <= timeout_cnt + 1;
           end if;
 
-          if (eof = '1') then
+          if (timeout_cnt = timeout_cnt_max or eof = '1') then
             -- when we reach the end of frame,
             -- switch to the next chip
-            state    <= IDLE_state;
-            data_sel <= next_channel;
+            state       <= IDLE_state;
+            data_sel    <= next_channel;
+            timeout_cnt <= 0;
           else
-            -- FIXME: add a timeout here
             -- keep reading & copy data to the output
             rd_en_o(data_sel) <= '1';
           end if;
