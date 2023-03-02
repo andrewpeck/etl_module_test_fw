@@ -781,13 +781,14 @@ begin
 
   debug : if (C_DEBUG) generate
 
-    signal ila_uplink_data    : std_logic_vector (223 downto 0);
-    signal ila_uplink_valid   : std_logic;
-    signal ila_uplink_ready   : std_logic;
-    signal ila_uplink_reset   : std_logic;
-    signal ila_uplink_fec_err : std_logic;
-    signal ila_uplink_ic      : std_logic_vector (1 downto 0);
-    signal ila_uplink_ec      : std_logic_vector (1 downto 0);
+    signal ila_uplink_data       : std_logic_vector (223 downto 0);
+    signal ila_uplink_elink_data : std_logic_vector (7 downto 0);
+    signal ila_uplink_valid      : std_logic;
+    signal ila_uplink_ready      : std_logic;
+    signal ila_uplink_reset      : std_logic;
+    signal ila_uplink_fec_err    : std_logic;
+    signal ila_uplink_ic         : std_logic_vector (1 downto 0);
+    signal ila_uplink_ec         : std_logic_vector (1 downto 0);
 
     signal rx_locked_mon          : std_logic;
     signal rx_err_mon             : std_logic;
@@ -803,13 +804,14 @@ begin
     begin
       if (rising_edge(clk40)) then
 
-        ila_uplink_data    <= uplink_data_aligned(lpgbt_sel).data;
-        ila_uplink_valid   <= uplink_data_aligned(lpgbt_sel).valid;
-        ila_uplink_ready   <= uplink_ready(lpgbt_sel);
-        ila_uplink_reset   <= uplink_reset(lpgbt_sel);
-        ila_uplink_fec_err <= uplink_fec_err(lpgbt_sel);
-        ila_uplink_ic      <= uplink_data(lpgbt_sel).ic;
-        ila_uplink_ec      <= uplink_data(lpgbt_sel).ec;
+        ila_uplink_data       <= uplink_data_aligned(lpgbt_sel).data;
+        ila_uplink_elink_data <= ila_uplink_data(8*(elink_sel+1)-1 downto 8*elink_sel);
+        ila_uplink_valid      <= uplink_data_aligned(lpgbt_sel).valid;
+        ila_uplink_ready      <= uplink_ready(lpgbt_sel);
+        ila_uplink_reset      <= uplink_reset(lpgbt_sel);
+        ila_uplink_fec_err    <= uplink_fec_err(lpgbt_sel);
+        ila_uplink_ic         <= uplink_data(lpgbt_sel).ic;
+        ila_uplink_ec         <= uplink_data(lpgbt_sel).ec;
 
         rx_state_mon           <= rx_state_mon_arr(link_sel);
         rx_frame_mon           <= rx_frame_mon_arr(link_sel);
@@ -828,17 +830,15 @@ begin
         probe0(7 downto 0)     => rx_crc,
         probe0(15 downto 8)    => rx_crc_calc,
         probe0(16)             => l1a,
-        probe0(17)             => '0',
-        probe0(18)             => '0',
-        probe0(19)             => '0',
-        probe0(20)             => rx_start_of_packet_mon,
-        probe0(21)             => rx_end_of_packet_mon,
-        probe0(22)             => rx_crc_match,
-        probe0(28 downto 23)   => std_logic_vector(to_unsigned(link_sel_daq, 6)),
-        probe0(84 downto 29)   => rx_fifo_rd_en_selector,
-        probe0(140 downto 85)  => rx_end_of_packet,
-        probe0(196 downto 141) => rx_fifo_empty_arr,
-        probe0(223 downto 197) => (others => '0'),
+        probe0(17)             => rx_start_of_packet_mon,
+        probe0(18)             => rx_end_of_packet_mon,
+        probe0(19)             => rx_crc_match,
+        probe0(25 downto 20)   => std_logic_vector(to_unsigned(link_sel_daq, 6)),
+        probe0(65 downto 26)   => rx_frame_mon,
+        probe0(73 downto 66)   => ila_uplink_elink_data,
+        probe0(137 downto 74)  => (others => '0'),
+        probe0(193 downto 138) => rx_fifo_empty_arr,
+        probe0(223 downto 194) => (others => '0'),
         probe1(0)              => ila_uplink_valid,
         probe2(0)              => ila_uplink_ready,
         probe3(0)              => ila_uplink_reset,
