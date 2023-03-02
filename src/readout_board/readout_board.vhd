@@ -63,7 +63,7 @@ architecture behavioral of readout_board is
   signal fifo_reset_cnt : integer range 0 to 7 := 0;
 
   -- FIXME: account for fec5/12
-  constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0055555";
+  constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
   constant FREQ : integer := 320;       -- uplink frequency
 
