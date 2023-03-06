@@ -37,6 +37,11 @@
   <node id="FIFO_ELINK_SEL0"     address="0x300" mask="0x1f"         permission="rw" description="Choose which e-link the readout fifo connects to (0-27)"/>
   <node id="FIFO_LPGBT_SEL0"     address="0x300" mask="0x100"        permission="rw" description="Choose which lpgbt the readout fifo connects to (0-1)"/>
 
+  <node id="TX_FIFO_RESET"  address="0x30e" mask="0x1"        permission="w"  description="Reset the tx FIFO"/>
+  <node id="TX_FIFO_WR_EN"  address="0x30e" mask="0x2"        permission="w"  description="TX Fifo Write enable"/>
+  <node id="TX_FIFO_RD_EN"  address="0x30f" mask="0x2"        permission="rw" description="TX Fifo Read enable"/>
+  <node id="TX_FIFO_DATA"   address="0x310" mask="0xffffffff" permission="rw" description="TX Fifo Data"/>
+
   <node id="FIFO_RESET"          address="0x311" mask="0x1"          permission="w"  description="Reset the daq FIFO"/>
 
   <node id="RX_FIFO_LOST_WORD_CNT" address="0x312" mask="0xffffffff"   permission="r" description="# of words lost to a full FIFO"/>

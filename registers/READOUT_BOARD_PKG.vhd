@@ -82,7 +82,7 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Downlink LpGBT Encoder
-    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs
+    DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=txfifo
   end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
 
 
@@ -334,6 +334,10 @@ package READOUT_BOARD_CTRL is
     SC                         :READOUT_BOARD_SC_CTRL_t;      
     FIFO_ELINK_SEL0            :std_logic_vector( 4 downto 0);  -- Choose which e-link the readout fifo connects to (0-27)
     FIFO_LPGBT_SEL0            :std_logic;                      -- Choose which lpgbt the readout fifo connects to (0-1)
+    TX_FIFO_RESET              :std_logic;                      -- Reset the tx FIFO
+    TX_FIFO_WR_EN              :std_logic;                      -- TX Fifo Write enable
+    TX_FIFO_RD_EN              :std_logic;                      -- TX Fifo Read enable
+    TX_FIFO_DATA               :std_logic_vector(31 downto 0);  -- TX Fifo Data
     FIFO_RESET                 :std_logic;                      -- Reset the daq FIFO
     RX_FIFO_DATA_SRC           :std_logic;                      -- 0=etroc data, 1=fixed pattern for ETROC data fifo
     ETROC_DISABLE              :std_logic_vector(27 downto 0);  -- Write a 1 to disable this ETROC from readout
@@ -358,6 +362,10 @@ package READOUT_BOARD_CTRL is
                                                                    SC => DEFAULT_READOUT_BOARD_SC_CTRL_t,
                                                                    FIFO_ELINK_SEL0 => (others => '0'),
                                                                    FIFO_LPGBT_SEL0 => '0',
+                                                                   TX_FIFO_RESET => '0',
+                                                                   TX_FIFO_WR_EN => '0',
+                                                                   TX_FIFO_RD_EN => '0',
+                                                                   TX_FIFO_DATA => (others => '0'),
                                                                    FIFO_RESET => '0',
                                                                    RX_FIFO_DATA_SRC => '0',
                                                                    ETROC_DISABLE => (others => '0'),

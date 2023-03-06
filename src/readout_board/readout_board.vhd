@@ -8,6 +8,7 @@ library lpgbt_fpga;
 use lpgbt_fpga.lpgbtfpga_package.all;
 
 library ctrl_lib;
+
 use ctrl_lib.READOUT_BOARD_ctrl.all;
 
 library work;
@@ -121,6 +122,23 @@ architecture behavioral of readout_board is
   signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
 
   --------------------------------------------------------------------------------
+  -- TX Fifo
+  --------------------------------------------------------------------------------
+
+  signal tx_filler_gen        : std_logic_vector (7 downto 0) := (others => '0');
+  signal tx_gen               : std_logic_vector (7 downto 0) := (others => '0');
+  signal tx_fifo_out          : std_logic_vector (7 downto 0) := (others => '0');
+  signal tx_fifo_rst          : std_logic                     := '0';
+  signal tx_filler_en         : std_logic                     := '0';
+  signal tx_fifo_rst_cnt      : integer range 0 to 7          := 0;
+  signal tx_fifo_rd_en        : std_logic                     := '0';
+  signal tx_fifo_valid        : std_logic                     := '0';
+  signal tx_fifo_almost_empty : std_logic                     := '0';
+  signal tx_filler_tlast      : std_logic                     := '0';
+  signal tx_filler_tnext      : std_logic                     := '0';
+  signal tx_data_src_selfifo  : std_logic                     := '0';
+
+  --------------------------------------------------------------------------------
   -- FIFO
   --------------------------------------------------------------------------------
 
@@ -215,6 +233,7 @@ begin
     end if;
   end process;
 
+
   -- prbs generation
 
   prbs_any_gen : entity work.prbs_any
@@ -274,6 +293,8 @@ begin
             downlink_data(I).data <= repeat_byte(cnt_slv);
           when 2 =>
             downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
+          when 3 =>
+            downlink_data(I).data <= repeat_byte(tx_gen);
           when others =>
             downlink_data(I).data <= repeat_byte(fast_cmd);
 
@@ -776,6 +797,93 @@ begin
   --     );
 
   --------------------------------------------------------------------------------
+  -- TX Fifo
+  --------------------------------------------------------------------------------
+
+  -- generate fillers 8 bits at a time
+  tx_filler_generator_1: entity work.tx_filler_generator
+    port map (
+      clock => clk40,
+      l1a   => l1a,
+      bc0   => bc0,
+      dout  => tx_filler_gen,
+      en    => tx_filler_en,
+      tlast => open
+      );
+
+  tx_filler_en <= not tx_fifo_valid;
+
+  -- switch between the filler generator and the fifo
+  tx_gen <= tx_fifo_out when tx_data_src_selfifo ='1' else tx_filler_gen;
+
+  -- synchronize the filler -> fifo switchover
+  -- to the tlast of the filler generator
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (ctrl.tx_fifo_rd_en = '0') then
+        tx_data_src_selfifo <= '0';
+
+      elsif (tx_filler_tlast = '1') then
+        tx_data_src_selfifo <= '1';
+      elsif (tx_fifo_almost_empty = '1') then
+        tx_data_src_selfifo <= '0';
+      end if;
+    end if;
+  end process;
+
+  -- Synchronize the rd_en of the fifo to the data word
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (ctrl.tx_fifo_rd_en = '0') then
+        tx_fifo_rd_en <= '0';
+      elsif (tx_filler_tnext = '1') then
+        tx_fifo_rd_en <= '1';
+      end if;
+    end if;
+  end process;
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (reset = '1' or ctrl.tx_fifo_reset = '1') then
+        tx_fifo_rst_cnt <= 7;
+        tx_fifo_rst     <= '1';
+      elsif (tx_fifo_rst_cnt > 0) then
+        tx_fifo_rst_cnt <= tx_fifo_rst_cnt-1;
+        tx_fifo_rst     <= '1';
+      else
+        tx_fifo_rst <= '0';
+      end if;
+    end if;
+  end process;
+
+  fifo_sync_inst : entity work.fifo_sync
+    generic map (
+      DEPTH               => 32768,
+      USE_ALMOST_FULL     => 1,
+      WR_WIDTH            => 32,
+      RD_WIDTH            => 8,
+      FIFO_READ_LATENCY   => 1
+      )
+    port map (
+      rst           => tx_fifo_rst,
+      clk           => clk40,
+      wr_en         => ctrl.tx_fifo_wr_en,
+      rd_en         => tx_fifo_rd_en,
+      din           => ctrl.tx_fifo_data,
+      dout          => tx_fifo_out,
+      valid         => tx_fifo_valid,
+      wr_data_count => open,
+      overflow      => open,
+      full          => open,
+      almost_empty  => tx_fifo_almost_empty,
+      almost_full   => open,
+      empty         => open
+      );
+
+  --------------------------------------------------------------------------------
   -- DEBUG ILAS
   --------------------------------------------------------------------------------
 
@@ -836,7 +944,16 @@ begin
         probe0(25 downto 20)   => std_logic_vector(to_unsigned(link_sel_daq, 6)),
         probe0(65 downto 26)   => rx_frame_mon,
         probe0(73 downto 66)   => ila_uplink_elink_data,
-        probe0(137 downto 74)  => (others => '0'),
+        probe0(81 downto 74)   => tx_fifo_out,
+        probe0(82)             => tx_fifo_rst,
+        probe0(83)             => tx_filler_en,
+        probe0(84)             => tx_fifo_rd_en,
+        probe0(85)             => tx_fifo_valid,
+        probe0(86)             => tx_fifo_almost_empty,
+        probe0(87)             => tx_filler_tlast,
+        probe0(88)             => tx_filler_tnext,
+        probe0(89)             => tx_data_src_selfifo,
+        probe0(137 downto 90)  => (others => '0'),
         probe0(193 downto 138) => rx_fifo_empty_arr,
         probe0(223 downto 194) => (others => '0'),
         probe1(0)              => ila_uplink_valid,

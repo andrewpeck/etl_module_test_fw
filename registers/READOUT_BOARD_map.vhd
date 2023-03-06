@@ -98,7 +98,7 @@ begin  -- architecture behavioral
         when 17 => --0x11
           localRdData( 0)            <=  Mon.LPGBT.DAQ.DOWNLINK.READY;                --LPGBT Downlink Ready
         when 19 => --0x13
-          localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs
+          localRdData( 3 downto  0)  <=  reg_data(19)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
         when 33 => --0x21
           localRdData( 0)            <=  Mon.LPGBT.TRIGGER.UPLINK.READY;              --LPGBT Uplink Ready
           localRdData(31 downto 16)  <=  Mon.LPGBT.TRIGGER.UPLINK.FEC_ERR_CNT;        --Data Corrected Count
@@ -205,6 +205,10 @@ begin  -- architecture behavioral
         when 768 => --0x300
           localRdData( 4 downto  0)  <=  reg_data(768)( 4 downto  0);                 --Choose which e-link the readout fifo connects to (0-27)
           localRdData( 8)            <=  reg_data(768)( 8);                           --Choose which lpgbt the readout fifo connects to (0-1)
+        when 783 => --0x30f
+          localRdData( 1)            <=  reg_data(783)( 1);                           --TX Fifo Read enable
+        when 784 => --0x310
+          localRdData(31 downto  0)  <=  reg_data(784)(31 downto  0);                 --TX Fifo Data
         when 786 => --0x312
           localRdData(31 downto  0)  <=  Mon.RX_FIFO_LOST_WORD_CNT;                   --# of words lost to a full FIFO
         when 787 => --0x313
@@ -317,6 +321,8 @@ begin  -- architecture behavioral
   Ctrl.SC.SCA_ENABLE                           <=  reg_data(540)( 0);                
   Ctrl.FIFO_ELINK_SEL0                         <=  reg_data(768)( 4 downto  0);      
   Ctrl.FIFO_LPGBT_SEL0                         <=  reg_data(768)( 8);                
+  Ctrl.TX_FIFO_RD_EN                           <=  reg_data(783)( 1);                
+  Ctrl.TX_FIFO_DATA                            <=  reg_data(784)(31 downto  0);      
   Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 0);               
   Ctrl.ETROC_DISABLE                           <=  reg_data(1059)(27 downto  0);     
   Ctrl.ETROC_DISABLE_SLAVE                     <=  reg_data(1060)(27 downto  0);     
@@ -347,6 +353,8 @@ begin  -- architecture behavioral
       Ctrl.SC.START_CONNECT <= '0';
       Ctrl.SC.START_COMMAND <= '0';
       Ctrl.SC.INJ_CRC_ERR <= '0';
+      Ctrl.TX_FIFO_RESET <= '0';
+      Ctrl.TX_FIFO_WR_EN <= '0';
       Ctrl.FIFO_RESET <= '0';
       Ctrl.LINK_RESET_PULSE <= '0';
       Ctrl.PACKET_CNT_RESET <= '0';
@@ -394,7 +402,7 @@ begin  -- architecture behavioral
         when 16 => --0x10
           Ctrl.LPGBT.DAQ.DOWNLINK.RESET         <=  localWrData( 0);               
         when 19 => --0x13
-          reg_data(19)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs
+          reg_data(19)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
         when 31 => --0x1f
           Ctrl.LPGBT.FEC_ERR_RESET              <=  localWrData( 0);               
         when 32 => --0x20
@@ -505,6 +513,13 @@ begin  -- architecture behavioral
         when 768 => --0x300
           reg_data(768)( 4 downto  0)           <=  localWrData( 4 downto  0);      --Choose which e-link the readout fifo connects to (0-27)
           reg_data(768)( 8)                     <=  localWrData( 8);                --Choose which lpgbt the readout fifo connects to (0-1)
+        when 782 => --0x30e
+          Ctrl.TX_FIFO_RESET                    <=  localWrData( 0);               
+          Ctrl.TX_FIFO_WR_EN                    <=  localWrData( 1);               
+        when 783 => --0x30f
+          reg_data(783)( 1)                     <=  localWrData( 1);                --TX Fifo Read enable
+        when 784 => --0x310
+          reg_data(784)(31 downto  0)           <=  localWrData(31 downto  0);      --TX Fifo Data
         when 785 => --0x311
           Ctrl.FIFO_RESET                       <=  localWrData( 0);               
         when 1056 => --0x420
@@ -625,6 +640,10 @@ begin  -- architecture behavioral
       reg_data(545)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.SC.INJ_CRC_ERR;
       reg_data(768)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_ELINK_SEL0;
       reg_data(768)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_LPGBT_SEL0;
+      reg_data(782)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TX_FIFO_RESET;
+      reg_data(782)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.TX_FIFO_WR_EN;
+      reg_data(783)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.TX_FIFO_RD_EN;
+      reg_data(784)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TX_FIFO_DATA;
       reg_data(785)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.FIFO_RESET;
       reg_data(1056)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.RX_FIFO_DATA_SRC;
       reg_data(1059)(27 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_DISABLE;
