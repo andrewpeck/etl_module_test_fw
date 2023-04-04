@@ -140,7 +140,7 @@ foreach target $targets {
 
         if {[string equal $device $device]} {
             if {[llength $argv] == 2 && [string equal [lindex $argv 1] "noflash"]} {
-                continue
+                puts " > Skipping flash programming..."
             } else {
                 puts "do you want to program the Flash? y/n"
                 gets stdin select
