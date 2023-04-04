@@ -87,6 +87,11 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
+### v2.1.5
+
+  - Fix `noflash` mode for program.tcl
+  - Add a work-in-progress tx fifo
+
 ### v2.1.4
 
   - Fix the upper two e-links
