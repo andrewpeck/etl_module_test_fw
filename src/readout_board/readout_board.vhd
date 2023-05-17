@@ -873,7 +873,7 @@ begin
   fifo_sync_inst : entity work.fifo_sync
     generic map (
       DEPTH               => 32768,
-      USE_ALMOST_FULL     => 1,
+      USE_ALMOST_EMPTY    => 1,
       WR_WIDTH            => 32,
       RD_WIDTH            => 8,
       FIFO_READ_LATENCY   => 1
@@ -893,7 +893,6 @@ begin
       overflow      => open,
       full          => open,
       almost_empty  => tx_fifo_almost_empty,
-      almost_full   => open,
       empty         => tx_fifo_empty
       );
 
@@ -976,7 +975,7 @@ begin
         probe0(148 downto 141) => downlink_data(0).data(7 downto 0),
         probe0(156 downto 149) => uplink_data(0).data(7 downto 0),
         probe0(157)            => tx_fifo_empty,
-        probe0(223 downto 157) => (others => '0'),
+        probe0(223 downto 158) => (others => '0'),
         probe1(0)              => ila_uplink_valid,
         probe2(0)              => ila_uplink_ready,
         probe3(0)              => ila_uplink_reset,
