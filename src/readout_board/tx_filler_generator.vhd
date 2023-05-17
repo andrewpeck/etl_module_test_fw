@@ -1,3 +1,17 @@
+----------------------------------------------------------------------------------
+-- CMS Endcap Timing Layer
+-- ETROC Readout Firmware
+-- A. Peck, D. Spitzbart
+-- Boston University
+--
+----------------------------------------------------------------------------------
+--
+-- This module generates a filler pattern than mimics the ETROC filler.
+--
+-- It produces 8 bits per 40MHz clock cycle.
+--
+----------------------------------------------------------------------------------
+
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -61,7 +75,7 @@ begin
     if (rising_edge(clock)) then
 
       tlast <= '0';
-      tnext <= '1';
+      tnext <= '0';
 
       case state is
 

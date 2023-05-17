@@ -808,7 +808,8 @@ begin
       bc0   => bc0,
       dout  => tx_filler_gen,
       en    => tx_filler_en,
-      tlast => open
+      tnext => tx_filler_tnext,
+      tlast => tx_filler_tlast
       );
 
   tx_filler_en <= not tx_fifo_valid;
@@ -823,7 +824,6 @@ begin
     if (rising_edge(clk40)) then
       if (ctrl.tx_fifo_rd_en = '0') then
         tx_data_src_selfifo <= '0';
-
       elsif (tx_filler_tlast = '1') then
         tx_data_src_selfifo <= '1';
       elsif (tx_fifo_almost_empty = '1') then
