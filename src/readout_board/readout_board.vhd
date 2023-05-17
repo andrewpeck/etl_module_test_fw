@@ -883,7 +883,10 @@ begin
       clk           => clk40,
       wr_en         => ctrl.tx_fifo_wr_en,
       rd_en         => tx_fifo_rd_en,
-      din           => ctrl.tx_fifo_data,
+      din           => ctrl.tx_fifo_data(7 downto 0) &
+                       ctrl.tx_fifo_data(15 downto 8) &
+                       ctrl.tx_fifo_data(23 downto 16) &
+                       ctrl.tx_fifo_data(31 downto 24),
       dout          => tx_fifo_out,
       valid         => tx_fifo_valid,
       wr_data_count => open,
