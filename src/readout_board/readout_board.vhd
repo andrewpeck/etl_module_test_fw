@@ -134,9 +134,10 @@ architecture behavioral of readout_board is
   signal tx_fifo_rd_en        : std_logic                     := '0';
   signal tx_fifo_valid        : std_logic                     := '0';
   signal tx_fifo_almost_empty : std_logic                     := '0';
+  signal tx_fifo_empty        : std_logic                     := '0';
   signal tx_filler_tlast      : std_logic                     := '0';
   signal tx_filler_tnext      : std_logic                     := '0';
-  signal tx_data_src_selfifo  : std_logic                     := '0';
+  signal tx_data_fifo_notfill : std_logic                     := '0';
 
   --------------------------------------------------------------------------------
   -- FIFO
@@ -797,7 +798,7 @@ begin
   tx_filler_en <= not tx_fifo_valid;
 
   -- switch between the filler generator and the fifo
-  tx_gen <= tx_fifo_out when tx_data_src_selfifo ='1' else tx_filler_gen;
+  tx_gen <= tx_fifo_out when tx_data_fifo_notfill ='1' else tx_filler_gen;
 
   ------------------------------------------
   -- synchronize the filler -> fifo switchover
@@ -807,13 +808,18 @@ begin
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
-      if (ctrl.tx_fifo_rd_en = '0') then
-        tx_data_src_selfifo <= '0';
-      elsif (tx_filler_tlast = '1') then
-        tx_data_src_selfifo <= '1';
-      elsif (tx_fifo_almost_empty = '1') then
-        tx_data_src_selfifo <= '0';
+      -- switch over to the fifo when rd_en is selected and we are at the last
+      -- filler word
+      if (tx_fifo_rd_en = '1' and tx_filler_tlast = '1') then
+        tx_data_fifo_notfill <= '1';
+
+      -- switch back when we are almost empty (fifo getting drained)
+      -- or empty (fifo was empty to begin with)
+      elsif (tx_fifo_empty = '1' or tx_fifo_almost_empty = '1') then
+        tx_data_fifo_notfill <= '0';
+
       end if;
+
     end if;
   end process;
 
@@ -885,7 +891,7 @@ begin
       full          => open,
       almost_empty  => tx_fifo_almost_empty,
       almost_full   => open,
-      empty         => open
+      empty         => tx_fifo_empty
       );
 
   --------------------------------------------------------------------------------
@@ -957,7 +963,7 @@ begin
         probe0(86)             => tx_fifo_almost_empty,
         probe0(87)             => tx_filler_tlast,
         probe0(88)             => tx_filler_tnext,
-        probe0(89)             => tx_data_src_selfifo,
+        probe0(89)             => tx_data_fifo_notfill,
         probe0(97 downto 90)   => tx_filler_gen,
         probe0(105 downto 98)  => tx_gen,
         probe0(106)            => ctrl.tx_fifo_wr_en,
@@ -966,6 +972,7 @@ begin
         probe0(140)            => ctrl.tx_fifo_reset,
         probe0(148 downto 141) => downlink_data(0).data(7 downto 0),
         probe0(156 downto 149) => uplink_data(0).data(7 downto 0),
+        probe0(157)            => tx_fifo_empty,
         probe0(223 downto 157) => (others => '0'),
         probe1(0)              => ila_uplink_valid,
         probe2(0)              => ila_uplink_ready,
