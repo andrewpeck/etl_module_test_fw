@@ -21,7 +21,7 @@ use ieee.numeric_std.all;
 entity tx_filler_generator is
   port(
     clock : in  std_logic;
-    en    : in  std_logic;
+    rst   : in  std_logic;
     l1a   : in  std_logic;
     bc0   : in  std_logic;
     tlast : out std_logic;
@@ -98,12 +98,12 @@ begin
           data  <= header & "10" &
                   std_logic_vector(to_unsigned(l1a_cnt, 8)) & "00" &
                   std_logic_vector(to_unsigned(bcid, 12));
-          if (en = '1') then
-            state <= D0;
-          else
-            state <= D4;
-          end if;
+          state <= D0;
       end case;
+
+      if rst='1' then
+        state <= D0;
+      end if;
 
     end if;
   end process;

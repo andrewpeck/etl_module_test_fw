@@ -129,7 +129,6 @@ architecture behavioral of readout_board is
   signal tx_gen               : std_logic_vector (7 downto 0) := (others => '0');
   signal tx_fifo_out          : std_logic_vector (7 downto 0) := (others => '0');
   signal tx_fifo_rst          : std_logic                     := '0';
-  signal tx_filler_en         : std_logic                     := '0';
   signal tx_fifo_rst_cnt      : integer range 0 to 7          := 0;
   signal tx_fifo_rd_en        : std_logic                     := '0';
   signal tx_fifo_valid        : std_logic                     := '0';
@@ -787,15 +786,14 @@ begin
   tx_filler_generator_inst : entity work.tx_filler_generator
     port map (
       clock => clk40,
+      rst   => tx_fifo_almost_empty and not tx_fifo_empty,
       l1a   => l1a,
       bc0   => bc0,
       dout  => tx_filler_gen,
-      en    => tx_filler_en,
       tnext => tx_filler_tnext,
       tlast => tx_filler_tlast
       );
 
-  tx_filler_en <= not tx_fifo_valid;
 
   -- switch between the filler generator and the fifo
   tx_gen <= tx_fifo_out when tx_sel_fifo ='1' else tx_filler_gen;
@@ -810,12 +808,15 @@ begin
     if (rising_edge(clk40)) then
       -- switch over to the fifo when rd_en is selected and we are at the last
       -- filler word
-      if (tx_fifo_rd_en = '1' and tx_filler_tlast = '1') then
+      if (tx_fifo_empty = '0' and
+          tx_fifo_rd_en = '1' and
+          tx_filler_tlast = '1') then
         tx_sel_fifo <= '1';
 
       -- switch back when we are almost empty (fifo getting drained)
       -- or empty (fifo was empty to begin with)
-      elsif (tx_fifo_empty = '1' or tx_fifo_almost_empty = '1') then
+      elsif (tx_fifo_valid = '0' or
+             tx_fifo_empty = '1') then
         tx_sel_fifo <= '0';
 
       end if;
@@ -959,7 +960,7 @@ begin
         probe0(73 downto 66)   => ila_uplink_elink_data,
         probe0(81 downto 74)   => tx_fifo_out,
         probe0(82)             => tx_fifo_rst,
-        probe0(83)             => tx_filler_en,
+        probe0(83)             => '0',
         probe0(84)             => tx_fifo_rd_en,
         probe0(85)             => tx_fifo_valid,
         probe0(86)             => tx_fifo_almost_empty,
