@@ -778,30 +778,12 @@ begin
       fifo_wb_out   => daq_wb_out(0)
       );
 
-  -- --------------------------------------------------------------------------------
-  -- -- Histogrammer
-  -- --------------------------------------------------------------------------------
-
-  -- histogrammer_inst : entity work.histogrammer
-  --   generic map (
-  --     NBINS => 28*2,
-  --     DEPTH =>
-  --     )
-  --   port map (
-  --     clock        => clk40,
-  --     reset        => histo_reset,
-  --     freeze_i     => histo_freeze,
-  --     enable_i     => histo_enable,
-  --     bin_select_i => to_integer(unsigned(histo_bin_select)),
-  --     count_o      => histo_count
-  --     );
-
   --------------------------------------------------------------------------------
   -- TX Fifo
   --------------------------------------------------------------------------------
 
   -- generate fillers 8 bits at a time
-  tx_filler_generator_1: entity work.tx_filler_generator
+  tx_filler_generator_inst : entity work.tx_filler_generator
     port map (
       clock => clk40,
       l1a   => l1a,
@@ -817,8 +799,11 @@ begin
   -- switch between the filler generator and the fifo
   tx_gen <= tx_fifo_out when tx_data_src_selfifo ='1' else tx_filler_gen;
 
+  ------------------------------------------
   -- synchronize the filler -> fifo switchover
   -- to the tlast of the filler generator
+  ------------------------------------------
+
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -833,6 +818,18 @@ begin
   end process;
 
   -- Synchronize the rd_en of the fifo to the data word
+  -- this is done by only reading the fifo at the appropriate
+  -- phase of the 40 bit to 8 bit conversion state machine
+  --
+  -- the tnext signal indicates that the next data word is the last data word
+  -- in the cycle.
+  --
+  -- by flagging rd_en high on tnext, then a word should be available at the
+  -- FIFO output in time to replace the first data word; this of course depends
+  -- on the latency of the FIFO, so that would need to be taken into account.
+  -- if the latency of the FIFO changes, then the timing of this signal would
+  -- need to change as well by adding a delay
+
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -843,6 +840,10 @@ begin
       end if;
     end if;
   end process;
+
+  ------------------------------------------
+  -- pulse extend the TX FIFO reset signal
+  ------------------------------------------
 
   process (clk40) is
   begin
@@ -858,6 +859,10 @@ begin
       end if;
     end if;
   end process;
+
+  ------------------------------------------
+  -- tx fifo instance
+  ------------------------------------------
 
   fifo_sync_inst : entity work.fifo_sync
     generic map (
