@@ -137,7 +137,7 @@ architecture behavioral of readout_board is
   signal tx_fifo_empty        : std_logic                     := '0';
   signal tx_filler_tlast      : std_logic                     := '0';
   signal tx_filler_tnext      : std_logic                     := '0';
-  signal tx_data_fifo_notfill : std_logic                     := '0';
+  signal tx_sel_fifo          : std_logic                     := '0';
 
   --------------------------------------------------------------------------------
   -- FIFO
@@ -798,7 +798,7 @@ begin
   tx_filler_en <= not tx_fifo_valid;
 
   -- switch between the filler generator and the fifo
-  tx_gen <= tx_fifo_out when tx_data_fifo_notfill ='1' else tx_filler_gen;
+  tx_gen <= tx_fifo_out when tx_sel_fifo ='1' else tx_filler_gen;
 
   ------------------------------------------
   -- synchronize the filler -> fifo switchover
@@ -811,12 +811,12 @@ begin
       -- switch over to the fifo when rd_en is selected and we are at the last
       -- filler word
       if (tx_fifo_rd_en = '1' and tx_filler_tlast = '1') then
-        tx_data_fifo_notfill <= '1';
+        tx_sel_fifo <= '1';
 
       -- switch back when we are almost empty (fifo getting drained)
       -- or empty (fifo was empty to begin with)
       elsif (tx_fifo_empty = '1' or tx_fifo_almost_empty = '1') then
-        tx_data_fifo_notfill <= '0';
+        tx_sel_fifo <= '0';
 
       end if;
 
@@ -965,7 +965,7 @@ begin
         probe0(86)             => tx_fifo_almost_empty,
         probe0(87)             => tx_filler_tlast,
         probe0(88)             => tx_filler_tnext,
-        probe0(89)             => tx_data_fifo_notfill,
+        probe0(89)             => tx_sel_fifo,
         probe0(97 downto 90)   => tx_filler_gen,
         probe0(105 downto 98)  => tx_gen,
         probe0(106)            => ctrl.tx_fifo_wr_en,
