@@ -652,8 +652,12 @@ begin
           end if;
         end process;
 
-
-        data_i <= data_padded(32*(ielink+1)-1 downto 32*ielink);
+        process (clk40) is
+        begin
+          if (rising_edge(clk40)) then
+            data_i <= data_padded(32*(ielink+1)-1 downto 32*ielink);
+          end if;
+        end process;
 
         etroc_rx_1 : entity etroc.etroc_rx
           port map (
