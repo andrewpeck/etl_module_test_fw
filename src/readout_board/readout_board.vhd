@@ -655,7 +655,7 @@ begin
         process (clk40) is
         begin
           if (rising_edge(clk40)) then
-            data_i <= data_padded(32*(ielink+1)-1 downto 32*ielink);
+            data_i <= data_padded(24+8*(ielink+1)-1 downto 8*ielink);
           end if;
         end process;
 
