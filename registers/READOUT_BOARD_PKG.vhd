@@ -326,6 +326,7 @@ package READOUT_BOARD_CTRL is
     RESET_ETROC_RX             :std_logic_vector(31 downto 0);  -- 1 to reset the ETROC rx module
     ZERO_SUPRESS               :std_logic_vector(31 downto 0);  -- 1 to zero suppress fillers out from the ETROC RX
     BITSLIP_AUTO_EN            :std_logic;                      -- 1 to enable automatic bitslipping alignment
+    ELINK_WIDTH                :std_logic_vector( 2 downto 0);  -- 2 = 320 Mbps, 3 = 640 Mbps, 4 = 1280 Mbps
     RAW_DATA_MODE              :std_logic_vector(31 downto 0);  -- 1 to read all data from ETROC, regardless of content
     ETROC_BITSLIP_SLAVE        :std_logic_vector(31 downto 0);  -- 1 to bitslip an ETROC
     RESET_ETROC_RX_SLAVE       :std_logic_vector(31 downto 0);  -- 1 to reset the ETROC rx module
@@ -354,6 +355,7 @@ package READOUT_BOARD_CTRL is
                                                                    RESET_ETROC_RX => (others => '0'),
                                                                    ZERO_SUPRESS => x"0fffffff",
                                                                    BITSLIP_AUTO_EN => '1',
+                                                                   ELINK_WIDTH => "010",
                                                                    RAW_DATA_MODE => (others => '0'),
                                                                    ETROC_BITSLIP_SLAVE => (others => '0'),
                                                                    RESET_ETROC_RX_SLAVE => (others => '0'),
