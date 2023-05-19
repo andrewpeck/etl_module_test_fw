@@ -21,6 +21,8 @@
 
   <node id="BITSLIP_AUTO_EN" address="0x107" mask="0x1"        permission="rw" description="1 to enable automatic bitslipping alignment" parameters="default=0x1"/>
 
+  <node id="ELINK_WIDTH"     address="0x107" mask="0xe"        permission="rw" description="2 = 320 Mbps, 3 = 640 Mbps, 4 = 1280 Mbps" parameters="default=0x2"/>
+
   <node id="ETROC_BITSLIP"   address="0x104" mask="0xffffffff" permission="w"  description="1 to bitslip an ETROC" />
   <node id="RESET_ETROC_RX"  address="0x105" mask="0xffffffff" permission="w"  description="1 to reset the ETROC rx module" />
   <node id="ZERO_SUPRESS"    address="0x106" mask="0xffffffff" permission="rw" description="1 to zero suppress fillers out from the ETROC RX" parameters="default=0xfffffff" />

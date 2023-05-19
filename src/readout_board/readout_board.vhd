@@ -576,7 +576,13 @@ begin
   --------------------------------------------------------------------------------
 
   etroc_rx_lpgbt_gen : for ilpgbt in 0 to NUM_UPLINKS-1 generate
+    signal data_padded : std_logic_vector (8*28+24-1 downto 0) := (others => '0');
+  begin
+
+    data_padded (223 downto 0) <= uplink_data_aligned(ilpgbt).data;
+
     etroc_rx_elink_gen : for ielink in 0 to 27 generate
+
       en_gen : if (ELINK_EN_MASK(ielink) = '1') generate
 
         signal data_i : std_logic_vector (31 downto 0);
@@ -600,16 +606,62 @@ begin
 
         signal disable : std_logic := '0';
 
+        signal enable_by_rate : std_logic := '0';
+
       begin
 
-        data_i <= x"000000" & uplink_data_aligned(ilpgbt).data(8*(ielink+1)-1 downto 8*ielink);
+        process (clk40) is
+        begin
+          if (rising_edge(clk40)) then
+
+
+            case ctrl.elink_width is
+
+              -- 320 Mbps
+              -- enable every elink
+              when "010" =>
+                enable_by_rate <= '1';
+
+
+              -- 640 Mbps
+              -- only enable even elinks
+              -- 0, 2, 4, 6, etc
+              when "011" =>
+
+                if (ielink mod 2 = 0) then
+                  enable_by_rate <= '1';
+                else
+                  enable_by_rate <= '0';
+                end if;
+
+              -- 1280 Mbps
+              -- only enable every fourth elink
+              when "100" =>
+
+                if (ielink mod 4 = 0) then
+                  enable_by_rate <= '1';
+                else
+                  enable_by_rate <= '0';
+                end if;
+
+              -- disable invalid settings
+              when others =>
+                enable_by_rate <= '0';
+
+            end case;
+          end if;
+        end process;
+
+
+        data_i <= data_padded(32*(ielink+1)-1 downto 32*ielink);
 
         etroc_rx_1 : entity etroc.etroc_rx
           port map (
             clock             => clk40,
             -- FIXME: this should not be shared across both lpgbts
-            reset             => reset or ctrl.reset_etroc_rx(ielink) or disable,
+            reset             => reset or ctrl.reset_etroc_rx(ielink) or disable or not enable_by_rate,
             data_i            => data_i,
+            elinkwidth        => ctrl.elink_width, -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
             bitslip_i         => bitslip,
             bitslip_auto_i    => ctrl.bitslip_auto_en,
             zero_suppress     => zero_suppress,

@@ -286,7 +286,7 @@ begin
     generic map (
       MAX_INPUT      => MAX_ELINK_WIDTH,
       MAX_OUTPUT     => 40,
-      SUPPORT_INPUT  => "11100",
+      SUPPORT_INPUT  => "11100",        -- 32, 16, 8, 4, 2
       SUPPORT_OUTPUT => "01000"         -- 66, 4x10, 2x10, 10, 8
       )
     port map (
