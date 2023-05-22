@@ -9,4 +9,5 @@ package fast_commands_pkg is
   constant L1ACR_CMD      : std_logic_vector(7 downto 0) := x"66";
   constant L1A_CMD        : std_logic_vector(7 downto 0) := x"96";
   constant L1ABCR_CMD     : std_logic_vector(7 downto 0) := x"99";
+  constant BCR_CMD        : std_logic_vector(7 downto 0) := x"5A";
 end package fast_commands_pkg;

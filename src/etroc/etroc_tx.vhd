@@ -37,6 +37,8 @@ begin
         data_o <= L1ABCR_CMD;
       elsif (l1a = '1') then
         data_o <= L1A_CMD;
+      elsif (bc0 = '1') then
+        data_o <= BCR_CMD;
       elsif (link_reset = '1') then
         data_o <= LINK_RESET_CMD;
       end if;
