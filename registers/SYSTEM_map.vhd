@@ -101,7 +101,6 @@ begin  -- architecture behavioral
 
       -- action resets
       Ctrl.L1A_PULSE <= '0';
-      Ctrl.LINK_RESET_PULSE <= '0';
       
 
 
@@ -116,8 +115,6 @@ begin  -- architecture behavioral
           reg_data(64)( 1)              <=  localWrData( 1);                --Controls SFP1 Disable
         when 1280 => --0x500
           Ctrl.L1A_PULSE                <=  localWrData( 0);               
-        when 1281 => --0x501
-          Ctrl.LINK_RESET_PULSE         <=  localWrData( 0);               
         when 1282 => --0x502
           reg_data(1282)(31 downto  0)  <=  localWrData(31 downto  0);      --Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
         when 1287 => --0x507
@@ -135,7 +132,6 @@ begin  -- architecture behavioral
       reg_data(64)( 0)  <= DEFAULT_SYSTEM_CTRL_t.SFP0_TX_DIS;
       reg_data(64)( 1)  <= DEFAULT_SYSTEM_CTRL_t.SFP1_TX_DIS;
       reg_data(1280)( 0)  <= DEFAULT_SYSTEM_CTRL_t.L1A_PULSE;
-      reg_data(1281)( 0)  <= DEFAULT_SYSTEM_CTRL_t.LINK_RESET_PULSE;
       reg_data(1282)(31 downto  0)  <= DEFAULT_SYSTEM_CTRL_t.L1A_RATE;
       reg_data(1287)( 0)  <= DEFAULT_SYSTEM_CTRL_t.EN_EXT_TRIGGER;
 

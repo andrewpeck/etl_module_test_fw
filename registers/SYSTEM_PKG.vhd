@@ -18,7 +18,6 @@ package SYSTEM_CTRL is
     SFP0_TX_DIS                :std_logic;                      -- Controls SFP0 Disable
     SFP1_TX_DIS                :std_logic;                      -- Controls SFP1 Disable
     L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
-    LINK_RESET_PULSE           :std_logic;                      -- Write 1 to pulse Link reset
     L1A_RATE                   :std_logic_vector(31 downto 0);  -- Rate of generated triggers f_trig =(2^32-1) * clk_period * rate
     EN_EXT_TRIGGER             :std_logic;                      -- 1 to enable the external SMA trigger
   end record SYSTEM_CTRL_t;
@@ -30,7 +29,6 @@ package SYSTEM_CTRL is
                                                      SFP0_TX_DIS => '0',
                                                      SFP1_TX_DIS => '0',
                                                      L1A_PULSE => '0',
-                                                     LINK_RESET_PULSE => '0',
                                                      L1A_RATE => x"00000000",
                                                      EN_EXT_TRIGGER => '0'
                                                     );
