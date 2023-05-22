@@ -11,7 +11,6 @@ entity ttc is
     reset      : in  std_logic;
     l1a        : out std_logic;
     bc0        : out std_logic;
-    link_reset : out std_logic;
 
     force_trig  : in std_logic;
     ext_trig    : in std_logic;
