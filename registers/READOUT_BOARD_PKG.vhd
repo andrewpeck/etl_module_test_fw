@@ -5,13 +5,13 @@ use IEEE.std_logic_1164.all;
 
 
 package READOUT_BOARD_CTRL is
-  type READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t is record
+  type READOUT_BOARD_LPGBT_UPLINK_MON_t is record
     READY                      :std_logic;     -- LPGBT Uplink Ready
     FEC_ERR_CNT                :std_logic_vector(15 downto 0);  -- Data Corrected Count
-  end record READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t;
+  end record READOUT_BOARD_LPGBT_UPLINK_MON_t;
+  type READOUT_BOARD_LPGBT_UPLINK_MON_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_UPLINK_MON_t;
 
-
-  type READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t is record
+  type READOUT_BOARD_LPGBT_UPLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Uplink
     ALIGN_0                    :std_logic_vector( 2 downto 0);
     ALIGN_1                    :std_logic_vector( 2 downto 0);
@@ -41,154 +41,55 @@ package READOUT_BOARD_CTRL is
     ALIGN_25                   :std_logic_vector( 2 downto 0);
     ALIGN_26                   :std_logic_vector( 2 downto 0);
     ALIGN_27                   :std_logic_vector( 2 downto 0);
-  end record READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t;
+  end record READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
+  type READOUT_BOARD_LPGBT_UPLINK_CTRL_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
 
-
-  constant DEFAULT_READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t : READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t := (
-                                                                                                     RESET => '0',
-                                                                                                     ALIGN_0 => (others => '0'),
-                                                                                                     ALIGN_1 => (others => '0'),
-                                                                                                     ALIGN_2 => (others => '0'),
-                                                                                                     ALIGN_3 => (others => '0'),
-                                                                                                     ALIGN_4 => (others => '0'),
-                                                                                                     ALIGN_5 => (others => '0'),
-                                                                                                     ALIGN_6 => (others => '0'),
-                                                                                                     ALIGN_7 => (others => '0'),
-                                                                                                     ALIGN_8 => (others => '0'),
-                                                                                                     ALIGN_9 => (others => '0'),
-                                                                                                     ALIGN_10 => (others => '0'),
-                                                                                                     ALIGN_11 => (others => '0'),
-                                                                                                     ALIGN_12 => (others => '0'),
-                                                                                                     ALIGN_13 => (others => '0'),
-                                                                                                     ALIGN_14 => (others => '0'),
-                                                                                                     ALIGN_15 => (others => '0'),
-                                                                                                     ALIGN_16 => (others => '0'),
-                                                                                                     ALIGN_17 => (others => '0'),
-                                                                                                     ALIGN_18 => (others => '0'),
-                                                                                                     ALIGN_19 => (others => '0'),
-                                                                                                     ALIGN_20 => (others => '0'),
-                                                                                                     ALIGN_21 => (others => '0'),
-                                                                                                     ALIGN_22 => (others => '0'),
-                                                                                                     ALIGN_23 => (others => '0'),
-                                                                                                     ALIGN_24 => (others => '0'),
-                                                                                                     ALIGN_25 => (others => '0'),
-                                                                                                     ALIGN_26 => (others => '0'),
-                                                                                                     ALIGN_27 => (others => '0')
-                                                                                                    );
-  type READOUT_BOARD_LPGBT_DAQ_DOWNLINK_MON_t is record
+  constant DEFAULT_READOUT_BOARD_LPGBT_UPLINK_CTRL_t : READOUT_BOARD_LPGBT_UPLINK_CTRL_t := (
+                                                                                             RESET => '0',
+                                                                                             ALIGN_0 => (others => '0'),
+                                                                                             ALIGN_1 => (others => '0'),
+                                                                                             ALIGN_2 => (others => '0'),
+                                                                                             ALIGN_3 => (others => '0'),
+                                                                                             ALIGN_4 => (others => '0'),
+                                                                                             ALIGN_5 => (others => '0'),
+                                                                                             ALIGN_6 => (others => '0'),
+                                                                                             ALIGN_7 => (others => '0'),
+                                                                                             ALIGN_8 => (others => '0'),
+                                                                                             ALIGN_9 => (others => '0'),
+                                                                                             ALIGN_10 => (others => '0'),
+                                                                                             ALIGN_11 => (others => '0'),
+                                                                                             ALIGN_12 => (others => '0'),
+                                                                                             ALIGN_13 => (others => '0'),
+                                                                                             ALIGN_14 => (others => '0'),
+                                                                                             ALIGN_15 => (others => '0'),
+                                                                                             ALIGN_16 => (others => '0'),
+                                                                                             ALIGN_17 => (others => '0'),
+                                                                                             ALIGN_18 => (others => '0'),
+                                                                                             ALIGN_19 => (others => '0'),
+                                                                                             ALIGN_20 => (others => '0'),
+                                                                                             ALIGN_21 => (others => '0'),
+                                                                                             ALIGN_22 => (others => '0'),
+                                                                                             ALIGN_23 => (others => '0'),
+                                                                                             ALIGN_24 => (others => '0'),
+                                                                                             ALIGN_25 => (others => '0'),
+                                                                                             ALIGN_26 => (others => '0'),
+                                                                                             ALIGN_27 => (others => '0')
+                                                                                            );
+  type READOUT_BOARD_LPGBT_DOWNLINK_MON_t is record
     READY                      :std_logic;     -- LPGBT Downlink Ready
-  end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_MON_t;
+  end record READOUT_BOARD_LPGBT_DOWNLINK_MON_t;
+  type READOUT_BOARD_LPGBT_DOWNLINK_MON_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_DOWNLINK_MON_t;
 
-
-  type READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t is record
+  type READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Downlink LpGBT Encoder
     DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=txfifo
-  end record READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
+  end record READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t;
+  type READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t;
 
-
-  constant DEFAULT_READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t : READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t := (
-                                                                                                         RESET => '0',
-                                                                                                         DL_SRC => (others => '0')
-                                                                                                        );
-  type READOUT_BOARD_LPGBT_DAQ_MON_t is record
-    UPLINK                     :READOUT_BOARD_LPGBT_DAQ_UPLINK_MON_t;
-    DOWNLINK                   :READOUT_BOARD_LPGBT_DAQ_DOWNLINK_MON_t;
-  end record READOUT_BOARD_LPGBT_DAQ_MON_t;
-
-
-  type READOUT_BOARD_LPGBT_DAQ_CTRL_t is record
-    UPLINK                     :READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t;
-    DOWNLINK                   :READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t;
-  end record READOUT_BOARD_LPGBT_DAQ_CTRL_t;
-
-
-  constant DEFAULT_READOUT_BOARD_LPGBT_DAQ_CTRL_t : READOUT_BOARD_LPGBT_DAQ_CTRL_t := (
-                                                                                       UPLINK => DEFAULT_READOUT_BOARD_LPGBT_DAQ_UPLINK_CTRL_t,
-                                                                                       DOWNLINK => DEFAULT_READOUT_BOARD_LPGBT_DAQ_DOWNLINK_CTRL_t
-                                                                                      );
-  type READOUT_BOARD_LPGBT_TRIGGER_UPLINK_MON_t is record
-    READY                      :std_logic;     -- LPGBT Uplink Ready
-    FEC_ERR_CNT                :std_logic_vector(15 downto 0);  -- Data Corrected Count
-  end record READOUT_BOARD_LPGBT_TRIGGER_UPLINK_MON_t;
-
-
-  type READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t is record
-    RESET                      :std_logic;     -- Reset this Uplink
-    ALIGN_0                    :std_logic_vector( 2 downto 0);
-    ALIGN_1                    :std_logic_vector( 2 downto 0);
-    ALIGN_2                    :std_logic_vector( 2 downto 0);
-    ALIGN_3                    :std_logic_vector( 2 downto 0);
-    ALIGN_4                    :std_logic_vector( 2 downto 0);
-    ALIGN_5                    :std_logic_vector( 2 downto 0);
-    ALIGN_6                    :std_logic_vector( 2 downto 0);
-    ALIGN_7                    :std_logic_vector( 2 downto 0);
-    ALIGN_8                    :std_logic_vector( 2 downto 0);
-    ALIGN_9                    :std_logic_vector( 2 downto 0);
-    ALIGN_10                   :std_logic_vector( 2 downto 0);
-    ALIGN_11                   :std_logic_vector( 2 downto 0);
-    ALIGN_12                   :std_logic_vector( 2 downto 0);
-    ALIGN_13                   :std_logic_vector( 2 downto 0);
-    ALIGN_14                   :std_logic_vector( 2 downto 0);
-    ALIGN_15                   :std_logic_vector( 2 downto 0);
-    ALIGN_16                   :std_logic_vector( 2 downto 0);
-    ALIGN_17                   :std_logic_vector( 2 downto 0);
-    ALIGN_18                   :std_logic_vector( 2 downto 0);
-    ALIGN_19                   :std_logic_vector( 2 downto 0);
-    ALIGN_20                   :std_logic_vector( 2 downto 0);
-    ALIGN_21                   :std_logic_vector( 2 downto 0);
-    ALIGN_22                   :std_logic_vector( 2 downto 0);
-    ALIGN_23                   :std_logic_vector( 2 downto 0);
-    ALIGN_24                   :std_logic_vector( 2 downto 0);
-    ALIGN_25                   :std_logic_vector( 2 downto 0);
-    ALIGN_26                   :std_logic_vector( 2 downto 0);
-    ALIGN_27                   :std_logic_vector( 2 downto 0);
-  end record READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t;
-
-
-  constant DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t : READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t := (
-                                                                                                             RESET => '0',
-                                                                                                             ALIGN_0 => (others => '0'),
-                                                                                                             ALIGN_1 => (others => '0'),
-                                                                                                             ALIGN_2 => (others => '0'),
-                                                                                                             ALIGN_3 => (others => '0'),
-                                                                                                             ALIGN_4 => (others => '0'),
-                                                                                                             ALIGN_5 => (others => '0'),
-                                                                                                             ALIGN_6 => (others => '0'),
-                                                                                                             ALIGN_7 => (others => '0'),
-                                                                                                             ALIGN_8 => (others => '0'),
-                                                                                                             ALIGN_9 => (others => '0'),
-                                                                                                             ALIGN_10 => (others => '0'),
-                                                                                                             ALIGN_11 => (others => '0'),
-                                                                                                             ALIGN_12 => (others => '0'),
-                                                                                                             ALIGN_13 => (others => '0'),
-                                                                                                             ALIGN_14 => (others => '0'),
-                                                                                                             ALIGN_15 => (others => '0'),
-                                                                                                             ALIGN_16 => (others => '0'),
-                                                                                                             ALIGN_17 => (others => '0'),
-                                                                                                             ALIGN_18 => (others => '0'),
-                                                                                                             ALIGN_19 => (others => '0'),
-                                                                                                             ALIGN_20 => (others => '0'),
-                                                                                                             ALIGN_21 => (others => '0'),
-                                                                                                             ALIGN_22 => (others => '0'),
-                                                                                                             ALIGN_23 => (others => '0'),
-                                                                                                             ALIGN_24 => (others => '0'),
-                                                                                                             ALIGN_25 => (others => '0'),
-                                                                                                             ALIGN_26 => (others => '0'),
-                                                                                                             ALIGN_27 => (others => '0')
-                                                                                                            );
-  type READOUT_BOARD_LPGBT_TRIGGER_MON_t is record
-    UPLINK                     :READOUT_BOARD_LPGBT_TRIGGER_UPLINK_MON_t;
-  end record READOUT_BOARD_LPGBT_TRIGGER_MON_t;
-
-
-  type READOUT_BOARD_LPGBT_TRIGGER_CTRL_t is record
-    UPLINK                     :READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t;
-  end record READOUT_BOARD_LPGBT_TRIGGER_CTRL_t;
-
-
-  constant DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t : READOUT_BOARD_LPGBT_TRIGGER_CTRL_t := (
-                                                                                               UPLINK => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_UPLINK_CTRL_t
-                                                                                              );
+  constant DEFAULT_READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t : READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t := (
+                                                                                                 RESET => '0',
+                                                                                                 DL_SRC => (others => '0')
+                                                                                                );
   type READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t is record
     TIMER_LSBS                 :std_logic_vector(31 downto 0);  -- Timer of how long the counter has been running
     TIMER_MSBS                 :std_logic_vector(31 downto 0);  -- Timer of how long the counter has been running
@@ -218,24 +119,24 @@ package READOUT_BOARD_CTRL is
                                                                                                                SEL => x"0000"
                                                                                                               );
   type READOUT_BOARD_LPGBT_MON_t is record
-    DAQ                        :READOUT_BOARD_LPGBT_DAQ_MON_t;
-    TRIGGER                    :READOUT_BOARD_LPGBT_TRIGGER_MON_t;
+    UPLINK                     :READOUT_BOARD_LPGBT_UPLINK_MON_t_ARRAY;
+    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_MON_t_ARRAY;
     PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t;
   end record READOUT_BOARD_LPGBT_MON_t;
 
 
   type READOUT_BOARD_LPGBT_CTRL_t is record
-    DAQ                        :READOUT_BOARD_LPGBT_DAQ_CTRL_t;
-    FEC_ERR_RESET              :std_logic;                       -- Write 1 to reset FEC error counter
-    TRIGGER                    :READOUT_BOARD_LPGBT_TRIGGER_CTRL_t;
+    UPLINK                     :READOUT_BOARD_LPGBT_UPLINK_CTRL_t_ARRAY;
+    FEC_ERR_RESET              :std_logic;                                -- Write 1 to reset FEC error counter
+    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t_ARRAY;
     PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t;
   end record READOUT_BOARD_LPGBT_CTRL_t;
 
 
   constant DEFAULT_READOUT_BOARD_LPGBT_CTRL_t : READOUT_BOARD_LPGBT_CTRL_t := (
-                                                                               DAQ => DEFAULT_READOUT_BOARD_LPGBT_DAQ_CTRL_t,
+                                                                               UPLINK => (others => DEFAULT_READOUT_BOARD_LPGBT_UPLINK_CTRL_t ),
                                                                                FEC_ERR_RESET => '0',
-                                                                               TRIGGER => DEFAULT_READOUT_BOARD_LPGBT_TRIGGER_CTRL_t,
+                                                                               DOWNLINK => (others => DEFAULT_READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t ),
                                                                                PATTERN_CHECKER => DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t
                                                                               );
   type READOUT_BOARD_SC_RX_MON_t is record

@@ -23,11 +23,13 @@ library etroc;
 
 entity readout_board is
   generic(
-    INST            : integer := 0;
-    C_DEBUG         : boolean := true;
-    NUM_UPLINKS     : integer := 2;
-    NUM_DOWNLINKS   : integer := 1;
-    NUM_SCAS        : integer := 1
+    C_DEBUG          : boolean := true;
+    C_EN_PAT_CHECK   : boolean := false;
+    NUM_UPLINKS      : integer := 2;
+    NUM_DOWNLINKS    : integer := 1;
+    NUM_SCAS         : integer := 1;
+    ETROC_FIFO_DEPTH : natural := 32768/2;
+    TX_FIFO_DEPTH    : natural := 32768/8
     );
   port(
 
@@ -60,66 +62,22 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  signal fifo_reset     : std_logic            := '0';
-  signal fifo_reset_cnt : integer range 0 to 7 := 0;
+  signal fifo_reset : std_logic := '0';
 
   -- FIXME: account for fec5/12
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
-  constant FREQ : integer := 320;       -- uplink frequency
-
-  constant DOWNWIDTH  : integer := 8;
-  constant UPWIDTH    : integer := FREQ/40;
-  constant NUM_ELINKS : integer := 224/UPWIDTH;
+  constant DOWNWIDTH : integer := 8;
 
   signal valid : std_logic;
-
-  --------------------------------------------------------------------------------
-  -- FEC Error Counters
-  --------------------------------------------------------------------------------
-
-  constant COUNTER_WIDTH : integer := 16;
-  type counter_array_t is array (integer range <>)
-    of std_logic_vector(COUNTER_WIDTH-1 downto 0);
-
-  -- counters
-  signal uplink_fec_err_cnt : counter_array_t(NUM_UPLINKS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- LPGBT Glue
   --------------------------------------------------------------------------------
 
-  signal uplink_data_aligned : lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
-  signal uplink_data         : lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
-  signal uplink_reset        : std_logic_vector (NUM_UPLINKS-1 downto 0);
-  signal uplink_ready        : std_logic_vector (NUM_UPLINKS-1 downto 0);
-  signal uplink_fec_err      : std_logic_vector (NUM_UPLINKS-1 downto 0);
-
-  signal downlink_data         : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
-  signal downlink_reset        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
-  signal downlink_ready        : std_logic_vector (NUM_DOWNLINKS-1 downto 0);
-
-  -- master
-
-  signal prbs_err_counters  : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
-  signal upcnt_err_counters : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
-
-  signal counter : integer range 0 to 255        := 0;
-  signal cnt_slv : std_logic_vector (7 downto 0) := (others => '0');
-
-  signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
-  signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
-
-  signal prbs_ff  : std_logic_vector (31 downto 0) := (others => '0');
-  signal upcnt_ff : std_logic_vector (31 downto 0) := (others => '0');
-
-  -- don't care too much about bus coherence here.. the counters should just be zero
-  -- and exact numbers don't really matter..
-  attribute ASYNC_REG             : string;
-  attribute ASYNC_REG of prbs_ff  : signal is "true";
-  attribute ASYNC_REG of upcnt_ff : signal is "true";
-
-  signal fast_cmd : std_logic_vector (7 downto 0) := (others => '0');
+  signal uplink_data    : lpgbt_uplink_data_rt_array (NUM_UPLINKS-1 downto 0);
+  signal uplink_fec_err : std_logic_vector (NUM_UPLINKS-1 downto 0);
+  signal downlink_data  : lpgbt_downlink_data_rt_array (NUM_DOWNLINKS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- TX Fifo
@@ -129,7 +87,6 @@ architecture behavioral of readout_board is
   signal tx_gen               : std_logic_vector (7 downto 0) := (others => '0');
   signal tx_fifo_out          : std_logic_vector (7 downto 0) := (others => '0');
   signal tx_fifo_rst          : std_logic                     := '0';
-  signal tx_fifo_rst_cnt      : integer range 0 to 7          := 0;
   signal tx_fifo_rd_en        : std_logic                     := '0';
   signal tx_fifo_valid        : std_logic                     := '0';
   signal tx_fifo_almost_empty : std_logic                     := '0';
@@ -148,16 +105,15 @@ architecture behavioral of readout_board is
 
   type int_array_t is array (integer range <>) of integer;
 
-  signal elink_sel    : integer range 0 to 27;
-  signal lpgbt_sel    : integer range 0 to 1;
-  signal link_sel     : integer range 0 to 28*2-1;
-  signal link_sel_daq : integer range 0 to 28*2-1;
+  signal elink_sel : integer range 0 to 27;
+  signal lpgbt_sel : integer range 0 to 1;
+  signal link_sel  : integer range 0 to 28*2-1;
+  signal mux_sel   : integer range 0 to 28*2-1;
 
   --------------------------------------------------------------------------------
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal packet_rx_rate : std_logic_vector (31 downto 0);
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
 
@@ -221,97 +177,107 @@ begin
 
   -- up counter
 
-  cnt_slv <= std_logic_vector (to_unsigned(counter, cnt_slv'length));
-  process (clk40) is
+  dl_gen : if (true) generate
+    signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
+    signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
+    signal fast_cmd         : std_logic_vector (7 downto 0)           := (others => '0');
+    signal upcnt            : integer range 0 to 255                  := 0;
   begin
-    if (rising_edge(clk40)) then
-      if (counter = 255) then
-        counter <= 0;
-      else
-        counter <= counter + 1;
-      end if;
-    end if;
-  end process;
-
-
-  -- prbs generation
-
-  prbs_any_gen : entity work.prbs_any
-    generic map (
-      chk_mode    => false,
-      inv_pattern => false,
-      poly_lenght => 7,
-      poly_tap    => 6,
-      nbits       => 8
-      )
-    port map (
-      rst      => reset,
-      clk      => clk40,
-      data_in  => (others => '0'),
-      en       => '1',
-      data_out => prbs_gen
-      );
-
-  -- need to reverse the prbs vector to match lpgbt
-
-
-  --------------------------------------------------------------------------------
-  -- lpgbt downlink multiplexing
-  --------------------------------------------------------------------------------
-  --
-  -- Choose between different data sources
-  --
-  --  + up count
-  --  + prbs-7 generation
-  --  + programmable fast command
-
-  dl_assign : for I in 0 to NUM_DOWNLINKS-1 generate
-
-    function repeat_byte (x : std_logic_vector) return std_logic_vector is
-      variable result : std_logic_vector(x'length*4-1 downto 0);
-    begin
-      result := x & x & x & x;
-      return result;
-    end;
-
-    signal dl_src : integer;
-
-  begin
-
-    dl_src <= to_integer(unsigned(ctrl.lpgbt.daq.downlink.dl_src));
-
-    downlink_data(I).valid <= strobe;
 
     process (clk40) is
     begin
       if (rising_edge(clk40)) then
-        case dl_src is
-
-          when 0 =>
-            downlink_data(I).data <= repeat_byte(fast_cmd);
-          when 1 =>
-            downlink_data(I).data <= repeat_byte(cnt_slv);
-          when 2 =>
-            downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
-          when 3 =>
-            downlink_data(I).data <= repeat_byte(tx_gen);
-          when others =>
-            downlink_data(I).data <= repeat_byte(fast_cmd);
-
-        end case;
+        if (upcnt = 255) then
+          upcnt <= 0;
+        else
+          upcnt <= upcnt + 1;
+        end if;
       end if;
     end process;
-  end generate;
 
-  etroc_tx_inst : entity etroc.etroc_tx
-    port map (
-      clock      => clk40,
-      reset      => reset,
-      l1a        => l1a,
-      bc0        => bc0,
-      link_reset => ctrl.link_reset_pulse,
-      data_o     => fast_cmd
-      );
+    -- prbs generation
+
+    prbs_any_gen : entity work.prbs_any
+      generic map (
+        chk_mode    => false,
+        inv_pattern => false,
+        poly_lenght => 7,
+        poly_tap    => 6,
+        nbits       => 8
+        )
+      port map (
+        rst      => reset,
+        clk      => clk40,
+        data_in  => (others => '0'),
+        en       => '1',
+        data_out => prbs_gen
+        );
+
+    prbs_gen_reverse <= reverse_vector (prbs_gen);
+
+    -- lpgbt downlink multiplexing
+    --
+    -- Choose between different data sources
+    --
+    --  + up count
+    --  + prbs-7 generation
+    --  + programmable fast command
+
+    dl_assign : for I in 0 to NUM_DOWNLINKS-1 generate
+
+      function repeat_byte (x : std_logic_vector) return std_logic_vector is
+        variable result : std_logic_vector(x'length*4-1 downto 0);
+      begin
+        result := x & x & x & x;
+        return result;
+      end;
+
+      signal dl_src : integer;
+
+    begin
+
+      downlink_data(I).valid <= strobe;
+
+      process (clk40) is
+      begin
+        if (rising_edge(clk40)) then
+
+          dl_src <= to_integer(unsigned(ctrl.lpgbt.downlink(0).dl_src));
+
+          case dl_src is
+
+            when 0 =>
+              downlink_data(I).data <= repeat_byte(fast_cmd);
+            when 1 =>
+              downlink_data(I).data <= repeat_byte(std_logic_vector (to_unsigned(upcnt, cnt_slv'length)));
+            when 2 =>
+              downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
+
+            -- need to reverse the prbs vector to match lpgbt
+            when 3 =>
+              downlink_data(I).data <= repeat_byte(tx_gen);
+            when others =>
+              downlink_data(I).data <= repeat_byte(fast_cmd);
+
+          end case;
+        end if;
+      end process;
+    end generate;
+
+    etroc_tx_inst : entity etroc.etroc_tx
+      port map (
+        clock      => clk40,
+        reset      => reset,
+        l1a        => l1a,
+        bc0        => bc0,
+        link_reset => ctrl.link_reset_pulse,
+        data_o     => fast_cmd
+        );
+  end generate;  -- tx_gen
+
+  --------------------------------------------------------------------------------
+  -- L1A Rate Counter
+  --------------------------------------------------------------------------------
 
   pkt_counter_inst : entity work.rate_counter
     generic map (
@@ -322,8 +288,12 @@ begin
       clk_i   => clk40,
       reset_i => reset,
       en_i    => or_reduce(rx_end_of_packet),
-      rate_o  => packet_rx_rate
+      rate_o  => mon.packet_rx_rate
       );
+
+  --------------------------------------------------------------------------------
+  -- ETROC Packet Counters
+  --------------------------------------------------------------------------------
 
   etroc_rx_cnt_gen : for I in rx_end_of_packet'range generate
   begin
@@ -352,27 +322,33 @@ begin
 
   end generate;
 
-  mon.packet_rx_rate <= packet_rx_rate;
-  mon.packet_cnt     <= packet_cnt(link_sel);
-  mon.error_cnt      <= err_cnt(link_sel);
-
-  --------------------------------------------------------------------------------
-  -- Record mapping
-  --
-  --   + dumb mapping to/from records and internal signals
-  --
-  --------------------------------------------------------------------------------
-
-  mon.lpgbt.daq.uplink.ready     <= uplink_ready(0);
-  mon.lpgbt.daq.downlink.ready   <= downlink_ready(0);
-  mon.lpgbt.trigger.uplink.ready <= uplink_ready(1);
-  downlink_reset(0)              <= ctrl.lpgbt.daq.downlink.reset;
-  uplink_reset(0)                <= ctrl.lpgbt.daq.uplink.reset;
-  uplink_reset(1)                <= ctrl.lpgbt.trigger.uplink.reset;
+  mon.packet_cnt <= packet_cnt(link_sel);
+  mon.error_cnt <= err_cnt(link_sel);
 
   --------------------------------------------------------------------------------
   -- GBT Slow Control
   --------------------------------------------------------------------------------
+
+  sc_gen : if (NUM_SCAS > 0) generate
+    signal lpgbt_ic_up   : std_logic_vector (1 downto 0) := (others => '0');
+    signal lpgbt_ic_down : std_logic_vector (1 downto 0) := (others => '0');
+    signal sca_ic_up     : std_logic_vector (1 downto 0) := (others => '0');
+    signal sca_ic_down   : std_logic_vector (1 downto 0) := (others => '0');
+  begin
+
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
+
+        lpgbt_ic_up <= uplink_data(0).ic;
+        sca_ic_up <= uplink_data(0).ec;
+
+        downlink_data(0).ic <= lpgbt_ic_down;
+        downlink_data(0).ec <= sca_ic_down;
+
+      end if;
+    end process;
+
 
   gbt_controller_wrapper_inst : entity work.gbt_controller_wrapper
     generic map (g_SCAS_PER_LPGBT => NUM_SCAS)
@@ -410,8 +386,11 @@ begin
       downlink_clk => clk320,
       uplink_clk   => clk320,
 
-      downlink_reset_i => downlink_reset,
-      uplink_reset_i   => uplink_reset,
+      downlink_reset_i(0) => ctrl.lpgbt.downlink(0).reset,
+      downlink_reset_i(1) => ctrl.lpgbt.downlink(1).reset,
+
+      uplink_reset_i(0) => ctrl.lpgbt.uplink(0).reset,
+      uplink_reset_i(1) => ctrl.lpgbt.uplink(1).reset,
 
       downlink_data_i => downlink_data,
       uplink_data_o   => uplink_data,
@@ -419,20 +398,18 @@ begin
       downlink_mgt_word_array_o => downlink_mgt_word_array,
       uplink_mgt_word_array_i   => uplink_mgt_word_array,
 
-      downlink_ready_o => downlink_ready,
-      uplink_ready_o   => uplink_ready,
+      downlink_ready_o(0) => mon.lpgbt.downlink(0).ready,
+      downlink_ready_o(1) => mon.lpgbt.downlink(1).ready,
+      uplink_ready_o(0)   => mon.lpgbt.uplink(0).ready,
+      uplink_ready_o(1)   => mon.lpgbt.uplink(1).ready,
 
       uplink_bitslip_o => uplink_bitslip,
       uplink_fec_err_o => uplink_fec_err
       );
 
-
   --------------------------------------------------------------------------------
   -- FEC Counters
   --------------------------------------------------------------------------------
-
-  mon.lpgbt.daq.uplink.fec_err_cnt     <= uplink_fec_err_cnt(0);
-  mon.lpgbt.trigger.uplink.fec_err_cnt <= uplink_fec_err_cnt(1);
 
   ulfeccnt : for I in 0 to NUM_UPLINKS-1 generate
   begin
@@ -443,28 +420,10 @@ begin
         reset  => reset or ctrl.lpgbt.fec_err_reset,
         enable => '1',
         event  => uplink_fec_err(I),
-        count  => uplink_fec_err_cnt(I),
+        count  => mon.lpgbt.uplink(I).fec_err_cnt,
         at_max => open
         );
   end generate;
-
-  --------------------------------------------------------------------------------
-  -- Uplink Frame Aligner
-  --------------------------------------------------------------------------------
-
-  uplink_aligner_inst : entity work.uplink_aligner
-    generic map (
-      UPWIDTH     => UPWIDTH,
-      NUM_UPLINKS => NUM_UPLINKS,
-      NUM_ELINKS  => NUM_ELINKS
-      )
-    port map (
-      clk40            => clk40,
-      daq_uplink_ctrl  => ctrl.lpgbt.daq.uplink,
-      trig_uplink_ctrl => ctrl.lpgbt.trigger.uplink,
-      data_i           => uplink_data,
-      data_o           => uplink_data_aligned
-      );
 
   --------------------------------------------------------------------------------
   -- Elink Multiplexer
@@ -491,85 +450,103 @@ begin
   -- additional lpgbts just cat together the data field into n*daq + trig inputs
   -- and put it in a loop
 
-  uplink_prbs_checkers : for I in 0 to NUM_UPLINKS-1 generate
-    signal prbs_en  : std_logic_vector (31 downto 0) := (others => '0');
-    signal upcnt_en : std_logic_vector (31 downto 0) := (others => '0');
+  pat_check_gen : if (C_EN_PAT_CHECK) generate
+    signal prbs_err_counters  : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
+    signal upcnt_err_counters : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
+    signal prbs_ff            : std_logic_vector (31 downto 0) := (others => '0');
+    signal upcnt_ff           : std_logic_vector (31 downto 0) := (others => '0');
+    constant UPWIDTH          : integer                        := 8;
+
+    -- don't care too much about bus coherence here.. the counters should just be zero
+    -- and exact numbers don't really matter..
+    attribute ASYNC_REG             : string;
+    attribute ASYNC_REG of prbs_ff  : signal is "true";
+    attribute ASYNC_REG of upcnt_ff : signal is "true";
+
   begin
-    pat_checker : for J in 0 to NUM_ELINKS-1 generate
-      signal data : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
+
+    uplink_prbs_checkers : for I in 0 to NUM_UPLINKS-1 generate
+      constant NUM_ELINKS : integer                        := 224/UPWIDTH;
+      signal prbs_en      : std_logic_vector (31 downto 0) := (others => '0');
+      signal upcnt_en     : std_logic_vector (31 downto 0) := (others => '0');
     begin
-
-      g0 : if (I = 0) generate
-        prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_0;
-        upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_0;
-      end generate;
-
-      g1 : if (I = 1) generate
-        prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_1;
-        upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_1;
-      end generate;
-
-      -- copy for timing and align to system 40MHz
-      process (clk40) is
+      pat_checker : for J in 0 to NUM_ELINKS-1 generate
+        signal data : std_logic_vector (UPWIDTH-1 downto 0) := (others => '0');
       begin
-        if (rising_edge(clk40)) then
-          data <= uplink_data_aligned(I).data(8*(J+1)-1 downto 8*J);
-        end if;
-      end process;
 
-      pattern_checker_inst : entity work.pattern_checker
-        generic map (
-          DEBUG         => false,
-          COUNTER_WIDTH => 32,
-          WIDTH         => UPWIDTH
-          )
-        port map (
-          clock          => clk40,
-          reset          => reset or ctrl.lpgbt.pattern_checker.reset,
-          cnt_reset      => reset or ctrl.lpgbt.pattern_checker.cnt_reset,
-          data           => data,
-          check_prbs     => prbs_en(J),
-          check_upcnt    => upcnt_en(J),
-          prbs_errors_o  => prbs_err_counters(I*NUM_ELINKS+J),
-          upcnt_errors_o => upcnt_err_counters(I*NUM_ELINKS+J)
-          );
+        g0 : if (I = 0) generate
+          prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_0;
+          upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_0;
+        end generate;
 
-    end generate;
+        g1 : if (I = 1) generate
+          prbs_en  <= ctrl.lpgbt.pattern_checker.check_prbs_en_1;
+          upcnt_en <= ctrl.lpgbt.pattern_checker.check_upcnt_en_1;
+        end generate;
+
+        -- copy for timing and align to system 40MHz
+        process (clk40) is
+        begin
+          if (rising_edge(clk40)) then
+            data <= uplink_data(I).data(8*(J+1)-1 downto 8*J);
+          end if;
+        end process;
+
+        pattern_checker_inst : entity work.pattern_checker
+          generic map (
+            DEBUG         => false,
+            COUNTER_WIDTH => 32,
+            WIDTH         => UPWIDTH
+            )
+          port map (
+            clock          => clk40,
+            reset          => reset or ctrl.lpgbt.pattern_checker.reset,
+            cnt_reset      => reset or ctrl.lpgbt.pattern_checker.cnt_reset,
+            data           => data,
+            check_prbs     => prbs_en(J),
+            check_upcnt    => upcnt_en(J),
+            prbs_errors_o  => prbs_err_counters(I*NUM_ELINKS+J),
+            upcnt_errors_o => upcnt_err_counters(I*NUM_ELINKS+J)
+            );
+
+      end generate;
+    end generate;  -- end pattern checker
+
+    -- multiplex the outputs into one register for readout
+
+    process (ctrl_clk) is
+      variable sel : integer;
+    begin
+      if (rising_edge(ctrl_clk)) then
+        sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
+
+        prbs_ff  <= prbs_err_counters(sel);
+        upcnt_ff <= upcnt_err_counters(sel);
+
+        mon.lpgbt.pattern_checker.prbs_errors  <= prbs_ff;
+        mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_ff;
+      end if;
+    end process;
+
+    -- create a long (64 bit) timer to record how long the prbs tests have been running
+
+    timer : entity work.counter
+      generic map (
+        roll_over   => false,
+        async_reset => false,
+        width       => 64
+        )
+      port map (
+        clk                 => clk40,
+        reset               => reset or ctrl.lpgbt.pattern_checker.reset or ctrl.lpgbt.pattern_checker.cnt_reset,
+        enable              => '1',
+        event               => '1',
+        count(31 downto 0)  => mon.lpgbt.pattern_checker.timer_lsbs,
+        count(63 downto 32) => mon.lpgbt.pattern_checker.timer_msbs,
+        at_max              => open
+        );
+
   end generate;
-
-  -- multiplex the outputs into one register for readout
-
-  process (ctrl_clk) is
-    variable sel : integer;
-  begin
-    if (rising_edge(ctrl_clk)) then
-      sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
-
-      prbs_ff  <= prbs_err_counters(sel);
-      upcnt_ff <= upcnt_err_counters(sel);
-
-      mon.lpgbt.pattern_checker.prbs_errors  <= prbs_ff;
-      mon.lpgbt.pattern_checker.upcnt_errors <= upcnt_ff;
-    end if;
-  end process;
-
-  -- create a long (64 bit) timer to record how long the prbs tests have been running
-
-  timer : entity work.counter
-    generic map (
-      roll_over   => false,
-      async_reset => false,
-      width       => 64
-      )
-    port map (
-      clk                 => clk40,
-      reset               => reset or ctrl.lpgbt.pattern_checker.reset or ctrl.lpgbt.pattern_checker.cnt_reset,
-      enable              => '1',
-      event               => '1',
-      count(31 downto 0)  => mon.lpgbt.pattern_checker.timer_lsbs,
-      count(63 downto 32) => mon.lpgbt.pattern_checker.timer_msbs,
-      at_max              => open
-      );
 
   --------------------------------------------------------------------------------
   -- Data Decoder
@@ -579,7 +556,7 @@ begin
     signal data_padded : std_logic_vector (8*28+24-1 downto 0) := (others => '0');
   begin
 
-    data_padded (223 downto 0) <= uplink_data_aligned(ilpgbt).data;
+    data_padded (223 downto 0) <= uplink_data(ilpgbt).data;
 
     etroc_rx_elink_gen : for ielink in 0 to 27 generate
 
@@ -665,7 +642,7 @@ begin
             -- FIXME: this should not be shared across both lpgbts
             reset             => reset or ctrl.reset_etroc_rx(ielink) or disable or not enable_by_rate,
             data_i            => data_i,
-            elinkwidth        => ctrl.elink_width, -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
+            elinkwidth        => ctrl.elink_width,  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
             bitslip_i         => bitslip,
             bitslip_auto_i    => ctrl.bitslip_auto_en,
             zero_suppress     => zero_suppress,
@@ -796,28 +773,28 @@ begin
       global_full => global_fifo_full,
 
       ch_en_i => rx_locked and (elink_en_mask & elink_en_mask)
-                  and not (ctrl.etroc_disable_slave & ctrl.etroc_disable),
+      and not (ctrl.etroc_disable_slave & ctrl.etroc_disable),
 
-      data_i  => rx_fifo_data_arr(link_sel_daq),  -- in:  multiplexed input data
+      data_i  => rx_fifo_data_arr(mux_sel),  -- in:  multiplexed input data
       sof_i   => rx_start_of_packet,
       eof_i   => rx_end_of_packet,
-      full_i  => rx_fifo_full_arr,      -- in:  all full flags
-      empty_i => rx_fifo_empty_arr,     -- in:  all empty flags
-      valid_i => rx_fifo_valid_arr,     -- in:  all valid flags
+      full_i  => rx_fifo_full_arr,           -- in:  all full flags
+      empty_i => rx_fifo_empty_arr,          -- in:  all empty flags
+      valid_i => rx_fifo_valid_arr,          -- in:  all valid flags
 
-      data_sel => link_sel_daq,         -- out: multiplexer select 0-57
+      data_sel => mux_sel,              -- out: multiplexer select 0-57
 
-      rd_en_o    => rx_fifo_rd_en_selector,    -- out: fifo read enable
-      data_o     => rx_fifo_data_selector,     -- out: data, connect to daq fifo
-      metadata_o => rx_fifo_metadata_selector, -- out: data, connect to daq fifo
-      wr_en_o    => rx_fifo_valid_selector     -- out: wr_en, connect to daq_fifo
+      rd_en_o    => rx_fifo_rd_en_selector,     -- out: fifo read enable
+      data_o     => rx_fifo_data_selector,      -- out: data, connect to daq fifo
+      metadata_o => rx_fifo_metadata_selector,  -- out: data, connect to daq fifo
+      wr_en_o    => rx_fifo_valid_selector      -- out: wr_en, connect to daq_fifo
       );
 
   mon.rx_fifo_full <= global_fifo_full;
 
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
-      DEPTH          => 32768*4,
+      DEPTH          => ETROC_FIFO_DEPTH,
       LOST_CNT_WIDTH => mon.rx_fifo_lost_word_cnt'length
       )
     port map (
@@ -852,7 +829,7 @@ begin
 
 
   -- switch between the filler generator and the fifo
-  tx_gen <= tx_fifo_out when tx_sel_fifo ='1' else tx_filler_gen;
+  tx_gen <= tx_fifo_out when tx_sel_fifo = '1' else tx_filler_gen;
 
   ------------------------------------------
   -- synchronize the filler -> fifo switchover
@@ -908,20 +885,12 @@ begin
   -- pulse extend the TX FIFO reset signal
   ------------------------------------------
 
-  process (clk40) is
-  begin
-    if (rising_edge(clk40)) then
-      if (reset = '1' or ctrl.tx_fifo_reset = '1') then
-        tx_fifo_rst_cnt <= 7;
-        tx_fifo_rst     <= '1';
-      elsif (tx_fifo_rst_cnt > 0) then
-        tx_fifo_rst_cnt <= tx_fifo_rst_cnt-1;
-        tx_fifo_rst     <= '1';
-      else
-        tx_fifo_rst <= '0';
-      end if;
-    end if;
-  end process;
+  extender_inst : entity work.extender
+    generic map (LENGTH => 16)
+    port map (
+      clk => clk40,
+      d   => reset or ctrl.tx_fifo_reset,
+      q   => tx_fifo_rst);
 
   ------------------------------------------
   -- tx fifo instance
@@ -929,11 +898,11 @@ begin
 
   fifo_sync_inst : entity work.fifo_sync
     generic map (
-      DEPTH               => 32768,
-      USE_ALMOST_EMPTY    => 1,
-      WR_WIDTH            => 32,
-      RD_WIDTH            => 8,
-      FIFO_READ_LATENCY   => 1
+      DEPTH             => TX_FIFO_DEPTH,
+      USE_ALMOST_EMPTY  => 1,
+      WR_WIDTH          => 32,
+      RD_WIDTH          => 8,
+      FIFO_READ_LATENCY => 1
       )
     port map (
       rst           => tx_fifo_rst,
@@ -941,9 +910,9 @@ begin
       wr_en         => ctrl.tx_fifo_wr_en,
       rd_en         => tx_fifo_rd_en,
       din           => ctrl.tx_fifo_data(7 downto 0) &
-                       ctrl.tx_fifo_data(15 downto 8) &
-                       ctrl.tx_fifo_data(23 downto 16) &
-                       ctrl.tx_fifo_data(31 downto 24),
+      ctrl.tx_fifo_data(15 downto 8) &
+      ctrl.tx_fifo_data(23 downto 16) &
+      ctrl.tx_fifo_data(31 downto 24),
       dout          => tx_fifo_out,
       valid         => tx_fifo_valid,
       wr_data_count => open,
@@ -962,8 +931,6 @@ begin
     signal ila_uplink_data       : std_logic_vector (223 downto 0);
     signal ila_uplink_elink_data : std_logic_vector (7 downto 0);
     signal ila_uplink_valid      : std_logic;
-    signal ila_uplink_ready      : std_logic;
-    signal ila_uplink_reset      : std_logic;
     signal ila_uplink_fec_err    : std_logic;
     signal ila_uplink_ic         : std_logic_vector (1 downto 0);
     signal ila_uplink_ec         : std_logic_vector (1 downto 0);
@@ -982,11 +949,9 @@ begin
     begin
       if (rising_edge(clk40)) then
 
-        ila_uplink_data       <= uplink_data_aligned(lpgbt_sel).data;
+        ila_uplink_data       <= uplink_data(lpgbt_sel).data;
         ila_uplink_elink_data <= ila_uplink_data(8*(elink_sel+1)-1 downto 8*elink_sel);
-        ila_uplink_valid      <= uplink_data_aligned(lpgbt_sel).valid;
-        ila_uplink_ready      <= uplink_ready(lpgbt_sel);
-        ila_uplink_reset      <= uplink_reset(lpgbt_sel);
+        ila_uplink_valid      <= uplink_data(lpgbt_sel).valid;
         ila_uplink_fec_err    <= uplink_fec_err(lpgbt_sel);
         ila_uplink_ic         <= uplink_data(lpgbt_sel).ic;
         ila_uplink_ec         <= uplink_data(lpgbt_sel).ec;
@@ -1011,7 +976,7 @@ begin
         probe0(17)             => rx_start_of_packet_mon,
         probe0(18)             => rx_end_of_packet_mon,
         probe0(19)             => rx_crc_match,
-        probe0(25 downto 20)   => std_logic_vector(to_unsigned(link_sel_daq, 6)),
+        probe0(25 downto 20)   => std_logic_vector(to_unsigned(mux_sel, 6)),
         probe0(65 downto 26)   => rx_frame_mon,
         probe0(73 downto 66)   => ila_uplink_elink_data,
         probe0(81 downto 74)   => tx_fifo_out,
@@ -1034,12 +999,12 @@ begin
         probe0(157)            => tx_fifo_empty,
         probe0(223 downto 158) => (others => '0'),
         probe1(0)              => ila_uplink_valid,
-        probe2(0)              => ila_uplink_ready,
-        probe3(0)              => ila_uplink_reset,
+        probe2(0)              => '0',
+        probe3(0)              => '0',
         probe4(0)              => ila_uplink_fec_err,
         probe5(1 downto 0)     => (others => '0'),
         probe6(1 downto 0)     => (others => '0'),
-        probe7(39 downto 0)    => rx_fifo_data_arr(link_sel_daq),
+        probe7(39 downto 0)    => rx_fifo_data_arr(mux_sel),
         probe8(39 downto 0)    => rx_fifo_data_mux,
         probe9(0)              => rx_fifo_valid_mux,
         probe10(2 downto 0)    => rx_state_mon,

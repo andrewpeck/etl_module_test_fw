@@ -47,7 +47,7 @@ entity etl_test_fw is
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
-    NUM_RBS       : integer := 1;
+    NUM_RBS       : integer := 8;
     NUM_UPLINKS   : integer := 2;       -- Number of Uplinks / RB
     NUM_DOWNLINKS : integer := 1;       -- Number of Downlinks / RB
     NUM_SCAS      : integer := 1;       -- Number of SCAs / RB
@@ -574,15 +574,26 @@ begin
   rb_gen : if (EN_LPGBTS = 1) generate
 
     rbgen : for I in 0 to NUM_RBS-1 generate
-      constant NU : integer := NUM_UPLINKS;
-      constant ND : integer := NUM_DOWNLINKS;
+      constant NU    : integer := NUM_UPLINKS;
+      constant ND    : integer := NUM_DOWNLINKS;
+      constant DEBUG : boolean;
     begin
+
+      -- only generate an ILA for one of the RBs
+      -- (need to save resources)
+      y_gen : if (I = 0) generate
+        DEBUG <= true;
+      end generate;
+      n_gen : if (I /= 0) generate
+        DEBUG <= false;
+      end generate;
+
       readout_board_inst : entity work.readout_board
         generic map (
-          INST          => I,
-          NUM_UPLINKS   => NU,
-          NUM_DOWNLINKS => ND,
-          NUM_SCAS      => NUM_SCAS
+          NUM_UPLINKS   => NUM_UPLINKS,
+          NUM_DOWNLINKS => NUM_DOWNLINKS,
+          NUM_SCAS      => NUM_SCAS,
+          C_DEBUG       => DEBUG
           )
         port map (
 
