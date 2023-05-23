@@ -47,7 +47,7 @@ entity etl_test_fw is
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
-    NUM_RBS       : integer := 8;
+    NUM_RBS       : integer := 5;
     NUM_UPLINKS   : integer := 2;       -- Number of Uplinks / RB
     NUM_DOWNLINKS : integer := 1;       -- Number of Downlinks / RB
     NUM_SCAS      : integer := 1;       -- Number of SCAs / RB
@@ -233,6 +233,8 @@ architecture behavioral of etl_test_fw is
   signal led_progress     : std_logic_vector (leds'length - 1 downto 0);
 
 begin
+
+  assert NUM_RBS <= 5 report "Number of RBs cannot exceed 5 (10 receivers == 5 RBs)" severity error;
 
   --------------------------------------------------------------------------------
   -- Reset

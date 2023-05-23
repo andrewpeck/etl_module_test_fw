@@ -8,9 +8,6 @@
   <node id="READOUT_BOARD_2" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x4000"/>
   <node id="READOUT_BOARD_3" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x5000"/>
   <node id="READOUT_BOARD_4" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x6000"/>
-  <node id="READOUT_BOARD_5" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x7000"/>
-  <node id="READOUT_BOARD_6" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x8000"/>
-  <node id="READOUT_BOARD_7" fwinfo="type=array" module="file://modules/READOUT_BOARD.xml" address="0x9000"/>
 
   <node id="SYSTEM"          module="file://modules/SYSTEM.xml"        address="0xB000" />
 
@@ -19,10 +16,5 @@
   <node id="DAQ_RB2" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x0400000" />
   <node id="DAQ_RB3" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x0800000" />
   <node id="DAQ_RB4" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x1000000" />
-  <node id="DAQ_RB5" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x2000000" />
-  <node id="DAQ_RB6" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x4000000" />
-  <node id="DAQ_RB7" fwinfo="type=array" module="file://modules/DAQ.xml" address="0x8000000" />
 
 </node>
-
-

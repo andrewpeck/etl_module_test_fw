@@ -13,11 +13,11 @@ use ieee.numeric_std.all;
 
 package ipbus_decode_etl_test_fw is
 
-  constant IPBUS_SEL_WIDTH: positive := 5;
+  constant IPBUS_SEL_WIDTH: positive := 4;
   subtype ipbus_sel_t is std_logic_vector(IPBUS_SEL_WIDTH - 1 downto 0);
   function ipbus_sel_etl_test_fw(addr : in std_logic_vector(31 downto 0)) return ipbus_sel_t;
 
--- START automatically generated VHDL (Tue May 23 14:14:58 2023)
+-- START automatically generated VHDL (Tue May 23 18:36:42 2023)
   constant N_SLV_LOOPBACK: integer := 0;
   constant N_SLV_FW_INFO: integer := 1;
   constant N_SLV_READOUT_BOARD_0: integer := 2;
@@ -25,19 +25,13 @@ package ipbus_decode_etl_test_fw is
   constant N_SLV_READOUT_BOARD_2: integer := 4;
   constant N_SLV_READOUT_BOARD_3: integer := 5;
   constant N_SLV_READOUT_BOARD_4: integer := 6;
-  constant N_SLV_READOUT_BOARD_5: integer := 7;
-  constant N_SLV_READOUT_BOARD_6: integer := 8;
-  constant N_SLV_READOUT_BOARD_7: integer := 9;
-  constant N_SLV_SYSTEM: integer := 10;
-  constant N_SLV_DAQ_RB0: integer := 11;
-  constant N_SLV_DAQ_RB1: integer := 12;
-  constant N_SLV_DAQ_RB2: integer := 13;
-  constant N_SLV_DAQ_RB3: integer := 14;
-  constant N_SLV_DAQ_RB4: integer := 15;
-  constant N_SLV_DAQ_RB5: integer := 16;
-  constant N_SLV_DAQ_RB6: integer := 17;
-  constant N_SLV_DAQ_RB7: integer := 18;
-  constant N_SLAVES: integer := 19;
+  constant N_SLV_SYSTEM: integer := 7;
+  constant N_SLV_DAQ_RB0: integer := 8;
+  constant N_SLV_DAQ_RB1: integer := 9;
+  constant N_SLV_DAQ_RB2: integer := 10;
+  constant N_SLV_DAQ_RB3: integer := 11;
+  constant N_SLV_DAQ_RB4: integer := 12;
+  constant N_SLAVES: integer := 13;
 -- END automatically generated VHDL
 
     
@@ -49,45 +43,33 @@ package body ipbus_decode_etl_test_fw is
     variable sel: ipbus_sel_t;
   begin
 
--- START automatically generated VHDL (Tue May 23 14:14:58 2023)
-    if    std_match(addr, "----00000000----0000------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_LOOPBACK, IPBUS_SEL_WIDTH)); -- LOOPBACK / base 0x00000000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0001------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_FW_INFO, IPBUS_SEL_WIDTH)); -- FW_INFO / base 0x00001000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0010------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_0, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_0 / base 0x00002000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0011------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_1, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_1 / base 0x00003000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0100------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_2, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_2 / base 0x00004000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0101------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_3, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_3 / base 0x00005000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0110------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_4, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_4 / base 0x00006000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----0111------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_5, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_5 / base 0x00007000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----1000------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_6, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_6 / base 0x00008000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----1001------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_7, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_7 / base 0x00009000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000000----1011------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SYSTEM, IPBUS_SEL_WIDTH)); -- SYSTEM / base 0x0000b000 / mask 0x0ff0f000
-    elsif std_match(addr, "----00000001--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB0, IPBUS_SEL_WIDTH)); -- DAQ_RB0 / base 0x00100000 / mask 0x0ff00000
-    elsif std_match(addr, "----00000010--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB1, IPBUS_SEL_WIDTH)); -- DAQ_RB1 / base 0x00200000 / mask 0x0ff00000
-    elsif std_match(addr, "----00000100--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB2, IPBUS_SEL_WIDTH)); -- DAQ_RB2 / base 0x00400000 / mask 0x0ff00000
-    elsif std_match(addr, "----00001000--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB3, IPBUS_SEL_WIDTH)); -- DAQ_RB3 / base 0x00800000 / mask 0x0ff00000
-    elsif std_match(addr, "----00010000--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB4, IPBUS_SEL_WIDTH)); -- DAQ_RB4 / base 0x01000000 / mask 0x0ff00000
-    elsif std_match(addr, "----00100000--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB5, IPBUS_SEL_WIDTH)); -- DAQ_RB5 / base 0x02000000 / mask 0x0ff00000
-    elsif std_match(addr, "----01000000--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB6, IPBUS_SEL_WIDTH)); -- DAQ_RB6 / base 0x04000000 / mask 0x0ff00000
-    elsif std_match(addr, "----10000000--------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB7, IPBUS_SEL_WIDTH)); -- DAQ_RB7 / base 0x08000000 / mask 0x0ff00000
+-- START automatically generated VHDL (Tue May 23 18:36:42 2023)
+    if    std_match(addr, "-------00000----0000------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_LOOPBACK, IPBUS_SEL_WIDTH)); -- LOOPBACK / base 0x00000000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0001------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_FW_INFO, IPBUS_SEL_WIDTH)); -- FW_INFO / base 0x00001000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0010------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_0, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_0 / base 0x00002000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0011------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_1, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_1 / base 0x00003000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0100------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_2, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_2 / base 0x00004000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0101------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_3, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_3 / base 0x00005000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----0110------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_READOUT_BOARD_4, IPBUS_SEL_WIDTH)); -- READOUT_BOARD_4 / base 0x00006000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00000----1011------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_SYSTEM, IPBUS_SEL_WIDTH)); -- SYSTEM / base 0x0000b000 / mask 0x01f0f000
+    elsif std_match(addr, "-------00001--------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB0, IPBUS_SEL_WIDTH)); -- DAQ_RB0 / base 0x00100000 / mask 0x01f00000
+    elsif std_match(addr, "-------00010--------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB1, IPBUS_SEL_WIDTH)); -- DAQ_RB1 / base 0x00200000 / mask 0x01f00000
+    elsif std_match(addr, "-------00100--------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB2, IPBUS_SEL_WIDTH)); -- DAQ_RB2 / base 0x00400000 / mask 0x01f00000
+    elsif std_match(addr, "-------01000--------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB3, IPBUS_SEL_WIDTH)); -- DAQ_RB3 / base 0x00800000 / mask 0x01f00000
+    elsif std_match(addr, "-------10000--------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAQ_RB4, IPBUS_SEL_WIDTH)); -- DAQ_RB4 / base 0x01000000 / mask 0x01f00000
 -- END automatically generated VHDL
 
     else
