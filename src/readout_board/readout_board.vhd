@@ -249,7 +249,7 @@ begin
             when 0 =>
               downlink_data(I).data <= repeat_byte(fast_cmd);
             when 1 =>
-              downlink_data(I).data <= repeat_byte(std_logic_vector (to_unsigned(upcnt, cnt_slv'length)));
+              downlink_data(I).data <= repeat_byte(std_logic_vector (to_unsigned(upcnt, 8)));
             when 2 =>
               downlink_data(I).data <= repeat_byte(prbs_gen_reverse);
 
@@ -369,6 +369,7 @@ begin
       sca0_data_i => uplink_data(0).ec,
       sca0_data_o => downlink_data(0).ec
       );
+  end generate;
 
   --------------------------------------------------------------------------------
   -- LPGBT Cores
@@ -451,11 +452,14 @@ begin
   -- and put it in a loop
 
   pat_check_gen : if (C_EN_PAT_CHECK) generate
+
+    constant UPWIDTH    : integer := 8;
+    constant NUM_ELINKS : integer := 28;
+
     signal prbs_err_counters  : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
     signal upcnt_err_counters : std32_array_t (NUM_UPLINKS*NUM_ELINKS-1 downto 0);
     signal prbs_ff            : std_logic_vector (31 downto 0) := (others => '0');
     signal upcnt_ff           : std_logic_vector (31 downto 0) := (others => '0');
-    constant UPWIDTH          : integer                        := 8;
 
     -- don't care too much about bus coherence here.. the counters should just be zero
     -- and exact numbers don't really matter..
