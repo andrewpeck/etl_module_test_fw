@@ -311,16 +311,16 @@ begin
   begin
     if (rising_edge(clk40)) then
 
-      if (readout_board_mon(0).lpgbt.daq.uplink.ready = '1'
+      if (readout_board_mon(0).lpgbt.uplink(0).ready = '1'
           and l1as_recent = '1') then
         leds(7 downto 0) <= (breath or ipb_led) & (led_progress(7 downto 1) and repeat(not l1a_led, 7));
       elsif (mgt_rx_ready(0) = '1' and
              mgt_rx_ready(1) = '1' and
-             readout_board_mon(0).lpgbt.daq.uplink.ready = '1' and
-             readout_board_mon(0).lpgbt.trigger.uplink.ready = '1') then
+             readout_board_mon(0).lpgbt.uplink(0).ready = '1' and
+             readout_board_mon(0).lpgbt.uplink(1).ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon2_signal (6 downto 0);
       elsif (mgt_rx_ready(0) = '1' and
-             readout_board_mon(0).lpgbt.daq.uplink.ready = '1') then
+             readout_board_mon(0).lpgbt.uplink(1).ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon1_signal (6 downto 0);
       else
         leds(7 downto 0) <= ipb_led & breath & breath & breath &
@@ -578,24 +578,14 @@ begin
     rbgen : for I in 0 to NUM_RBS-1 generate
       constant NU    : integer := NUM_UPLINKS;
       constant ND    : integer := NUM_DOWNLINKS;
-      constant DEBUG : boolean;
     begin
-
-      -- only generate an ILA for one of the RBs
-      -- (need to save resources)
-      y_gen : if (I = 0) generate
-        DEBUG <= true;
-      end generate;
-      n_gen : if (I /= 0) generate
-        DEBUG <= false;
-      end generate;
 
       readout_board_inst : entity work.readout_board
         generic map (
           NUM_UPLINKS   => NUM_UPLINKS,
           NUM_DOWNLINKS => NUM_DOWNLINKS,
           NUM_SCAS      => NUM_SCAS,
-          C_DEBUG       => DEBUG
+          C_DEBUG       => I=0 -- only generate an ILA for one of the RBs (need to save resources)
           )
         port map (
 

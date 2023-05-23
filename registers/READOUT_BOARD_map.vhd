@@ -131,13 +131,9 @@ begin  -- architecture behavioral
           localRdData(10 downto  8)  <=  reg_data(21)(10 downto  8);                  --
           localRdData(14 downto 12)  <=  reg_data(21)(14 downto 12);                  --
         when 33 => --0x21
-          localRdData( 0)            <=  Mon.LPGBT.DOWNLINK(0).READY;                 --LPGBT Downlink Ready
+          localRdData( 0)            <=  Mon.LPGBT.DOWNLINK.READY;                    --LPGBT Downlink Ready
         when 35 => --0x23
           localRdData( 3 downto  0)  <=  reg_data(35)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
-        when 49 => --0x31
-          localRdData( 0)            <=  Mon.LPGBT.DOWNLINK(1).READY;                 --LPGBT Downlink Ready
-        when 51 => --0x33
-          localRdData( 3 downto  0)  <=  reg_data(51)( 3 downto  0);                  --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
         when 67 => --0x43
           localRdData(31 downto  0)  <=  reg_data(67)(31 downto  0);                  --Bitmask 1 to enable checking
         when 68 => --0x44
@@ -302,8 +298,7 @@ begin  -- architecture behavioral
   Ctrl.LPGBT.UPLINK(1).ALIGN_25                <=  reg_data(21)( 6 downto  4);       
   Ctrl.LPGBT.UPLINK(1).ALIGN_26                <=  reg_data(21)(10 downto  8);       
   Ctrl.LPGBT.UPLINK(1).ALIGN_27                <=  reg_data(21)(14 downto 12);       
-  Ctrl.LPGBT.DOWNLINK(0).DL_SRC                <=  reg_data(35)( 3 downto  0);       
-  Ctrl.LPGBT.DOWNLINK(1).DL_SRC                <=  reg_data(51)( 3 downto  0);       
+  Ctrl.LPGBT.DOWNLINK.DL_SRC                   <=  reg_data(35)( 3 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_0   <=  reg_data(67)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_0  <=  reg_data(68)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_1   <=  reg_data(69)(31 downto  0);       
@@ -344,8 +339,7 @@ begin  -- architecture behavioral
       Ctrl.LPGBT.UPLINK(0).RESET <= '0';
       Ctrl.LPGBT.UPLINK(1).RESET <= '0';
       Ctrl.LPGBT.FEC_ERR_RESET <= '0';
-      Ctrl.LPGBT.DOWNLINK(0).RESET <= '0';
-      Ctrl.LPGBT.DOWNLINK(1).RESET <= '0';
+      Ctrl.LPGBT.DOWNLINK.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.RESET <= '0';
       Ctrl.LPGBT.PATTERN_CHECKER.CNT_RESET <= '0';
       Ctrl.ETROC_BITSLIP <= (others => '0');
@@ -444,13 +438,9 @@ begin  -- architecture behavioral
         when 31 => --0x1f
           Ctrl.LPGBT.FEC_ERR_RESET              <=  localWrData( 6);               
         when 32 => --0x20
-          Ctrl.LPGBT.DOWNLINK(0).RESET          <=  localWrData( 0);               
+          Ctrl.LPGBT.DOWNLINK.RESET             <=  localWrData( 0);               
         when 35 => --0x23
           reg_data(35)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
-        when 48 => --0x30
-          Ctrl.LPGBT.DOWNLINK(1).RESET          <=  localWrData( 0);               
-        when 51 => --0x33
-          reg_data(51)( 3 downto  0)            <=  localWrData( 3 downto  0);      --0=etroc, 1=upcnt, 2=prbs, 3=txfifo
         when 65 => --0x41
           Ctrl.LPGBT.PATTERN_CHECKER.RESET      <=  localWrData( 0);               
         when 66 => --0x42
@@ -613,10 +603,8 @@ begin  -- architecture behavioral
       reg_data(21)(10 downto  8)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(1).ALIGN_26;
       reg_data(21)(14 downto 12)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(1).ALIGN_27;
       reg_data(31)( 6)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.FEC_ERR_RESET;
-      reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK(0).RESET;
-      reg_data(35)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK(0).DL_SRC;
-      reg_data(48)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK(1).RESET;
-      reg_data(51)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK(1).DL_SRC;
+      reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK.RESET;
+      reg_data(35)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK.DL_SRC;
       reg_data(65)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.RESET;
       reg_data(66)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CNT_RESET;
       reg_data(67)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_0;

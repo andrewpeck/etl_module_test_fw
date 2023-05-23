@@ -8,8 +8,7 @@
     <node id="UPLINK_0" fwinfo="type=array" address="0x00" module="file://LPGBT_UPLINK.xml"/>
     <node id="UPLINK_1" fwinfo="type=array" address="0x10" module="file://LPGBT_UPLINK.xml"/>
 
-    <node id="DOWNLINK_0"  fwinfo="type=array" address="0x20" module="file://LPGBT_DOWNLINK.xml"/>
-    <node id="DOWNLINK_1"  fwinfo="type=array" address="0x30" module="file://LPGBT_DOWNLINK.xml"/>
+    <node id="DOWNLINK" address="0x20" module="file://LPGBT_DOWNLINK.xml"/>
 
     <node id="FEC_ERR_RESET" address="0x1f" mask="0x40" permission="w" description="Write 1 to reset FEC error counter"/>
 

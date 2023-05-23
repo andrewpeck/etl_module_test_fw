@@ -78,13 +78,13 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_LPGBT_DOWNLINK_MON_t is record
     READY                      :std_logic;     -- LPGBT Downlink Ready
   end record READOUT_BOARD_LPGBT_DOWNLINK_MON_t;
-  type READOUT_BOARD_LPGBT_DOWNLINK_MON_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_DOWNLINK_MON_t;
+
 
   type READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Downlink LpGBT Encoder
     DL_SRC                     :std_logic_vector( 3 downto 0);  -- 0=etroc, 1=upcnt, 2=prbs, 3=txfifo
   end record READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t;
-  type READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t;
+
 
   constant DEFAULT_READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t : READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t := (
                                                                                                  RESET => '0',
@@ -120,7 +120,7 @@ package READOUT_BOARD_CTRL is
                                                                                                               );
   type READOUT_BOARD_LPGBT_MON_t is record
     UPLINK                     :READOUT_BOARD_LPGBT_UPLINK_MON_t_ARRAY;
-    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_MON_t_ARRAY;
+    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_MON_t;    
     PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_MON_t;
   end record READOUT_BOARD_LPGBT_MON_t;
 
@@ -128,7 +128,7 @@ package READOUT_BOARD_CTRL is
   type READOUT_BOARD_LPGBT_CTRL_t is record
     UPLINK                     :READOUT_BOARD_LPGBT_UPLINK_CTRL_t_ARRAY;
     FEC_ERR_RESET              :std_logic;                                -- Write 1 to reset FEC error counter
-    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t_ARRAY;
+    DOWNLINK                   :READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t;    
     PATTERN_CHECKER            :READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t;
   end record READOUT_BOARD_LPGBT_CTRL_t;
 
@@ -136,7 +136,7 @@ package READOUT_BOARD_CTRL is
   constant DEFAULT_READOUT_BOARD_LPGBT_CTRL_t : READOUT_BOARD_LPGBT_CTRL_t := (
                                                                                UPLINK => (others => DEFAULT_READOUT_BOARD_LPGBT_UPLINK_CTRL_t ),
                                                                                FEC_ERR_RESET => '0',
-                                                                               DOWNLINK => (others => DEFAULT_READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t ),
+                                                                               DOWNLINK => DEFAULT_READOUT_BOARD_LPGBT_DOWNLINK_CTRL_t,
                                                                                PATTERN_CHECKER => DEFAULT_READOUT_BOARD_LPGBT_PATTERN_CHECKER_CTRL_t
                                                                               );
   type READOUT_BOARD_SC_RX_MON_t is record

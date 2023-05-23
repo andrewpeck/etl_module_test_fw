@@ -250,7 +250,7 @@ begin
       begin
         if (rising_edge(clk40)) then
 
-          dl_src <= to_integer(unsigned(ctrl.lpgbt.downlink(0).dl_src));
+          dl_src <= to_integer(unsigned(ctrl.lpgbt.downlink.dl_src));
 
           case dl_src is
 
@@ -370,12 +370,11 @@ begin
 
       clk40 => clk40,
 
-      -- TODO: parameterize these outputs in an array to avoid hardcoded sizes
-      ic_data_i => uplink_data(0).ic,
-      ic_data_o => downlink_data(0).ic,
+      ic_data_i => lpgbt_ic_up,
+      ic_data_o => lpgbt_ic_down,
 
-      sca0_data_i => uplink_data(0).ec,
-      sca0_data_o => downlink_data(0).ec
+      sca0_data_i => sca_ic_up,
+      sca0_data_o => sca_ic_down
       );
   end generate;
 
@@ -395,8 +394,7 @@ begin
       downlink_clk => clk320,
       uplink_clk   => clk320,
 
-      downlink_reset_i(0) => ctrl.lpgbt.downlink(0).reset,
-      downlink_reset_i(1) => ctrl.lpgbt.downlink(1).reset,
+      downlink_reset_i(0) => ctrl.lpgbt.downlink.reset,
 
       uplink_reset_i(0) => ctrl.lpgbt.uplink(0).reset,
       uplink_reset_i(1) => ctrl.lpgbt.uplink(1).reset,
@@ -407,8 +405,7 @@ begin
       downlink_mgt_word_array_o => downlink_mgt_word_array,
       uplink_mgt_word_array_i   => uplink_mgt_word_array,
 
-      downlink_ready_o(0) => mon.lpgbt.downlink(0).ready,
-      downlink_ready_o(1) => mon.lpgbt.downlink(1).ready,
+      downlink_ready_o(0) => mon.lpgbt.downlink.ready,
       uplink_ready_o(0)   => mon.lpgbt.uplink(0).ready,
       uplink_ready_o(1)   => mon.lpgbt.uplink(1).ready,
 
