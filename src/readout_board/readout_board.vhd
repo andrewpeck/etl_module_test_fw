@@ -163,13 +163,21 @@ architecture behavioral of readout_board is
 
 begin
 
-  extender_inst : entity work.extender
+  fifo_reset_extender : entity work.extender
     generic map (LENGTH => 16)
     port map (
       clk => clk40,
       d   => reset or ctrl.fifo_reset,
       q   => fifo_reset
       );
+
+  tx_fifo_reset_extender : entity work.extender
+    generic map (LENGTH => 16)
+    port map (
+      clk => clk40,
+      d   => reset or ctrl.tx_fifo_reset,
+      q   => tx_fifo_rst);
+
 
   --------------------------------------------------------------------------------
   -- Downlink Data Generation
@@ -885,20 +893,7 @@ begin
     end if;
   end process;
 
-  ------------------------------------------
-  -- pulse extend the TX FIFO reset signal
-  ------------------------------------------
-
-  extender_inst : entity work.extender
-    generic map (LENGTH => 16)
-    port map (
-      clk => clk40,
-      d   => reset or ctrl.tx_fifo_reset,
-      q   => tx_fifo_rst);
-
-  ------------------------------------------
   -- tx fifo instance
-  ------------------------------------------
 
   fifo_sync_inst : entity work.fifo_sync
     generic map (
