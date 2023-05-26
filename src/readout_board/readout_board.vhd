@@ -307,9 +307,14 @@ begin
     port map (
       clock      => clk40,
       reset      => reset,
-      l1a        => l1a,
-      bc0        => bc0,
+      l1a        => l1a or ctrl.l1a_pulse,
+      bc0        => bc0 or ctrl.bc0_pulse,
+      ecr        => ctrl.ecr_pulse,
       link_reset => ctrl.link_reset_pulse,
+      qinj       => ctrl.qinj_pulse,
+      ws_stop    => ctrl.ws_stop_pulse,
+      ws_start   => ctrl.ws_start_pulse,
+      stop       => ctrl.stp_pulse,
       data_o     => fast_cmd
       );
 
