@@ -16,6 +16,11 @@ entity etroc_tx is
 
     l1a        : in std_logic;
     bc0        : in std_logic;
+    ecr        : in std_logic;
+    qinj       : in std_logic;
+    ws_stop    : in std_logic;
+    ws_start   : in std_logic;
+    stop       : in std_logic;
     link_reset : in std_logic;
 
     data_o : out std_logic_vector (ELINK_WIDTH-1 downto 0)
@@ -23,7 +28,6 @@ entity etroc_tx is
 end etroc_tx;
 
 architecture behavioral of etroc_tx is
-
 begin
 
   process (clock) is
@@ -35,15 +39,25 @@ begin
 
       if (l1a = '1' and bc0 = '1') then
         data_o <= L1ABCR_CMD;
+      elsif (l1a = '1' and ecr = '1') then
+        data_o <= L1ACR_CMD;
       elsif (l1a = '1') then
         data_o <= L1A_CMD;
+      elsif (qinj = '1') then
+        data_o <= INJQA_CMD;
+      elsif (ws_start = '1') then
+        data_o <= WS_START_CMD;
+      elsif (ws_stop = '1') then
+        data_o <= WS_STOP_CMD;
+      elsif (stop = '1') then
+        data_o <= STP_CMD;
       elsif (bc0 = '1') then
         data_o <= BCR_CMD;
       elsif (link_reset = '1') then
         data_o <= LINK_RESET_CMD;
       end if;
 
-    end if;
+    end if;  -- rising_edge(clock)
   end process;
 
 end behavioral;

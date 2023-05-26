@@ -57,7 +57,14 @@
   <node id="ETROC_DISABLE"        address="0x423" mask="0x0fffffff"   permission="rw"  description="Write a 1 to disable this ETROC from readout"/>
   <node id="ETROC_DISABLE_SLAVE"  address="0x424" mask="0x0fffffff"   permission="rw"  description="Write a 1 to disable this ETROC from readout"/>
 
-  <node id="LINK_RESET_PULSE" address="0x501" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
+  <node id="LINK_RESET_PULSE"  address="0x501" mask="0x00000001" permission="w"  description="Write 1 to pulse Link reset"/>
+  <node id="WS_STOP_PULSE"     address="0x501" mask="0x00000002" permission="w"  description="Write 1 to pulse Waveform Stop"/>
+  <node id="WS_START_PULSE"    address="0x501" mask="0x00000004" permission="w"  description="Write 1 to pulse Waveform Start"/>
+  <node id="QINJ_PULSE"        address="0x501" mask="0x00000008" permission="w"  description="Write 1 to pulse Charge Injection"/>
+  <node id="STP_PULSE"         address="0x501" mask="0x00000010" permission="w"  description="Write 1 to pulse STP"/>
+  <node id="ECR_PULSE"         address="0x501" mask="0x00000020" permission="w"  description="Write 1 to pulse ECR"/>
+  <node id="BC0_PULSE"         address="0x501" mask="0x00000040" permission="w"  description="Write 1 to pulse BC0"/>
+  <node id="L1A_PULSE"         address="0x501" mask="0x00000080" permission="w"  description="Write 1 to pulse L1A"/>
 
   <node id="PACKET_RX_RATE" address="0x504" mask="0xffffffff" permission="r" description="Measured rate of generated received packets in Hz" />
   <node id="PACKET_CNT" address="0x505" mask="0xffff" permission="r" description="Count of packets received (muxed across elinks)" />
