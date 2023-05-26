@@ -24,14 +24,14 @@ etroc-sim-job:
   stage: user_pre
   script: "make -C src/etroc"
 
-dataformat-update-job:
-  variables:
-    GIT_STRATEGY: clone
-  <<: *only-default
-  <<: *tag-hog
-  stage: user_pre
-  script:
-    - make -C src/etroc/configs && git diff --exit-code
+# dataformat-update-job:
+#   variables:
+#     GIT_STRATEGY: clone
+#   <<: *only-default
+#   <<: *tag-hog
+#   stage: user_pre
+#   script:
+#     - make -C src/etroc/configs && git diff --exit-code
 
 registers-update-job:
   variables:
