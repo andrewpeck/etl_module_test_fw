@@ -351,6 +351,8 @@ package READOUT_BOARD_CTRL is
     ECR_PULSE                  :std_logic;                      -- Write 1 to pulse ECR
     BC0_PULSE                  :std_logic;                      -- Write 1 to pulse BC0
     L1A_PULSE                  :std_logic;                      -- Write 1 to pulse L1A
+    L1A_QINJ_PULSE             :std_logic;                      -- Write 1 to pulse Charge Injection followed by L1A
+    L1A_INJ_DLY                :std_logic_vector(15 downto 0);  -- Number of clock cycles (40MHz) after which the L1A should be generated for a QINJ+L1A
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
   end record READOUT_BOARD_CTRL_t;
@@ -387,6 +389,8 @@ package READOUT_BOARD_CTRL is
                                                                    ECR_PULSE => '0',
                                                                    BC0_PULSE => '0',
                                                                    L1A_PULSE => '0',
+                                                                   L1A_QINJ_PULSE => '0',
+                                                                   L1A_INJ_DLY => (others => '0'),
                                                                    PACKET_CNT_RESET => '0',
                                                                    ERR_CNT_RESET => '0'
                                                                   );
