@@ -35,6 +35,7 @@ architecture behavioral of etroc_tx is
   signal l1a_dly_cnt : integer range 0 to 2**16-1;
   signal l1a_dly_inj : std_logic := '0';
   signal l1a_dly_gen : std_logic := '0';
+  signal l1a         : std_logic := '0';
 
 begin
 
