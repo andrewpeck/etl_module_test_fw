@@ -87,6 +87,10 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
+### v2.1.10
+
+-   Add a synchronized QINJ + L1A command
+
 ### v2.1.9
 
   - Add QINJ and other fast commands
