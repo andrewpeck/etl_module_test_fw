@@ -39,10 +39,23 @@ architecture behavioral of tx_filler_generator is
   signal data : std_logic_vector (39 downto 0)
     := (others => '0');
 
+  signal data_byte : std_logic_vector (7 downto 0) := (others => '0');
+
   signal header : std_logic_vector (15 downto 0) := x"3C5C";
 
   signal bcid    : integer range 0 to 3563 := 0;
   signal l1a_cnt : integer range 0 to 255  := 0;
+
+  function reverse_vector (a : std_logic_vector)
+    return std_logic_vector is
+    variable result : std_logic_vector(a'range);
+    alias aa        : std_logic_vector(a'REverse_range) is a;
+  begin
+    for i in aa'range loop
+      result(i) := aa(i);
+    end loop;
+    return result;
+  end;  -- function reverse_vector
 
 begin
 
@@ -80,32 +93,35 @@ begin
       case state is
 
         when D0 =>
-          dout  <= data(39 downto 32);
-          state <= D1;
-        when D1 =>
-          dout  <= data(31 downto 24);
-          state <= D2;
-        when D2 =>
-          dout  <= data(23 downto 16);
-          state <= D3;
-        when D3 =>
-          dout  <= data(15 downto 8);
-          state <= D4;
-          tnext <= '1';
-        when D4 =>
-          dout  <= data(7 downto 0);
-          tlast <= '1';
-          data  <= header & "10" &
+          state     <= D1;
+          data_byte <= data(7 downto 0);
+          tlast     <= '1';
+          data      <= header & "10" &
                   std_logic_vector(to_unsigned(l1a_cnt, 8)) & "00" &
                   std_logic_vector(to_unsigned(bcid, 12));
-          state <= D0;
+        when D1 =>
+          state     <= D2;
+          data_byte <= data(15 downto 8);
+        when D2 =>
+          state     <= D3;
+          data_byte <= data(23 downto 16);
+        when D3 =>
+          state     <= D4;
+          data_byte <= data(31 downto 24);
+          tnext     <= '1';
+        when D4 =>
+          data_byte <= data(39 downto 32);
+          state     <= D0;
       end case;
 
-      if rst='1' then
+      if rst = '1' then
         state <= D0;
       end if;
 
+      dout <= reverse_vector(data_byte);
+
     end if;
   end process;
+
 
 end behavioral;
