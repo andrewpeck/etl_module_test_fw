@@ -233,6 +233,8 @@ begin  -- architecture behavioral
         when 1285 => --0x505
           localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
           localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
+        when 1286 => --0x506
+          localRdData(31 downto 16)  <=  Mon.DATA_CNT;                                --Count of packet data frames (muxed across elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -372,6 +374,7 @@ begin  -- architecture behavioral
       Ctrl.L1A_QINJ_PULSE <= '0';
       Ctrl.PACKET_CNT_RESET <= '0';
       Ctrl.ERR_CNT_RESET <= '0';
+      Ctrl.DATA_CNT_RESET <= '0';
       
 
 
@@ -557,6 +560,7 @@ begin  -- architecture behavioral
         when 1286 => --0x506
           Ctrl.PACKET_CNT_RESET                 <=  localWrData( 0);               
           Ctrl.ERR_CNT_RESET                    <=  localWrData( 1);               
+          Ctrl.DATA_CNT_RESET                   <=  localWrData( 2);               
 
         when others => null;
 
@@ -685,6 +689,7 @@ begin  -- architecture behavioral
       reg_data(1282)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_INJ_DLY;
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
       reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
+      reg_data(1286)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.DATA_CNT_RESET;
 
       end if; -- reset
     end if; -- clk

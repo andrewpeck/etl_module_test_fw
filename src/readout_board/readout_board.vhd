@@ -160,6 +160,7 @@ architecture behavioral of readout_board is
   signal packet_rx_rate : std_logic_vector (31 downto 0);
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
+  signal data_cnt       : std16_array_t(28*NUM_UPLINKS-1 downto 0);
 
   --------------------------------------------------------------------------------
   -- ETROC RX
@@ -187,6 +188,7 @@ architecture behavioral of readout_board is
   signal rx_locked          : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_start_of_packet : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_end_of_packet   : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
+  signal rx_is_data         : std_logic_vector(28*NUM_UPLINKS-1 downto 0);
   signal rx_busy            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
   signal rx_idle            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
   signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
@@ -359,9 +361,25 @@ begin
 
   end generate;
 
+  etroc_data_frame_cnt : for I in rx_is_data'range generate
+  begin
+
+    dat_counter : entity work.counter
+      generic map (width => 16)
+      port map (
+        clk    => clk40,
+        reset  => reset or ctrl.err_cnt_reset,
+        enable => '1',
+        event  => rx_is_data(I),
+        count  => data_cnt(I),
+        at_max => open
+        );
+  end generate;
+
   mon.packet_rx_rate <= packet_rx_rate;
   mon.packet_cnt     <= packet_cnt(link_sel);
   mon.error_cnt      <= err_cnt(link_sel);
+  mon.data_cnt       <= data_cnt(link_sel);
 
   --------------------------------------------------------------------------------
   -- Record mapping
@@ -595,12 +613,12 @@ begin
         signal data_i : std_logic_vector (31 downto 0);
         signal data   : std_logic_vector (39 downto 0) := (others => '0');
 
-        signal locked          : std_logic := '0';
-        signal bitslip         : std_logic := '0';
-        signal zero_suppress   : std_logic := '1';
-        signal raw_data_mode   : std_logic := '0';
-        signal start_of_packet : std_logic := '0';
-        signal end_of_packet   : std_logic := '0';
+        signal locked              : std_logic := '0';
+        signal bitslip             : std_logic := '0';
+        signal zero_suppress       : std_logic := '1';
+        signal raw_data_mode       : std_logic := '0';
+        signal start_of_packet     : std_logic := '0';
+        signal end_of_packet       : std_logic := '0';
 
         signal start_of_packet_xfifo : std_logic;
         signal end_of_packet_xfifo   : std_logic;
@@ -690,7 +708,7 @@ begin
             col_o             => open,
             row_o             => open,
             ea_o              => open,
-            data_en_o         => open,
+            data_en_o         => rx_is_data(ilpgbt*28+ielink),
             stat_o            => open,
             hitcnt_o          => open,
             crc_o             => rx_crc_arr(ilpgbt*28+ielink),

@@ -317,6 +317,7 @@ package READOUT_BOARD_CTRL is
     PACKET_RX_RATE             :std_logic_vector(31 downto 0);  -- Measured rate of generated received packets in Hz
     PACKET_CNT                 :std_logic_vector(15 downto 0);  -- Count of packets received (muxed across elinks)
     ERROR_CNT                  :std_logic_vector(15 downto 0);  -- Count of packet errors (muxed across elinks)
+    DATA_CNT                   :std_logic_vector(15 downto 0);  -- Count of packet data frames (muxed across elinks)
   end record READOUT_BOARD_MON_t;
 
 
@@ -355,6 +356,7 @@ package READOUT_BOARD_CTRL is
     L1A_INJ_DLY                :std_logic_vector(15 downto 0);  -- Number of clock cycles (40MHz) after which the L1A should be generated for a QINJ+L1A
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
+    DATA_CNT_RESET             :std_logic;                      -- Write 1 to reset data counters
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -392,7 +394,8 @@ package READOUT_BOARD_CTRL is
                                                                    L1A_QINJ_PULSE => '0',
                                                                    L1A_INJ_DLY => (others => '0'),
                                                                    PACKET_CNT_RESET => '0',
-                                                                   ERR_CNT_RESET => '0'
+                                                                   ERR_CNT_RESET => '0',
+                                                                   DATA_CNT_RESET => '0'
                                                                   );
 
 
