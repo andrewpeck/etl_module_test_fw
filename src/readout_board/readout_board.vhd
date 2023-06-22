@@ -368,7 +368,7 @@ begin
       generic map (width => 16)
       port map (
         clk    => clk40,
-        reset  => reset or ctrl.err_cnt_reset,
+        reset  => reset or ctrl.data_cnt_reset,
         enable => '1',
         event  => rx_is_data(I),
         count  => data_cnt(I),
