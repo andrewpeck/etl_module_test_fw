@@ -274,24 +274,24 @@ begin
       end process;
     end generate;
 
-  end generate;
+    etroc_tx_inst : entity etroc.etroc_tx
+      port map (
+        clock       => clk40,
+        reset       => reset,
+        l1a_i       => l1a or ctrl.l1a_pulse,
+        bc0         => bc0 or ctrl.bc0_pulse,
+        ecr         => ctrl.ecr_pulse,
+        link_reset  => ctrl.link_reset_pulse,
+        qinj        => ctrl.qinj_pulse,
+        l1a_qinj    => ctrl.l1a_qinj_pulse,
+        l1a_inj_dly => ctrl.l1a_inj_dly,
+        ws_stop     => ctrl.ws_stop_pulse,
+        ws_start    => ctrl.ws_start_pulse,
+        stop        => ctrl.stp_pulse,
+        data_o      => fast_cmd
+        );
 
-  etroc_tx_inst : entity etroc.etroc_tx
-    port map (
-      clock       => clk40,
-      reset       => reset,
-      l1a_i       => l1a or ctrl.l1a_pulse,
-      bc0         => bc0 or ctrl.bc0_pulse,
-      ecr         => ctrl.ecr_pulse,
-      link_reset  => ctrl.link_reset_pulse,
-      qinj        => ctrl.qinj_pulse,
-      l1a_qinj    => ctrl.l1a_qinj_pulse,
-      l1a_inj_dly => ctrl.l1a_inj_dly,
-      ws_stop     => ctrl.ws_stop_pulse,
-      ws_start    => ctrl.ws_start_pulse,
-      stop        => ctrl.stp_pulse,
-      data_o      => fast_cmd
-      );
+  end generate;
 
   --------------------------------------------------------------------------------
   -- L1A Rate Counter
