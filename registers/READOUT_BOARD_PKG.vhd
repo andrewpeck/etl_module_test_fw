@@ -13,67 +13,11 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_UPLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Uplink
-    ALIGN_0                    :std_logic_vector( 2 downto 0);
-    ALIGN_1                    :std_logic_vector( 2 downto 0);
-    ALIGN_2                    :std_logic_vector( 2 downto 0);
-    ALIGN_3                    :std_logic_vector( 2 downto 0);
-    ALIGN_4                    :std_logic_vector( 2 downto 0);
-    ALIGN_5                    :std_logic_vector( 2 downto 0);
-    ALIGN_6                    :std_logic_vector( 2 downto 0);
-    ALIGN_7                    :std_logic_vector( 2 downto 0);
-    ALIGN_8                    :std_logic_vector( 2 downto 0);
-    ALIGN_9                    :std_logic_vector( 2 downto 0);
-    ALIGN_10                   :std_logic_vector( 2 downto 0);
-    ALIGN_11                   :std_logic_vector( 2 downto 0);
-    ALIGN_12                   :std_logic_vector( 2 downto 0);
-    ALIGN_13                   :std_logic_vector( 2 downto 0);
-    ALIGN_14                   :std_logic_vector( 2 downto 0);
-    ALIGN_15                   :std_logic_vector( 2 downto 0);
-    ALIGN_16                   :std_logic_vector( 2 downto 0);
-    ALIGN_17                   :std_logic_vector( 2 downto 0);
-    ALIGN_18                   :std_logic_vector( 2 downto 0);
-    ALIGN_19                   :std_logic_vector( 2 downto 0);
-    ALIGN_20                   :std_logic_vector( 2 downto 0);
-    ALIGN_21                   :std_logic_vector( 2 downto 0);
-    ALIGN_22                   :std_logic_vector( 2 downto 0);
-    ALIGN_23                   :std_logic_vector( 2 downto 0);
-    ALIGN_24                   :std_logic_vector( 2 downto 0);
-    ALIGN_25                   :std_logic_vector( 2 downto 0);
-    ALIGN_26                   :std_logic_vector( 2 downto 0);
-    ALIGN_27                   :std_logic_vector( 2 downto 0);
   end record READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
   type READOUT_BOARD_LPGBT_UPLINK_CTRL_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
 
   constant DEFAULT_READOUT_BOARD_LPGBT_UPLINK_CTRL_t : READOUT_BOARD_LPGBT_UPLINK_CTRL_t := (
-                                                                                             RESET => '0',
-                                                                                             ALIGN_0 => (others => '0'),
-                                                                                             ALIGN_1 => (others => '0'),
-                                                                                             ALIGN_2 => (others => '0'),
-                                                                                             ALIGN_3 => (others => '0'),
-                                                                                             ALIGN_4 => (others => '0'),
-                                                                                             ALIGN_5 => (others => '0'),
-                                                                                             ALIGN_6 => (others => '0'),
-                                                                                             ALIGN_7 => (others => '0'),
-                                                                                             ALIGN_8 => (others => '0'),
-                                                                                             ALIGN_9 => (others => '0'),
-                                                                                             ALIGN_10 => (others => '0'),
-                                                                                             ALIGN_11 => (others => '0'),
-                                                                                             ALIGN_12 => (others => '0'),
-                                                                                             ALIGN_13 => (others => '0'),
-                                                                                             ALIGN_14 => (others => '0'),
-                                                                                             ALIGN_15 => (others => '0'),
-                                                                                             ALIGN_16 => (others => '0'),
-                                                                                             ALIGN_17 => (others => '0'),
-                                                                                             ALIGN_18 => (others => '0'),
-                                                                                             ALIGN_19 => (others => '0'),
-                                                                                             ALIGN_20 => (others => '0'),
-                                                                                             ALIGN_21 => (others => '0'),
-                                                                                             ALIGN_22 => (others => '0'),
-                                                                                             ALIGN_23 => (others => '0'),
-                                                                                             ALIGN_24 => (others => '0'),
-                                                                                             ALIGN_25 => (others => '0'),
-                                                                                             ALIGN_26 => (others => '0'),
-                                                                                             ALIGN_27 => (others => '0')
+                                                                                             RESET => '0'
                                                                                             );
   type READOUT_BOARD_LPGBT_DOWNLINK_MON_t is record
     READY                      :std_logic;     -- LPGBT Downlink Ready
