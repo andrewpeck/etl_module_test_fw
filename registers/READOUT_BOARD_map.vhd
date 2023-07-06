@@ -226,11 +226,15 @@ begin  -- architecture behavioral
           localRdData(27 downto  0)  <=  reg_data(1059)(27 downto  0);                --Write a 1 to disable this ETROC from readout
         when 1060 => --0x424
           localRdData(27 downto  0)  <=  reg_data(1060)(27 downto  0);                --Write a 1 to disable this ETROC from readout
+        when 1282 => --0x502
+          localRdData(15 downto  0)  <=  reg_data(1282)(15 downto  0);                --Number of clock cycles (40MHz) after which the L1A should be generated for a QINJ+L1A
         when 1284 => --0x504
           localRdData(31 downto  0)  <=  Mon.PACKET_RX_RATE;                          --Measured rate of generated received packets in Hz
         when 1285 => --0x505
           localRdData(15 downto  0)  <=  Mon.PACKET_CNT;                              --Count of packets received (muxed across elinks)
           localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
+        when 1286 => --0x506
+          localRdData(31 downto 16)  <=  Mon.DATA_CNT;                                --Count of packet data frames (muxed across elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -328,6 +332,7 @@ begin  -- architecture behavioral
   Ctrl.RX_FIFO_DATA_SRC                        <=  reg_data(1056)( 0);               
   Ctrl.ETROC_DISABLE                           <=  reg_data(1059)(27 downto  0);     
   Ctrl.ETROC_DISABLE_SLAVE                     <=  reg_data(1060)(27 downto  0);     
+  Ctrl.L1A_INJ_DLY                             <=  reg_data(1282)(15 downto  0);     
 
 
   -- writes to slave
@@ -359,8 +364,17 @@ begin  -- architecture behavioral
       Ctrl.TX_FIFO_WR_EN <= '0';
       Ctrl.FIFO_RESET <= '0';
       Ctrl.LINK_RESET_PULSE <= '0';
+      Ctrl.WS_STOP_PULSE <= '0';
+      Ctrl.WS_START_PULSE <= '0';
+      Ctrl.QINJ_PULSE <= '0';
+      Ctrl.STP_PULSE <= '0';
+      Ctrl.ECR_PULSE <= '0';
+      Ctrl.BC0_PULSE <= '0';
+      Ctrl.L1A_PULSE <= '0';
+      Ctrl.L1A_QINJ_PULSE <= '0';
       Ctrl.PACKET_CNT_RESET <= '0';
       Ctrl.ERR_CNT_RESET <= '0';
+      Ctrl.DATA_CNT_RESET <= '0';
       
 
 
@@ -533,9 +547,20 @@ begin  -- architecture behavioral
           reg_data(1060)(27 downto  0)          <=  localWrData(27 downto  0);      --Write a 1 to disable this ETROC from readout
         when 1281 => --0x501
           Ctrl.LINK_RESET_PULSE                 <=  localWrData( 0);               
+          Ctrl.WS_STOP_PULSE                    <=  localWrData( 1);               
+          Ctrl.WS_START_PULSE                   <=  localWrData( 2);               
+          Ctrl.QINJ_PULSE                       <=  localWrData( 3);               
+          Ctrl.STP_PULSE                        <=  localWrData( 4);               
+          Ctrl.ECR_PULSE                        <=  localWrData( 5);               
+          Ctrl.BC0_PULSE                        <=  localWrData( 6);               
+          Ctrl.L1A_PULSE                        <=  localWrData( 7);               
+          Ctrl.L1A_QINJ_PULSE                   <=  localWrData( 8);               
+        when 1282 => --0x502
+          reg_data(1282)(15 downto  0)          <=  localWrData(15 downto  0);      --Number of clock cycles (40MHz) after which the L1A should be generated for a QINJ+L1A
         when 1286 => --0x506
           Ctrl.PACKET_CNT_RESET                 <=  localWrData( 0);               
           Ctrl.ERR_CNT_RESET                    <=  localWrData( 1);               
+          Ctrl.DATA_CNT_RESET                   <=  localWrData( 2);               
 
         when others => null;
 
@@ -653,8 +678,18 @@ begin  -- architecture behavioral
       reg_data(1059)(27 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_DISABLE;
       reg_data(1060)(27 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.ETROC_DISABLE_SLAVE;
       reg_data(1281)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LINK_RESET_PULSE;
+      reg_data(1281)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.WS_STOP_PULSE;
+      reg_data(1281)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.WS_START_PULSE;
+      reg_data(1281)( 3)  <= DEFAULT_READOUT_BOARD_CTRL_t.QINJ_PULSE;
+      reg_data(1281)( 4)  <= DEFAULT_READOUT_BOARD_CTRL_t.STP_PULSE;
+      reg_data(1281)( 5)  <= DEFAULT_READOUT_BOARD_CTRL_t.ECR_PULSE;
+      reg_data(1281)( 6)  <= DEFAULT_READOUT_BOARD_CTRL_t.BC0_PULSE;
+      reg_data(1281)( 7)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_PULSE;
+      reg_data(1281)( 8)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_QINJ_PULSE;
+      reg_data(1282)(15 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.L1A_INJ_DLY;
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
       reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
+      reg_data(1286)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.DATA_CNT_RESET;
 
       end if; -- reset
     end if; -- clk

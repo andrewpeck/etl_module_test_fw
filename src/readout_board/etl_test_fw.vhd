@@ -541,7 +541,13 @@ begin
       force_trig    => system_ctrl.l1a_pulse,
       ext_trig      => ext_trigger_i,
       ext_trig_en   => system_ctrl.en_ext_trigger,
-      trig_gen_rate => system_ctrl.l1a_rate
+      trig_gen_rate => system_ctrl.l1a_rate,
+
+      qinj_deadtime  => system_ctrl.qinj_deadtime,
+      force_qinj     => system_ctrl.qinj_pulse,
+      qinj_makes_l1a => system_ctrl.qinj_makes_l1a,
+      l1a_delay      => system_ctrl.l1a_delay,
+      qinj_gen_rate  => system_ctrl.qinj_rate
       );
 
   rate_counter_inst : entity work.rate_counter
