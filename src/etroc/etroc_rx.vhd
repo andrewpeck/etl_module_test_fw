@@ -198,9 +198,20 @@ architecture behavioral of etroc_rx is
 
 begin
 
+  --------------------------------------------------------------------------------
+  -- Outputs
+  --------------------------------------------------------------------------------
+
   state_mon_o <= std_logic_vector(to_unsigned(state_t'POS(state),3));
 
-  locked_o <= '1' when align_state = LOCKED_state else '0';
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      locked_o     <= '1' when align_state = LOCKED_state else '0';
+      err_o        <= '1' when state = ERR_state          else '0';
+      filler_mon_o <= '1' when next_data_is_filler        else '0';
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- Alignment State Machine
@@ -272,9 +283,6 @@ begin
   --------------------------------------------------------------------------------
   -- Data Parser
   --------------------------------------------------------------------------------
-
-  err_o        <= '1' when state = ERR_state   else '0';
-  filler_mon_o <= '1' when next_data_is_filler else '0';
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
