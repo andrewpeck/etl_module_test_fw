@@ -163,6 +163,7 @@ package READOUT_BOARD_CTRL is
     PACKET_CNT                 :std_logic_vector(15 downto 0);  -- Count of packets received (muxed across elinks)
     ERROR_CNT                  :std_logic_vector(15 downto 0);  -- Count of packet errors (muxed across elinks)
     DATA_CNT                   :std_logic_vector(15 downto 0);  -- Count of packet data frames (muxed across elinks)
+    FILLER_RATE                :std_logic_vector(23 downto 0);  -- Rate of packet filler frames (muxed across elinks)
   end record READOUT_BOARD_MON_t;
 
 

@@ -62,9 +62,7 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  signal fifo_reset : std_logic := '0';
-
-  -- FIXME: account for fec5/12
+  -- TODO: account for fec5/12
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
   constant DOWNWIDTH : integer := 8;
@@ -99,6 +97,7 @@ architecture behavioral of readout_board is
   -- FIFO
   --------------------------------------------------------------------------------
 
+  signal fifo_reset : std_logic                     := '0';
   signal fifo_full  : std_logic_vector (1 downto 0) := (others => '0');
   signal fifo_empty : std_logic_vector (1 downto 0) := (others => '0');
   signal fifo_armed : std_logic_vector (1 downto 0) := (others => '0');
@@ -111,10 +110,10 @@ architecture behavioral of readout_board is
   signal mux_sel   : integer range 0 to 28*2-1;
 
   --------------------------------------------------------------------------------
-  -- TTC
+  -- Counters
   --------------------------------------------------------------------------------
 
-  signal packet_rx_rate : std_logic_vector (31 downto 0);
+  signal filler_rate    : std24_array_t(28*NUM_UPLINKS-1 downto 0);
   signal packet_cnt     : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal err_cnt        : std16_array_t(28*NUM_UPLINKS-1 downto 0);
   signal data_cnt       : std16_array_t(28*NUM_UPLINKS-1 downto 0);
@@ -149,6 +148,7 @@ architecture behavioral of readout_board is
   signal rx_busy            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
   signal rx_idle            : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
   signal rx_err             : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
+  signal rx_filler          : std_logic_vector (28*NUM_UPLINKS-1 downto 0);
 
   signal rx_fifo_data, rx_fifo_data_mux   : std_logic_vector (39 downto 0);
   signal rx_fifo_valid, rx_fifo_valid_mux : std_logic;
@@ -165,6 +165,10 @@ architecture behavioral of readout_board is
   signal global_fifo_full : std_logic;
 
 begin
+
+  --------------------------------------------------------------------------------
+  -- Reset Extension
+  --------------------------------------------------------------------------------
 
   fifo_reset_extender : entity work.extender
     generic map (LENGTH => 16)
@@ -294,7 +298,7 @@ begin
   end generate;
 
   --------------------------------------------------------------------------------
-  -- L1A Rate Counter
+  -- Packet Rate Counter
   --------------------------------------------------------------------------------
 
   pkt_counter_inst : entity work.rate_counter
@@ -338,10 +342,17 @@ begin
         at_max => open
         );
 
-  end generate;
-
-  etroc_data_frame_cnt : for I in rx_is_data'range generate
-  begin
+    filler_rate_inst : entity work.rate_counter
+      generic map (
+        g_CLK_FREQUENCY => x"02638e98",
+        g_COUNTER_WIDTH => 24
+        )
+      port map (
+        clk_i   => clk40,
+        reset_i => reset,
+        en_i    => rx_filler(I),
+        rate_o  => filler_rate(I)
+        );
 
     dat_counter : entity work.counter
       generic map (width => 16)
@@ -353,12 +364,18 @@ begin
         count  => data_cnt(I),
         at_max => open
         );
+
   end generate;
 
-  mon.packet_rx_rate <= packet_rx_rate;
-  mon.packet_cnt     <= packet_cnt(link_sel);
-  mon.error_cnt      <= err_cnt(link_sel);
-  mon.data_cnt       <= data_cnt(link_sel);
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      mon.packet_cnt     <= packet_cnt(link_sel);
+      mon.error_cnt      <= err_cnt(link_sel);
+      mon.filler_rate    <= filler_rate(link_sel);
+      mon.data_cnt       <= data_cnt(link_sel);
+    end if;
+  end process;
 
   --------------------------------------------------------------------------------
   -- GBT Slow Control
@@ -704,6 +721,7 @@ begin
             chip_id_o         => open,
             start_of_packet_o => start_of_packet,
             end_of_packet_o   => end_of_packet,
+            filler_mon_o      => rx_filler(ilpgbt*28+ielink),
             err_o             => rx_err(ilpgbt*28+ielink),
             busy_o            => rx_busy(ilpgbt*28+ielink),
             idle_o            => rx_idle(ilpgbt*28+ielink),

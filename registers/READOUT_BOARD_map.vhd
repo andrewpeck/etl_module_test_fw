@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1286);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1286) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1287);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1287) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -171,6 +171,8 @@ begin  -- architecture behavioral
           localRdData(31 downto 16)  <=  Mon.ERROR_CNT;                               --Count of packet errors (muxed across elinks)
         when 1286 => --0x506
           localRdData(31 downto 16)  <=  Mon.DATA_CNT;                                --Count of packet data frames (muxed across elinks)
+        when 1287 => --0x507
+          localRdData(23 downto  0)  <=  Mon.FILLER_RATE;                             --Rate of packet filler frames (muxed across elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";

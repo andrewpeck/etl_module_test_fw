@@ -100,10 +100,12 @@ entity etroc_rx is
     chip_id_o       : out std_logic_vector (CHIPIDB -1 downto 0);
     end_of_packet_o : out std_logic;    -- end of packet
 
-    locked_o : out std_logic;
-    err_o    : out std_logic;
-    busy_o   : out std_logic;
-    idle_o   : out std_logic
+    -- raw monitor of the is_filler flag that can be used as a proxy for link health
+    filler_mon_o : out std_logic;
+    locked_o     : out std_logic;
+    err_o        : out std_logic;
+    busy_o       : out std_logic;
+    idle_o       : out std_logic
     );
 end etroc_rx;
 
@@ -271,7 +273,8 @@ begin
   -- Data Parser
   --------------------------------------------------------------------------------
 
-  err_o <= '1' when state = ERR_state else '0';
+  err_o        <= '1' when state = ERR_state   else '0';
+  filler_mon_o <= '1' when next_data_is_filler else '0';
 
   next_frame <= reverse_vector(next_frame_raw) when REVERSE else next_frame_raw;
 
