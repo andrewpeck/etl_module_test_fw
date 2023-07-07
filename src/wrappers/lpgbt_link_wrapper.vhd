@@ -185,10 +185,12 @@ begin
     signal bitslip     : std_logic;
     signal unused_bits : std_logic_vector(5 downto 0);
 
-    signal fec_err       : std_logic := '0';
-    signal datacorrected : std_logic_vector (229 downto 0);
-    signal iccorrected   : std_logic_vector (1 downto 0);
-    signal eccorrected   : std_logic_vector (1 downto 0);
+    signal fec_err         : std_logic := '0';
+    signal datacorrected   : std_logic_vector (229 downto 0);
+    signal datacorrected_r : std_logic_vector (229 downto 0);
+    signal reduce_pipe_s0  : std_logic_vector (32*7+1-1 downto 0) := (others => '0');
+    signal iccorrected     : std_logic_vector (1 downto 0);
+    signal eccorrected     : std_logic_vector (1 downto 0);
 
     signal uplink_reset_n : std_logic := '1';
 
@@ -242,18 +244,22 @@ begin
     --------------------------------------------------------------------------------
 
     process (uplink_clk) is
-      variable reduce_pipe_s0 : std_logic_vector (32*7+1-1 downto 0) := (others => '0');
     begin
       if (rising_edge(uplink_clk)) then
+
         -- pipeline to ease timing
-        reduce_pipe_s0(0)   := or_reduce(datacorrected(31 downto 0));
-        reduce_pipe_s0(1)   := or_reduce(datacorrected(63 downto 32));
-        reduce_pipe_s0(2)   := or_reduce(datacorrected(95 downto 64));
-        reduce_pipe_s0(3)   := or_reduce(datacorrected(127 downto 96));
-        reduce_pipe_s0(4)   := or_reduce(datacorrected(159 downto 128));
-        reduce_pipe_s0(5)   := or_reduce(datacorrected(191 downto 160));
-        reduce_pipe_s0(6)   := or_reduce(datacorrected(223 downto 192));
-        reduce_pipe_s0(7)   := or_reduce(iccorrected & eccorrected & datacorrected(229 downto 224));
+
+        datacorrected_r <= datacorrected;
+
+        reduce_pipe_s0(0)   <= or_reduce(datacorrected_r(31 downto 0));
+        reduce_pipe_s0(1)   <= or_reduce(datacorrected_r(63 downto 32));
+        reduce_pipe_s0(2)   <= or_reduce(datacorrected_r(95 downto 64));
+        reduce_pipe_s0(3)   <= or_reduce(datacorrected_r(127 downto 96));
+        reduce_pipe_s0(4)   <= or_reduce(datacorrected_r(159 downto 128));
+        reduce_pipe_s0(5)   <= or_reduce(datacorrected_r(191 downto 160));
+        reduce_pipe_s0(6)   <= or_reduce(datacorrected_r(223 downto 192));
+        reduce_pipe_s0(7)   <= or_reduce(iccorrected & eccorrected & datacorrected_r(229 downto 224));
+
         uplink_fec_err_o(I) <= or_reduce(reduce_pipe_s0 (7 downto 0));
       end if;
     end process;
