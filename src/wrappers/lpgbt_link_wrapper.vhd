@@ -114,6 +114,7 @@ begin
     signal downlink_data    : lpgbt_downlink_data_rt;
     signal mgt_data         : std_logic_vector(31 downto 0);
     signal downlink_reset_n : std_logic := '1';
+    signal downlink_ready   : std_logic_vector (g_NUM_DOWNLINKS-1 downto 0);
 
   begin
 
@@ -142,13 +143,20 @@ begin
         interleaverbypass_i => g_LPGBT_BYPASS_INTERLEAVER,
         encoderbypass_i     => g_LPGBT_BYPASS_FEC,
         scramblerbypass_i   => g_LPGBT_BYPASS_SCRAMBLER,
-        rdy_o               => downlink_ready_o(I)
+        rdy_o               => downlink_ready(I)
         );
 
     --------------------------------------------------------------------------------
     -- optionally pipeline some of the downlink registers
     -- (fixed some timing issues)
     --------------------------------------------------------------------------------
+
+    process (downlink_clk) is
+    begin
+      if (rising_edge(downlink_clk)) then
+        downlink_ready_o <= downlink_ready;
+      end if;
+    end process;
 
     downlink_data_pipe : process (downlink_clk, downlink_data_i) is
     begin
@@ -183,6 +191,8 @@ begin
     signal eccorrected   : std_logic_vector (1 downto 0);
 
     signal uplink_reset_n : std_logic := '1';
+
+    signal uplink_ready : std_logic_vector (g_NUM_UPLINKS-1 downto 0);
 
   begin
 
@@ -224,7 +234,7 @@ begin
         datacorrected_o            => datacorrected,
         iccorrected_o              => iccorrected,
         eccorrected_o              => eccorrected,
-        rdy_o                      => uplink_ready_o(I)
+        rdy_o                      => uplink_ready(I)
         );
 
     --------------------------------------------------------------------------------
@@ -252,6 +262,13 @@ begin
     -- optionally pipeline some of the uplink registers
     -- (fixed some timing issues)
     --------------------------------------------------------------------------------
+
+    process (uplink_clk) is
+    begin
+      if (rising_edge(uplink_clk)) then
+        uplink_ready_o <= uplink_ready;
+      end if;
+    end process;
 
     uplink_data_pipe : process (uplink_clk, uplink_data) is
     begin
