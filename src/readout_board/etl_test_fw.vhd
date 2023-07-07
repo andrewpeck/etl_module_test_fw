@@ -638,6 +638,7 @@ begin
     rbdata : for I in 0 to TOTAL_UPLINKS-1 generate
     begin
 
+      -- downlink data sync
       process (clk320) is
       begin
         if (rising_edge(clk320)) then
@@ -645,6 +646,7 @@ begin
         end if;
       end process;
 
+      -- uplink data sync
       process (clk320) is
       begin
         if (rising_edge(clk320)) then
@@ -652,12 +654,21 @@ begin
         end if;
       end process;
 
-      process (rxclk(I)) is
-      begin
-        if (rising_edge(rxclk(I))) then
-          rxslide(I) <= uplink_bitslip(I);
-        end if;
-      end process;
+      -- rxslide data sync
+      xpm_cdc_pulse_inst : xpm_cdc_pulse
+        generic map (
+          DEST_SYNC_FF => 3,
+          REG_OUTPUT   => 1,
+          RST_USED     => 0)
+        port map (
+          src_clk    => clk320,
+          dest_clk   => rxclk(I),
+
+          src_rst    => reset,
+          dest_rst   => '0',
+
+          src_pulse  => uplink_bitslip(I),
+          dest_pulse => rxslide(I));
 
     end generate;
 
