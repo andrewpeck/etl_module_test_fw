@@ -291,7 +291,12 @@ begin
   next_data_is_trailer <= (next_frame and TRAILER_IDENTIFIER_MASK) = TRAILER_IDENTIFIER_FRAME;
   next_data_is_data    <= (next_frame and DATA_IDENTIFIER_MASK) = DATA_IDENTIFIER_FRAME;
 
-  data_inv <= not data_i when invertp else data_i;
+  process (clock) is
+  begin
+    if (rising_edge(clock)) then
+      data_inv <= not data_i when invertp else data_i;
+    end if;
+  end process;
 
   decoding_gearbox_inst : entity work.decodinggearbox
     generic map (
