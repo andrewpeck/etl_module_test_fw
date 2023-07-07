@@ -154,7 +154,7 @@ begin
     process (downlink_clk) is
     begin
       if (rising_edge(downlink_clk)) then
-        downlink_ready_o <= downlink_ready;
+        downlink_ready_o(I) <= downlink_ready(I);
       end if;
     end process;
 
@@ -272,7 +272,7 @@ begin
     process (uplink_clk) is
     begin
       if (rising_edge(uplink_clk)) then
-        uplink_ready_o <= uplink_ready;
+        uplink_ready_o(I) <= uplink_ready(I);
       end if;
     end process;
 
