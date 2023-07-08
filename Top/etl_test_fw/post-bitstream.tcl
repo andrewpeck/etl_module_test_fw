@@ -5,8 +5,11 @@ set describe [GetHogDescribe $sha]
 file copy -force [file normalize $dst_dir/../../scripts/program.tcl] $dst_dir/program.tcl
 file copy -force [file normalize $dst_dir/../../scripts/program.sh] $dst_dir/program.sh
 
-#remove the bit file from the archive since it is redundant with the bin
+# remove the bit file from the archive since it is redundant with the bin
 #file delete [glob "$dst_dir/*.bit"]
+
+# remove unnecessary reports
+file delete [glob "$dst_dir/reports/*.rpt"]
 
 # write_cfgmem -force -format mcs -size 64 -interface SPIx8 -loadbit \
 #     "up 0x00000000 $dst_bit" -file $dst_mcs
