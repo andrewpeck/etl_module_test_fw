@@ -87,9 +87,27 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
+### v3.0.4
+
+  - Multi-rb support
+  - Add header rate counters
+  - Reduce archive size
+  - Improve timing closure
+      - ETROC data inversion is registered
+      - ETROC err monitors are registered
+      - RXSLIDE goes through an XPM CDC pulse synchronizer
+      - FEC flags from lpgbt core have an additional pipeline stage
+      - LPGBT ready signals are registered
+      - Add a global random QINJ generator
+
+### v2.1.11
+
+  - Add a data frame counter for each ETROC
+  - Fix TX FIFO
+
 ### v2.1.10
 
--   Add a synchronized QINJ + L1A command
+  - Add a synchronized QINJ + L1A command
 
 ### v2.1.9
 
