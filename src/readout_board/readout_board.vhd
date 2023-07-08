@@ -8,7 +8,6 @@ library lpgbt_fpga;
 use lpgbt_fpga.lpgbtfpga_package.all;
 
 library ctrl_lib;
-
 use ctrl_lib.READOUT_BOARD_ctrl.all;
 
 library work;
