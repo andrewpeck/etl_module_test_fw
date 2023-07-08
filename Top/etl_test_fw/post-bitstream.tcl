@@ -9,7 +9,11 @@ file copy -force [file normalize $dst_dir/../../scripts/program.sh] $dst_dir/pro
 #file delete [glob "$dst_dir/*.bit"]
 
 # remove unnecessary reports
-file delete [glob "$dst_dir/reports/*.rpt"]
+set reports [glob "$dst_dir/reports/*.rpt"]
+foreach report $reports {
+    puts "Deleting $report"
+    file delete $report
+}
 
 # write_cfgmem -force -format mcs -size 64 -interface SPIx8 -loadbit \
 #     "up 0x00000000 $dst_bit" -file $dst_mcs
