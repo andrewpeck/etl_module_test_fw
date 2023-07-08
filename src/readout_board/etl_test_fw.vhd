@@ -47,7 +47,7 @@ entity etl_test_fw is
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
-    NUM_RBS       : integer := 5;
+    NUM_RBS       : integer := 5;       -- Number of RBs / KCU
     NUM_UPLINKS   : integer := 2;       -- Number of Uplinks / RB
     NUM_DOWNLINKS : integer := 1;       -- Number of Downlinks / RB
     NUM_SCAS      : integer := 1;       -- Number of SCAs / RB
