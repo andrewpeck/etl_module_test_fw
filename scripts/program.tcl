@@ -1,5 +1,4 @@
-set basename [file rootname [lindex [glob *.bit] 0]]
-set bitfile ${basename}.bit
+set basename [file rootname [lindex [glob *.bin] 0]]
 set binfile ${basename}.bin
 set ltxfile ${basename}.ltx
 set part     xcku040
@@ -156,7 +155,7 @@ foreach target $targets {
             puts " > Programming FPGA"
             current_hw_device [get_hw_devices $device]
             refresh_hw_device -update_hw_probes false $device
-            set_property PROGRAM.FILE $bitfile $device
+            set_property PROGRAM.FILE $binfile $device
             set_property PROBES.FILE $ltxfile $device
             set_property FULL_PROBES.FILE $ltxfile $device
             program_hw_devices $device
