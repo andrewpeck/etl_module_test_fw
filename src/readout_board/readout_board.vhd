@@ -64,8 +64,6 @@ architecture behavioral of readout_board is
   -- TODO: account for fec5/12
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
-  constant DOWNWIDTH : integer := 8;
-
   signal valid : std_logic;
 
   --------------------------------------------------------------------------------
@@ -192,8 +190,9 @@ begin
   -- up counter
 
   dl_gen : if (true) generate
-    signal prbs_gen         : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
-    signal prbs_gen_reverse : std_logic_vector (DOWNWIDTH-1 downto 0) := (others => '0');
+    constant PRBS_DOWNWIDTH : integer := 8;
+    signal prbs_gen         : std_logic_vector (PRBS_DOWNWIDTH-1 downto 0) := (others => '0');
+    signal prbs_gen_reverse : std_logic_vector (PRBS_DOWNWIDTH-1 downto 0) := (others => '0');
     signal fast_cmd         : std_logic_vector (7 downto 0)           := (others => '0');
     signal upcnt            : integer range 0 to 255                  := 0;
   begin
