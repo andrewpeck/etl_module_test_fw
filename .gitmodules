@@ -9,7 +9,7 @@
 	url = https://gitlab.cern.ch/gbt-fpga/lpgbt-fpga
 [submodule "Hog"]
 	path = Hog
-	url = https://gitlab.cern.ch/hog/Hog
+	url = https://gitlab.com/hog-cern/Hog
 [submodule "uHAL_AXI_regmap"]
 	path = regmap
 	url = https://github.com/BU-Tools/uHAL_AXI_regmap
