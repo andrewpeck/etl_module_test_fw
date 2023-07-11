@@ -6,7 +6,7 @@ file copy -force [file normalize $dst_dir/../../scripts/program.tcl] $dst_dir/pr
 file copy -force [file normalize $dst_dir/../../scripts/program.sh] $dst_dir/program.sh
 
 # remove the bit file from the archive since it is redundant with the bin
-#file delete [glob "$dst_dir/*.bit"]
+file delete [glob "$dst_dir/*.bit"]
 
 # remove unnecessary reports
 set reports [glob "$dst_dir/reports/*.rpt"]

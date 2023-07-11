@@ -1,6 +1,6 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: 'Hog2023.1-8'
+      ref: 'c533a6b'
     - local: '/Top/etl_test_fw/gitlab-ci.yml'
     - local: '/.user-jobs.yml'
