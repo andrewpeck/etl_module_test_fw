@@ -194,7 +194,7 @@ begin
 
     signal uplink_reset_n : std_logic := '1';
 
-    signal uplink_ready : std_logic_vector (g_NUM_UPLINKS-1 downto 0);
+    signal uplink_ready : std_logic;
 
   begin
 
@@ -272,7 +272,7 @@ begin
     process (uplink_clk) is
     begin
       if (rising_edge(uplink_clk)) then
-        uplink_ready_o(I) <= uplink_ready(I);
+        uplink_ready_o(I) <= uplink_ready;
       end if;
     end process;
 
