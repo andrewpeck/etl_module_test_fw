@@ -236,7 +236,7 @@ begin
         datacorrected_o            => datacorrected,
         iccorrected_o              => iccorrected,
         eccorrected_o              => eccorrected,
-        rdy_o                      => uplink_ready(I)
+        rdy_o                      => uplink_ready
         );
 
     --------------------------------------------------------------------------------
