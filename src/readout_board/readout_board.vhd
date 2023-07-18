@@ -426,7 +426,6 @@ begin
 
   lpgbt_link_wrapper : entity work.lpgbt_link_wrapper
     generic map (
-      g_UPLINK_FEC    => FEC12,
       g_NUM_DOWNLINKS => NUM_DOWNLINKS,
       g_NUM_UPLINKS   => NUM_UPLINKS
       )
@@ -435,6 +434,8 @@ begin
 
       downlink_clk => clk320,
       uplink_clk   => clk320,
+
+      fec_mode_i => '0',
 
       downlink_reset_i(0) => ctrl.lpgbt.downlink.reset,
 
