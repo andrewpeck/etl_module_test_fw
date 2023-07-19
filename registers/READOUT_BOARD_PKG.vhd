@@ -13,11 +13,13 @@ package READOUT_BOARD_CTRL is
 
   type READOUT_BOARD_LPGBT_UPLINK_CTRL_t is record
     RESET                      :std_logic;     -- Reset this Uplink
+    FEC_MODE                   :std_logic;     -- 1 = FEC12 | 0 = FEC5
   end record READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
   type READOUT_BOARD_LPGBT_UPLINK_CTRL_t_ARRAY is array(0 to 1) of READOUT_BOARD_LPGBT_UPLINK_CTRL_t;
 
   constant DEFAULT_READOUT_BOARD_LPGBT_UPLINK_CTRL_t : READOUT_BOARD_LPGBT_UPLINK_CTRL_t := (
-                                                                                             RESET => '0'
+                                                                                             RESET => '0',
+                                                                                             FEC_MODE => '1'
                                                                                             );
   type READOUT_BOARD_LPGBT_DOWNLINK_MON_t is record
     READY                      :std_logic;     -- LPGBT Downlink Ready

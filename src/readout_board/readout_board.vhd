@@ -435,7 +435,8 @@ begin
       downlink_clk => clk320,
       uplink_clk   => clk320,
 
-      fec_mode_i => '0',
+      fec_mode_i(0) => ctrl.lpgbt.uplink(0).fec_mode,
+      fec_mode_i(1) => ctrl.lpgbt.uplink(1).fec_mode,
 
       downlink_reset_i(0) => ctrl.lpgbt.downlink.reset,
 

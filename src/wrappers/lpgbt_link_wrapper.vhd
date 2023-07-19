@@ -87,7 +87,7 @@ entity lpgbt_link_wrapper is
     uplink_ready_o : out std_logic_vector (g_NUM_UPLINKS-1 downto 0);
 
     -- fec mode
-    fec_mode_i : in std_logic := '0';
+    fec_mode_i : in std_logic_vector (g_NUM_UPLINKS-1 downto 0) := (others => '0');
 
     -- bitslip flag to connect to mgt rxslide for alignment
     uplink_bitslip_o : out std_logic_vector (g_NUM_UPLINKS-1 downto 0);
@@ -263,7 +263,7 @@ begin
     --------------------------------------------------------------------------------
 
     -- Converting fec_mode_i into an integer
-    fec_sel <= 1 when fec_mode_i = '1' else 0;
+    fec_sel <= 1 when fec_mode_i(I) = '1' else 0;
 
     process (uplink_clk) is
     begin

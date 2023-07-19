@@ -62,9 +62,11 @@ begin  -- architecture behavioral
         case to_integer(unsigned(wb_addr(10 downto 0))) is
           when 1 => --0x1
           localRdData( 0)            <=  Mon.LPGBT.UPLINK(0).READY;                   --LPGBT Uplink Ready
+          localRdData( 1)            <=  reg_data( 1)( 1);                            --1 = FEC12 | 0 = FEC5
           localRdData(31 downto 16)  <=  Mon.LPGBT.UPLINK(0).FEC_ERR_CNT;             --Data Corrected Count
         when 17 => --0x11
           localRdData( 0)            <=  Mon.LPGBT.UPLINK(1).READY;                   --LPGBT Uplink Ready
+          localRdData( 1)            <=  reg_data(17)( 1);                            --1 = FEC12 | 0 = FEC5
           localRdData(31 downto 16)  <=  Mon.LPGBT.UPLINK(1).FEC_ERR_CNT;             --Data Corrected Count
         when 33 => --0x21
           localRdData( 0)            <=  Mon.LPGBT.DOWNLINK.READY;                    --LPGBT Downlink Ready
@@ -184,6 +186,8 @@ begin  -- architecture behavioral
 
 
   -- Register mapping to ctrl structures
+  Ctrl.LPGBT.UPLINK(0).FEC_MODE                <=  reg_data( 1)( 1);                 
+  Ctrl.LPGBT.UPLINK(1).FEC_MODE                <=  reg_data(17)( 1);                 
   Ctrl.LPGBT.DOWNLINK.DL_SRC                   <=  reg_data(35)( 3 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_PRBS_EN_0   <=  reg_data(67)(31 downto  0);       
   Ctrl.LPGBT.PATTERN_CHECKER.CHECK_UPCNT_EN_0  <=  reg_data(68)(31 downto  0);       
@@ -265,8 +269,12 @@ begin  -- architecture behavioral
         case to_integer(unsigned(wb_addr(10 downto 0))) is
         when 0 => --0x0
           Ctrl.LPGBT.UPLINK(0).RESET            <=  localWrData( 0);               
+        when 1 => --0x1
+          reg_data( 1)( 1)                      <=  localWrData( 1);                --1 = FEC12 | 0 = FEC5
         when 16 => --0x10
           Ctrl.LPGBT.UPLINK(1).RESET            <=  localWrData( 0);               
+        when 17 => --0x11
+          reg_data(17)( 1)                      <=  localWrData( 1);                --1 = FEC12 | 0 = FEC5
         when 31 => --0x1f
           Ctrl.LPGBT.FEC_ERR_RESET              <=  localWrData( 6);               
         when 32 => --0x20
@@ -388,7 +396,9 @@ begin  -- architecture behavioral
       -- synchronous reset (active high)
       if reset = '1' then
       reg_data( 0)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(0).RESET;
+      reg_data( 1)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(0).FEC_MODE;
       reg_data(16)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(1).RESET;
+      reg_data(17)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.UPLINK(1).FEC_MODE;
       reg_data(31)( 6)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.FEC_ERR_RESET;
       reg_data(32)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK.RESET;
       reg_data(35)( 3 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.LPGBT.DOWNLINK.DL_SRC;
