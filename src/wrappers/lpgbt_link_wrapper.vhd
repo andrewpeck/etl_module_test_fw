@@ -209,6 +209,7 @@ begin
     signal fec_iccorrected   : std_logic_vector (3 downto 0);
     signal fec_eccorrected   : std_logic_vector (3 downto 0);
     signal fec_uplink_ready  : std_logic_vector (1 downto 0);
+    
 
   begin
 
