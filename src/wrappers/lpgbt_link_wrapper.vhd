@@ -187,7 +187,7 @@ begin
     signal bitslip     : std_logic;
     signal unused_bits : std_logic_vector(5 downto 0);
 
-    signal fec_err         : std_logic                            := '0';
+    signal fec_err         : std_logic := '0';
     signal datacorrected   : std_logic_vector (229 downto 0);
     signal datacorrected_r : std_logic_vector (229 downto 0);
     signal reduce_pipe_s0  : std_logic_vector (32*7+1-1 downto 0) := (others => '0');
