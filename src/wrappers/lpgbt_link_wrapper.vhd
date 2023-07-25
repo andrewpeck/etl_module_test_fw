@@ -204,7 +204,8 @@ begin
     -- use to select between FEC5 and FEC12 lpGBT cores
     --------------------------------------------------------------------------------
 
-    signal fec_mux_sel           : integer range 0 to 1;
+    signal fec_sel : integer range 0 to 1;
+
     signal fec_mux_uplink_data   : lpgbt_uplink_data_rt_array(1 downto 0);
     signal fec_mux_unused_bits   : std_logic_vector(11 downto 0);
     signal fec_mux_bitslip       : std_logic_vector(1 downto 0);
