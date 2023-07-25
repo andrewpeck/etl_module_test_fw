@@ -18,7 +18,7 @@ use work.types.all;
 entity control is
   generic(
     NUM_RBS   : integer              := 8;
-    EN_LPGBTS : integer range 0 to 1 := 0;
+    EN_LPGBTS : integer range 0 to 1 := 1;
     DEBUG     : boolean              := false
     );
   port(

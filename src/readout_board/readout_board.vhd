@@ -42,10 +42,6 @@ entity readout_board is
     bc0 : in std_logic;
     l1a : in std_logic;
 
-    --tx_ready : in std_logic;
-    --rx_ready : in std_logic;
-
-    ctrl_clk : in  std_logic;
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
 
@@ -411,7 +407,7 @@ begin
 
       reset_i => reset,
 
-      ctrl_clk => ctrl_clk,
+      ctrl_clk => clk40,
       mon      => mon.sc,
       ctrl     => ctrl.sc,
 
@@ -572,10 +568,10 @@ begin
 
     -- multiplex the outputs into one register for readout
 
-    process (ctrl_clk) is
+    process (clk40) is
       variable sel : integer;
     begin
-      if (rising_edge(ctrl_clk)) then
+      if (rising_edge(clk40)) then
         sel := to_integer(unsigned(ctrl.lpgbt.pattern_checker.sel));
 
         prbs_ff  <= prbs_err_counters(sel);

@@ -33,7 +33,6 @@ entity etl_test_fw is
   generic(
 
     USE_SYSTEM_IBERT : boolean := false;
-    USE_TCLINK       : boolean := false;
 
     USE_EXT_REF : boolean := false;
 
@@ -42,8 +41,6 @@ entity etl_test_fw is
 
     USE_PCIE : integer range 0 to 1 := 0;
     USE_ETH  : integer range 0 to 1 := 1;
-
-    EN_LPGBTS : integer range 0 to 1 := 1;
 
     PCIE_LANES : integer range 1 to 8 := 1;
 
@@ -103,10 +100,10 @@ entity etl_test_fw is
     -- Transceivers
     --------------------------------------------------------------------------------
 
-    tx_p : out std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
-    tx_n : out std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
-    rx_p : in  std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
-    rx_n : in  std_logic_vector(EN_LPGBTS*NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    tx_p : out std_logic_vector(NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    tx_n : out std_logic_vector(NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    rx_p : in  std_logic_vector(NUM_UPLINKS*NUM_RBS - 1 downto 0);
+    rx_n : in  std_logic_vector(NUM_UPLINKS*NUM_RBS - 1 downto 0);
 
     sfp0_tx_disable  : out std_logic := '0';
     sfp1_tx_disable  : out std_logic := '0';
@@ -335,17 +332,25 @@ begin
   begin
     if (rising_edge(clk40)) then
 
+      -- if there has been an L1A, show the L1A rate on the LEDs
       if (readout_board_mon(0).lpgbt.uplink(0).ready = '1'
           and l1as_recent = '1') then
         leds(7 downto 0) <= (breath or ipb_led) & (led_progress(7 downto 1) and repeat(not l1a_led, 7));
+
+      -- Otherwise (no L1A) show a cylon pattern
+      -- two cylons for both trigger and daq
       elsif (mgt_rx_ready(0) = '1' and
              mgt_rx_ready(1) = '1' and
              readout_board_mon(0).lpgbt.uplink(0).ready = '1' and
              readout_board_mon(0).lpgbt.uplink(1).ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon2_signal (6 downto 0);
+
+      -- one cylon for only trigger
       elsif (mgt_rx_ready(0) = '1' and
              readout_board_mon(0).lpgbt.uplink(1).ready = '1') then
         leds(7 downto 0) <= ipb_led & cylon1_signal (6 downto 0);
+
+      -- If the links aren't locked, just breathe and wait
       else
         leds(7 downto 0) <= ipb_led & breath & breath & breath &
                             breath & breath & breath & breath;
@@ -354,7 +359,7 @@ begin
     end if;
   end process;
 
-  progress_bar_1 : entity work.progress_bar
+  progress_bar_inst : entity work.progress_bar
     generic map (
       g_LOGARITHMIC        => 1,
       g_CLK_FREQUENCY      => 40079000,
@@ -372,47 +377,61 @@ begin
       progress_bar_o => led_progress
       );
 
+  -- see if there have been l1as recently
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+      if (l1a = '1') then
+        l1as_recent_cnt <= 2**28-1;
+        l1as_recent     <= '1';
+      elsif (l1as_recent_cnt > 0) then
+        l1as_recent_cnt <= l1as_recent_cnt - 1;
+      else
+        l1as_recent_cnt <= 0;
+        l1as_recent     <= '0';
+      end if;
+    end if;
+  end process;
+
+
   --------------------------------------------------------------------------------
   -- Clocking
   --------------------------------------------------------------------------------
 
-  -- create 1/8 strobe synced to 40MHz clock
+  -- create 1/8 strobe synced to 40MHz clock;
+  -- used for the lpgbt link
 
   clock_strobe_inst : entity work.clock_strobe
-    generic map (
-      RATIO => 8
-      )
+    generic map (RATIO => 8)
     port map (
       fast_clk_i => clk320,
       slow_clk_i => clk40,
-      strobe_o   => strobe
-      );
+      strobe_o   => strobe);
 
   osc_clk125_ibuf_inst : IBUFDS
     port map(
       i  => osc_clk125_p,
       ib => osc_clk125_n,
-      o  => clk_osc125_ibuf
-      );
+      o  => clk_osc125_ibuf);
 
   osc_clk300_ibuf_inst : IBUFDS
     port map(
       i  => osc_clk300_p,
       ib => osc_clk300_n,
-      o  => clk_osc300_ibuf
-      );
+      o  => clk_osc300_ibuf);
 
   osc125_bufg : BUFG
     port map(
       i => clk_osc125_ibuf,
-      o => clk_osc125
-      );
+      o => clk_osc125);
 
   osc300_bufg : BUFG
     port map(
       i => clk_osc300_ibuf,
-      o => clk_osc300
-      );
+      o => clk_osc300);
+
+  -- take in the REFCLK and use it as the system clock
+  -- 320 ⟹ 40, 320
 
   system_clocks_inst : system_clocks
     port map (
@@ -422,6 +441,10 @@ begin
       clk_320   => clk320,
       locked    => locked
       );
+
+  --------------------------------------------------------------------------------
+  -- Select Si570 vs SMA as reference clock
+  --------------------------------------------------------------------------------
 
   SI570_REF_GEN : if (not USE_EXT_REF) generate
     refclk_ibufds : ibufds_gte3
@@ -455,6 +478,13 @@ begin
         );
   end generate;
 
+  --------------------------------------------------------------------------------
+  -- MGT BUFG
+  --
+  -- take the MGT reference clock and globally buffer it
+  --
+  --------------------------------------------------------------------------------
+
   mgtclk_img_bufg : BUFG_GT
     port map(
       I       => refclk_mirror,
@@ -467,8 +497,15 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- Ethernet
+  -- Ethernet Interface
+  --
+  -- GbE ⟺ Wishbone
   --------------------------------------------------------------------------------
+
+  -- set the ip address and mac based on the switches, allow them to be
+  -- different for each board.
+  --
+  -- IP comes out as 192.168.{10+SW[3:0]}
 
   ip_addr(0)           <= IP_ADDR_BASE(0) + to_integer(unsigned(sw(3 downto 0)));
   mac_addr(3 downto 0) <= sw(3 downto 0);
@@ -503,6 +540,13 @@ begin
         );
   end generate;
 
+  --------------------------------------------------------------------------------
+  -- PCIE Interface
+  --
+  -- (probably broken)
+  --
+  --------------------------------------------------------------------------------
+
   pcie : if (USE_PCIE = 1) generate
     pcie_infra : entity ipbus.pcie_infra
       port map(
@@ -527,13 +571,13 @@ begin
 
   --------------------------------------------------------------------------------
   -- IPBUS Control
+  --
+  -- 1) Wishbone switch
+  -- 2) Wishbone ⟺ CTRL + Monitoring Records
   --------------------------------------------------------------------------------
 
   control_inst : entity work.control
-    generic map (
-      EN_LPGBTS => EN_LPGBTS,
-      NUM_RBS   => NUM_RBS
-      )
+    generic map (NUM_RBS => NUM_RBS)
     port map (
       reset_i            => reset,
       clock              => clk40,
@@ -553,7 +597,13 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- Readout Boards
+  -- TTC
+  --
+  -- 1) L1A Generator
+  -- 2) QINJ Generator
+  -- 2) BC0 Generator
+  -- 3) External trigger receiver
+  -- 4) L1A Rate Counter
   --------------------------------------------------------------------------------
 
   ttc_inst : entity work.ttc
@@ -571,293 +621,286 @@ begin
       force_qinj     => system_ctrl.qinj_pulse,
       qinj_makes_l1a => system_ctrl.qinj_makes_l1a,
       l1a_delay      => system_ctrl.l1a_delay,
-      qinj_gen_rate  => system_ctrl.qinj_rate
-      );
+      qinj_gen_rate  => system_ctrl.qinj_rate);
 
-  rate_counter_inst : entity work.rate_counter
+  l1a_rate_counter_inst : entity work.rate_counter
     generic map (
       g_CLK_FREQUENCY => x"02638e98",
-      g_COUNTER_WIDTH => 32
-      )
+      g_COUNTER_WIDTH => 32)
     port map (
       clk_i   => clk40,
       reset_i => reset,
       en_i    => l1a,
-      rate_o  => l1a_rate_cnt
-      );
-
-  process (clk40) is
-  begin
-    if (rising_edge(clk40)) then
-      if (l1a = '1') then
-        l1as_recent_cnt <= 2**28-1;
-        l1as_recent     <= '1';
-      elsif (l1as_recent_cnt > 0) then
-        l1as_recent_cnt <= l1as_recent_cnt - 1;
-      else
-        l1as_recent_cnt <= 0;
-        l1as_recent     <= '0';
-      end if;
-    end if;
-  end process;
+      rate_o  => l1a_rate_cnt);
 
   system_mon.l1a_rate_cnt <= l1a_rate_cnt;
 
-  rb_gen : if (EN_LPGBTS = 1) generate
+  --------------------------------------------------------------------------------
+  -- Readout Boards
+  --------------------------------------------------------------------------------
 
-    rbgen : for I in 0 to NUM_RBS-1 generate
-      constant NU    : integer := NUM_UPLINKS;
-      constant ND    : integer := NUM_DOWNLINKS;
+  rbgen : for I in 0 to NUM_RBS-1 generate
+    constant NU    : integer := NUM_UPLINKS;
+    constant ND    : integer := NUM_DOWNLINKS;
+  begin
+
+    readout_board_inst : entity work.readout_board
+      generic map (
+        NUM_UPLINKS   => NUM_UPLINKS,
+        NUM_DOWNLINKS => NUM_DOWNLINKS,
+        NUM_SCAS      => NUM_SCAS,
+        C_DEBUG       => I=0 -- only generate an ILA for one of the RBs (need to save resources)
+        )
+      port map (
+
+        -- clock and reset
+        clk40  => clk40,
+        clk320 => clk320,
+        strobe => strobe,
+        reset  => reset,
+
+        -- ttc
+        bc0 => bc0,
+        l1a => l1a,
+
+        -- DAQ wishbone
+        daq_wb_in  => daq_ipb_w_array(I downto I),
+        daq_wb_out => daq_ipb_r_array(I downto I),
+
+        -- Slow control
+        mon      => readout_board_mon(I),
+        ctrl     => readout_board_ctrl(I),
+
+        -- data LPGBT ⟺ MGTS
+        uplink_bitslip          => uplink_bitslip (NU*(I+1)-1 downto NU*I),
+        uplink_mgt_word_array   => uplink_mgt_word_array (NU*(I+1)-1 downto NU*I),
+        downlink_mgt_word_array => downlink_mgt_word_array(ND*(I+1)-1 downto ND*I)
+        );
+  end generate;
+
+  --------------------------------------------------------------------------------
+  -- CDC MGT ⟺ LPGBT
+  --------------------------------------------------------------------------------
+
+  process (clk320) is
+  begin
+    if (rising_edge(clk320)) then
+      system_mon.mgt_tx_ready <= mgt_tx_ready;
+      system_mon.mgt_rx_ready <= mgt_rx_ready;
+
+      mgt_tx_reset <= system_ctrl.mgt_tx_reset;
+      mgt_rx_reset <= system_ctrl.mgt_rx_reset;
+    end if;
+  end process;
+
+  rbdata : for I in 0 to TOTAL_UPLINKS-1 generate
+  begin
+
+    -- downlink data sync
+    process (clk320) is
     begin
+      if (rising_edge(clk320)) then
+        mgt_data_in(I) <= downlink_mgt_word_array(I/2);
+      end if;
+    end process;
 
-      readout_board_inst : entity work.readout_board
-        generic map (
-          NUM_UPLINKS   => NUM_UPLINKS,
-          NUM_DOWNLINKS => NUM_DOWNLINKS,
-          NUM_SCAS      => NUM_SCAS,
-          C_DEBUG       => I=0 -- only generate an ILA for one of the RBs (need to save resources)
-          )
-        port map (
+    -- uplink data sync
+    process (clk320) is
+    begin
+      if (rising_edge(clk320)) then
+        uplink_mgt_word_array(I) <= mgt_data_out(I);
+      end if;
+    end process;
 
-          reset => reset,
+    -- rxslide data sync
+    xpm_cdc_pulse_inst : xpm_cdc_pulse
+      generic map (
 
-          strobe => strobe,
+        REG_OUTPUT   => 1,
+        RST_USED     => 0)
+      port map (
+        src_clk    => clk320,
+        dest_clk   => rxclk(I),
 
-          bc0 => bc0,
-          l1a => l1a,
+        src_rst    => reset,
+        dest_rst   => '0',
 
-          --daq_txready  => tx_ready(I*2),
-          --daq_rxready  => rx_ready(I*2),
-          --trig_rxready => rx_ready(I*2+1),
+        src_pulse  => uplink_bitslip(I),
+        dest_pulse => rxslide(I));
 
-          daq_wb_in  => daq_ipb_w_array(I downto I),
-          daq_wb_out => daq_ipb_r_array(I downto I),
+  end generate;
 
-          clk40  => clk40,
-          clk320 => clk320,
+  --------------------------------------------------------------------------------
+  -- Transceiver Generation
+  --------------------------------------------------------------------------------
 
-          -- slow control
-          ctrl_clk => clk40,
-          mon      => readout_board_mon(I),
-          ctrl     => readout_board_ctrl(I),
+  datagen : for I in 0 to TOTAL_UPLINKS-1 generate
 
-          -- data
-          uplink_bitslip          => uplink_bitslip (NU*(I+1)-1 downto NU*I),
-          uplink_mgt_word_array   => uplink_mgt_word_array (NU*(I+1)-1 downto NU*I),
-          downlink_mgt_word_array => downlink_mgt_word_array(ND*(I+1)-1 downto ND*I)
-          );
-    end generate;
+    signal txdata, rxdata : std_logic_vector (31 downto 0);
+
+    signal drpclk  : std_logic;
+    signal drpaddr : std_logic_vector(8 downto 0);
+    signal drpen   : std_logic;
+    signal drpdi   : std_logic_vector(15 downto 0);
+    signal drprdy  : std_logic;
+    signal drpdo   : std_logic_vector(15 downto 0);
+    signal drpwe   : std_logic;
+
+    signal tx_ready : std_logic := '0';
+    signal rx_ready : std_logic := '0';
+
+    signal reset_rx_clk : std_logic := '1';
+
+  begin
+
+    gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
+    mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
+
+    xlx_ku_mgt_10g24_inst : entity work.xlx_ku_mgt_10g24
+      port map (
+        mgt_refclk_i => refclk,
+
+        -- drp
+        mgt_freedrpclk_i => drpclk,
+        drpaddr          => drpaddr,
+        drpen            => drpen,
+        drpdi            => drpdi,
+        drprdy           => drprdy,
+        drpdo            => drpdo,
+        drpwe            => drpwe,
+
+        mgt_rxusrclk_o    => rxclk(I),
+        mgt_txusrclk_o    => txclk(I),
+        mgt_txreset_i     => reset or mgt_tx_reset(I),
+        mgt_rxreset_i     => reset or mgt_rx_reset(I),
+        mgt_rxslide_i     => rxslide(I),
+        mgt_entxcalibin_i => '0',
+        mgt_txcalib_i     => (others => '0'),
+        mgt_txready_o     => mgt_tx_ready(I),
+        mgt_rxready_o     => mgt_rx_ready(I),
+        mgt_tx_aligned_o  => open,
+        mgt_tx_piphase_o  => open,
+        mgt_usrword_i     => txdata,  -- mgt_data_in(I),
+        mgt_usrword_o     => rxdata,  -- mgt_data_out(I),
+        rxp_i             => rx_p(I),
+        rxn_i             => rx_n(I),
+        txp_o             => tx_p(I),
+        txn_o             => tx_n(I));
+
+    --------------------------------------------------------------------------------
+    -- TX/RX Ready
+    --------------------------------------------------------------------------------
 
     process (clk320) is
     begin
       if (rising_edge(clk320)) then
-        system_mon.mgt_tx_ready <= mgt_tx_ready;
-        system_mon.mgt_rx_ready <= mgt_rx_ready;
-
-        mgt_tx_reset <= system_ctrl.mgt_tx_reset;
-        mgt_rx_reset <= system_ctrl.mgt_rx_reset;
+        tx_ready <= mgt_tx_ready(I);
       end if;
     end process;
 
-    rbdata : for I in 0 to TOTAL_UPLINKS-1 generate
+    process (rxclk(I)) is
+    begin
+      if (rising_edge(rxclk(I))) then
+        rx_ready <= mgt_rx_ready(I);
+      end if;
+    end process;
+
+    --------------------------------------------------------------------------------
+    -- Reset CDC
+    --------------------------------------------------------------------------------
+
+    xpm_cdc_sync_rst_inst : xpm_cdc_sync_rst
+      generic map (
+        DEST_SYNC_FF   => 2,
+        INIT           => 1,
+        INIT_SYNC_FF   => 0,
+        SIM_ASSERT_CHK => 0)
+      port map (
+        dest_rst => reset_rx_clk,
+        dest_clk => rxclk(I),
+        src_rst  => reset);
+
+    --------------------------------------------------------------------------------
+    -- Uplink/Downlink Data CDCs
+    --------------------------------------------------------------------------------
+
+    -- CDC rxclk ⟹ clk320
+
+    mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
+      generic map (
+        FIFO_READ_LATENCY => 4,
+        DEPTH             => 16,
+        WR_WIDTH          => 32,
+        RD_WIDTH          => 32)
+      port map (
+        rst    => reset_rx_clk,
+        wr_clk => rxclk(I),
+        rd_clk => clk320,
+        wr_en  => rx_ready, -- only write when rx_ready is asserted
+        rd_en  => '1',
+        din    => rxdata,
+        dout   => mgt_data_out(I),
+        valid  => open,
+        full   => open,
+        empty  => open);
+
+    -- CRC clk320 ⟹ txclk
+
+    mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
+      generic map (
+        FIFO_READ_LATENCY => 4,
+        DEPTH             => 16,
+        WR_WIDTH          => 32,
+        RD_WIDTH          => 32)
+      port map (
+        rst    => reset,
+        wr_clk => clk320,
+        rd_clk => txclk(I),
+        wr_en  => tx_ready, -- only write when tx_ready is asserted
+        rd_en  => '1',
+        din    => mgt_data_in(I),
+        dout   => txdata,
+        valid  => open,
+        full   => open,
+        empty  => open);
+
+    --------------------------------------------------------------------------------
+    -- IBERT
+    --------------------------------------------------------------------------------
+
+    noibert : if (not USE_SYSTEM_IBERT) generate
+    begin
+      drpclk  <= clk40;
+      drpen   <= '0';
+      drpwe   <= '0';
+      drpaddr <= (others => '0');
+      drpdi   <= (others => '0');
+    end generate;
+
+    ibert : if (USE_SYSTEM_IBERT) generate
     begin
 
-      -- downlink data sync
-      process (clk320) is
-      begin
-        if (rising_edge(clk320)) then
-          mgt_data_in(I) <= downlink_mgt_word_array(I/2);
-        end if;
-      end process;
-
-      -- uplink data sync
-      process (clk320) is
-      begin
-        if (rising_edge(clk320)) then
-          uplink_mgt_word_array(I) <= mgt_data_out(I);
-        end if;
-      end process;
-
-      -- rxslide data sync
-      xpm_cdc_pulse_inst : xpm_cdc_pulse
-        generic map (
-          DEST_SYNC_FF => 3,
-          REG_OUTPUT   => 1,
-          RST_USED     => 0)
+      system_ibert_inst : system_ibert
         port map (
-          src_clk    => clk320,
-          dest_clk   => rxclk(I),
-
-          src_rst    => reset,
-          dest_rst   => '0',
-
-          src_pulse  => uplink_bitslip(I),
-          dest_pulse => rxslide(I));
+          drpclk_o(0)       => drpclk,
+          gt0_drpen_o       => drpen,
+          gt0_drpwe_o       => drpwe,
+          gt0_drpaddr_o     => drpaddr,
+          gt0_drpdi_o       => drpdi,
+          gt0_drprdy_i      => drprdy,
+          gt0_drpdo_i       => drpdo,
+          eyescanreset_o(0) => open,
+          rxrate_o          => open,
+          txdiffctrl_o      => open,
+          txprecursor_o     => open,
+          txpostcursor_o    => open,
+          rxlpmen_o(0)      => open,
+          rxoutclk_i(0)     => rxclk(I),
+          clk               => clk40
+          );
 
     end generate;
 
-    datagen : for I in 0 to TOTAL_UPLINKS-1 generate
-
-      signal txdata, rxdata : std_logic_vector (31 downto 0);
-
-      signal drpclk  : std_logic;
-      signal drpaddr : std_logic_vector(8 downto 0);
-      signal drpen   : std_logic;
-      signal drpdi   : std_logic_vector(15 downto 0);
-      signal drprdy  : std_logic;
-      signal drpdo   : std_logic_vector(15 downto 0);
-      signal drpwe   : std_logic;
-
-      signal tx_ready : std_logic := '0';
-      signal rx_ready : std_logic := '0';
-
-
-      signal reset_rx_clk : std_logic := '1';
-
-    begin
-
-      gtwiz_userdata_tx_in (32*(I+1)-1 downto 32*I) <= mgt_data_in(I);
-      mgt_data_out(I)                               <= gtwiz_userdata_rx_out (32*(I+1)-1 downto 32*I);
-
-      noibert : if (not USE_SYSTEM_IBERT and not USE_TCLINK) generate
-      begin
-        drpclk  <= clk40;
-        drpen   <= '0';
-        drpwe   <= '0';
-        drpaddr <= (others => '0');
-        drpdi   <= (others => '0');
-      end generate;
-
-      tclink_gen : if (not USE_SYSTEM_IBERT and USE_TCLINK) generate
-      begin
-      end generate;
-
-      ibert : if (USE_SYSTEM_IBERT and not USE_TCLINK) generate
-      begin
-
-        system_ibert_inst : system_ibert
-          port map (
-            drpclk_o(0)       => drpclk,
-            gt0_drpen_o       => drpen,
-            gt0_drpwe_o       => drpwe,
-            gt0_drpaddr_o     => drpaddr,
-            gt0_drpdi_o       => drpdi,
-            gt0_drprdy_i      => drprdy,
-            gt0_drpdo_i       => drpdo,
-            eyescanreset_o(0) => open,
-            rxrate_o          => open,
-            txdiffctrl_o      => open,
-            txprecursor_o     => open,
-            txpostcursor_o    => open,
-            rxlpmen_o(0)      => open,
-            rxoutclk_i(0)     => rxclk(I),
-            clk               => clk40
-            );
-
-      end generate;
-
-      process (clk320) is
-      begin
-        if (rising_edge(clk320)) then
-          tx_ready <= mgt_tx_ready(I);
-        end if;
-      end process;
-
-      process (rxclk(I)) is
-      begin
-        if (rising_edge(rxclk(I))) then
-          rx_ready <= mgt_rx_ready(I);
-        end if;
-      end process;
-
-      xlx_ku_mgt_10g24_1 : entity work.xlx_ku_mgt_10g24
-        port map (
-          mgt_refclk_i => refclk,
-
-          -- drp
-          mgt_freedrpclk_i => drpclk,
-          drpaddr          => drpaddr,
-          drpen            => drpen,
-          drpdi            => drpdi,
-          drprdy           => drprdy,
-          drpdo            => drpdo,
-          drpwe            => drpwe,
-
-          mgt_rxusrclk_o    => rxclk(I),
-          mgt_txusrclk_o    => txclk(I),
-          mgt_txreset_i     => reset or mgt_tx_reset(I),
-          mgt_rxreset_i     => reset or mgt_rx_reset(I),
-          mgt_rxslide_i     => rxslide(I),
-          mgt_entxcalibin_i => '0',
-          mgt_txcalib_i     => (others => '0'),
-          mgt_txready_o     => mgt_tx_ready(I),
-          mgt_rxready_o     => mgt_rx_ready(I),
-          mgt_tx_aligned_o  => open,
-          mgt_tx_piphase_o  => open,
-          mgt_usrword_i     => txdata,  -- mgt_data_in(I),
-          mgt_usrword_o     => rxdata,  -- mgt_data_out(I),
-          rxp_i             => rx_p(I),
-          rxn_i             => rx_n(I),
-          txp_o             => tx_p(I),
-          txn_o             => tx_n(I)
-          );
-
-      xpm_cdc_sync_rst_inst : xpm_cdc_sync_rst
-        generic map (
-          DEST_SYNC_FF   => 2,
-          INIT           => 1,
-          INIT_SYNC_FF   => 0,
-          SIM_ASSERT_CHK => 0
-          )
-        port map (
-          dest_rst => reset_rx_clk,
-          dest_clk => rxclk(I),
-          src_rst  => reset
-          );
-
-      -- rxclk --> clk320
-      mgt_cdc_lpgbt_to_fpga : entity work.fifo_async
-        generic map (
-          FIFO_READ_LATENCY => 4,
-          DEPTH             => 16,
-          WR_WIDTH          => 32,
-          RD_WIDTH          => 32
-          )
-        port map (
-          rst    => reset_rx_clk,
-          wr_clk => rxclk(I),
-          rd_clk => clk320,
-          wr_en  => rx_ready,
-          rd_en  => '1',
-          din    => rxdata,
-          dout   => mgt_data_out(I),
-          valid  => open,
-          full   => open,
-          empty  => open
-          );
-
-      -- clk320 --> txclk
-      mgt_cdc_fpga_to_lpgbt : entity work.fifo_async
-        generic map (
-          FIFO_READ_LATENCY => 4,
-          DEPTH             => 16,
-          WR_WIDTH          => 32,
-          RD_WIDTH          => 32
-          )
-        port map (
-          rst    => reset,
-          wr_clk => clk320,
-          rd_clk => txclk(I),
-          wr_en  => tx_ready,
-          rd_en  => '1',
-          din    => mgt_data_in(I),
-          dout   => txdata,
-          valid  => open,
-          full   => open,
-          empty  => open
-          );
-
-    end generate;
   end generate;
 
   --------------------------------------------------------------------------------
@@ -873,12 +916,19 @@ begin
 
   fw_info_mon.DNA <= dna(31 downto 0);
 
+  --------------------------------------------------------------------------------
+  -- Device DNA to read unique KCU serial number
+  --------------------------------------------------------------------------------
+
   device_dna_inst : device_dna
     port map (
       clock => clk40,
       reset => reset,
-      dna   => dna
-      );
+      dna   => dna);
+
+  --------------------------------------------------------------------------------
+  -- Uptime counter
+  --------------------------------------------------------------------------------
 
   process (clk40) is
     variable upcnt : unsigned (63 downto 0) := (others => '0');
@@ -889,6 +939,10 @@ begin
       fw_info_mon.uptime_msbs <= std_logic_vector(upcnt (63 downto 32));
     end if;
   end process;
+
+  --------------------------------------------------------------------------------
+  -- Clock Frequency Monitors
+  --------------------------------------------------------------------------------
 
   freq_counters : if (true) generate
     signal freq_cnt_clk    : std_logic;
