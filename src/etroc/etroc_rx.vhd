@@ -292,7 +292,7 @@ begin
             align_bad_cnt <= 0;
 
             -- less than 40 bitslips, we keep trying another bitslip
-            if (bitslip_cnt < FRAME_WIDTH) then
+            if (bitslip_cnt <= FRAME_WIDTH) then
               bitslip_auto <= '1';
               if (AUTO_INVERT) then
                 bitslip_cnt <= bitslip_cnt + 1;
