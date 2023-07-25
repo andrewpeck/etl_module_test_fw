@@ -174,7 +174,8 @@ architecture behavioral of etl_test_fw is
 
   signal clk_osc125, clk_osc300           : std_logic;
   signal clk_osc125_ibuf, clk_osc300_ibuf : std_logic;
-  signal clk40, clk320, clk125            : std_logic := '0';
+  signal clk40, clk320, clk125            : std_logic;
+  signal clk40_oddr                       : std_logic;
   signal reset                            : std_logic := '0';
 
   --------------------------------------------------------------------------------
@@ -234,7 +235,8 @@ architecture behavioral of etl_test_fw is
 
 begin
 
-  assert NUM_RBS <= 5 report "Number of RBs cannot exceed 5 (10 receivers == 5 RBs)" severity error;
+  assert NUM_RBS <= 5 report "Number of RBs cannot exceed 5 (10 receivers == 5 RBs)"
+                    severity error;
 
   --------------------------------------------------------------------------------
   -- Reset
@@ -261,7 +263,29 @@ begin
       ext_trigger_o => ext_trigger_i
       );
 
-  user_sma_n <= l1a;
+  --------------------------------------------------------------------------------
+  -- CLK40 Output
+  --
+  -- Send out the 40MHz clock on an ODDR so that the crazy DAQ system can sample it
+  --------------------------------------------------------------------------------
+
+  clk40_oddr : ODDR
+    generic map (                       --
+      DDR_CLK_EDGE => "OPPOSITE_EDGE",  -- "OPPOSITE_EDGE" or "SAME_EDGE"
+      INIT         => '0',              -- Initial value of Q: 1'b0 or 1'b1
+      SRTYPE       => "SYNC"            -- Set/Reset type: "SYNC" or "ASYNC"
+      )
+    port map (
+      C  => clk40,                      -- 1-bit clock input
+      Q  => clk40_oddr,                 -- 1-bit DDR output
+      CE => '1',                        -- 1-bit clock enable input
+      D1 => '1',                        -- 1-bit data input (positive edge)
+      D2 => '0',                        -- 1-bit data input (negative edge)
+      R  => reset,                      -- 1-bit reset
+      S  => '0'                         -- 1-bit set
+      );
+
+  user_sma_n <= clk40_oddr;
 
   --------------------------------------------------------------------------------
   -- IO/LED
