@@ -198,17 +198,20 @@ begin
 
     signal uplink_ready : std_logic;
 
-    ----------------------
-    -- FEC signals 
-    ----------------------
-    signal fec_sel           : integer range 0 to 1;
-    signal fec_uplink_data   : lpgbt_uplink_data_rt_array(1 downto 0);
-    signal fec_unused_bits   : std_logic_vector(11 downto 0);
-    signal fec_bitslip       : std_logic_vector(1 downto 0);
-    signal fec_datacorrected : std_logic_vector (459 downto 0);
-    signal fec_iccorrected   : std_logic_vector (3 downto 0);
-    signal fec_eccorrected   : std_logic_vector (3 downto 0);
-    signal fec_uplink_ready  : std_logic_vector (1 downto 0);
+    --------------------------------------------------------------------------------
+    -- FEC Multiplexer Signals
+    --
+    -- use to select between FEC5 and FEC12 lpGBT cores
+    --------------------------------------------------------------------------------
+
+    signal fec_mux_sel           : integer range 0 to 1;
+    signal fec_mux_uplink_data   : lpgbt_uplink_data_rt_array(1 downto 0);
+    signal fec_mux_unused_bits   : std_logic_vector(11 downto 0);
+    signal fec_mux_bitslip       : std_logic_vector(1 downto 0);
+    signal fec_mux_datacorrected : std_logic_vector (459 downto 0);
+    signal fec_mux_iccorrected   : std_logic_vector (3 downto 0);
+    signal fec_mux_eccorrected   : std_logic_vector (3 downto 0);
+    signal fec_mux_uplink_ready  : std_logic_vector (1 downto 0);
     
 
   begin
@@ -220,7 +223,7 @@ begin
       end if;
     end process;
 
-    fec_mode_uplink_gen : for J in 0 to 1 generate
+    fec_mux_mode_uplink_gen : for J in 0 to 1 generate
     begin
       uplink_inst : entity lpgbt_fpga.lpgbtfpga_uplink
 
@@ -245,16 +248,16 @@ begin
           bypassfecencoder_i  => g_LPGBT_BYPASS_FEC,
           bypassscrambler_i   => g_LPGBT_BYPASS_SCRAMBLER,
 
-          uplinkclkouten_o           => fec_uplink_data(J).valid,
-          userdata_o(223 downto 0)   => fec_uplink_data(J).data,
-          userdata_o(229 downto 224) => fec_unused_bits(J * 6 + 5 downto J * 6),
-          ecdata_o                   => fec_uplink_data(J).ec,  --external control
-          icdata_o                   => fec_uplink_data(J).ic,  --internal control
-          mgt_bitslipctrl_o          => fec_bitslip(J),
-          datacorrected_o            => fec_datacorrected(J * 230 + 229 downto J * 230),
-          iccorrected_o              => fec_iccorrected(J * 2 + 1 downto J * 2),
-          eccorrected_o              => fec_eccorrected(J * 2 + 1 downto J * 2),
-          rdy_o                      => fec_uplink_ready(J)
+          uplinkclkouten_o           => fec_mux_uplink_data(J).valid,
+          userdata_o(223 downto 0)   => fec_mux_uplink_data(J).data,
+          userdata_o(229 downto 224) => fec_mux_unused_bits(J * 6 + 5 downto J * 6),
+          ecdata_o                   => fec_mux_uplink_data(J).ec,  --external control
+          icdata_o                   => fec_mux_uplink_data(J).ic,  --internal control
+          mgt_bitslipctrl_o          => fec_mux_bitslip(J),
+          datacorrected_o            => fec_mux_datacorrected(J * 230 + 229 downto J * 230),
+          iccorrected_o              => fec_mux_iccorrected(J * 2 + 1 downto J * 2),
+          eccorrected_o              => fec_mux_eccorrected(J * 2 + 1 downto J * 2),
+          rdy_o                      => fec_mux_uplink_ready(J)
           );
     end generate;
 
@@ -268,13 +271,13 @@ begin
     process (uplink_clk) is
     begin
       if (rising_edge(uplink_clk)) then
-        uplink_data   <= fec_uplink_data(fec_sel);
-        unused_bits   <= fec_unused_bits(fec_sel * 6 + 5 downto fec_sel * 6);
-        bitslip       <= fec_bitslip(fec_sel);
-        datacorrected <= fec_datacorrected(fec_sel * 230 + 229 downto fec_sel * 230);
-        iccorrected   <= fec_iccorrected(fec_sel * 2 + 1 downto fec_sel * 2);
-        eccorrected   <= fec_eccorrected(fec_sel * 2 + 1 downto fec_sel * 2);
-        uplink_ready  <= fec_uplink_ready(fec_sel);
+        uplink_data   <= fec_mux_uplink_data(fec_sel);
+        unused_bits   <= fec_mux_unused_bits(fec_sel * 6 + 5 downto fec_sel * 6);
+        bitslip       <= fec_mux_bitslip(fec_sel);
+        datacorrected <= fec_mux_datacorrected(fec_sel * 230 + 229 downto fec_sel * 230);
+        iccorrected   <= fec_mux_iccorrected(fec_sel * 2 + 1 downto fec_sel * 2);
+        eccorrected   <= fec_mux_eccorrected(fec_sel * 2 + 1 downto fec_sel * 2);
+        uplink_ready  <= fec_mux_uplink_ready(fec_sel);
       end if;
     end process;
 
