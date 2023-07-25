@@ -61,7 +61,12 @@ end readout_board;
 
 architecture behavioral of readout_board is
 
-  -- TODO: account for fec5/12
+  -- NOTE: for the RB-3, we only enable every other elink
+  -- to support RB-6 and RB-7, this 0555555 should be changed to FFFFFFF
+  --
+  -- it should not hurt anything to change this but will increase firmware usage
+  -- and compile time
+  --
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
   signal valid : std_logic;
@@ -615,10 +620,10 @@ begin
 
       en_gen : if (ELINK_EN_MASK(ielink) = '1') generate
 
-        signal data_i : std_logic_vector (31 downto 0);
-        signal data   : std_logic_vector (39 downto 0) := (others => '0');
+        -- Signals from ETROC ⟹ FIFO
+        signal data_to_fifo  : std_logic_vector (39 downto 0) := (others => '0');
+        signal wr_en_to_fifo : std_logic                      := '0';
 
-        signal locked              : std_logic := '0';
         signal bitslip             : std_logic := '0';
         signal zero_suppress       : std_logic := '1';
         signal raw_data_mode       : std_logic := '0';
@@ -631,14 +636,23 @@ begin
         signal full_xfifo            : std_logic;
         signal empty_xfifo           : std_logic;
 
-        signal wr_en : std_logic := '0';
-        signal rd_en : std_logic := '0';
-
         signal disable : std_logic := '0';
 
         signal enable_by_rate : std_logic := '0';
 
       begin
+
+        --------------------------------------------------------------------------------
+        -- Elink Enable Logic
+        --
+        -- Depending on the data rate that we program in the ETROC,
+        -- only certain elinks will be available
+        --
+        -- 320  Mbps: enable every elink
+        -- 640  Mbps: only enable even elinks, i.e. 0, 2, 4, 6, etc
+        -- 1280 Mbps: only enable every fourth elink, i.e. 0, 4, 8
+        --
+        --------------------------------------------------------------------------------
 
         process (clk40) is
         begin
@@ -682,26 +696,37 @@ begin
           end if;
         end process;
 
-        process (clk40) is
-        begin
-          if (rising_edge(clk40)) then
-            data_i <= data_padded(24+8*(ielink+1)-1 downto 8*ielink);
-          end if;
-        end process;
+        --------------------------------------------------------------------------------
+        -- ETROC Decoder
+        --
+        -- Takes in 8, 16, or 32 bit frames from the elinks
+        -- Does automatic alignment / inversion
+        -- Outputs 40 bit ETROC data words
+        --------------------------------------------------------------------------------
 
-        etroc_rx_1 : entity etroc.etroc_rx
+        etroc_rx_inst : entity etroc.etroc_rx
           port map (
-            clock             => clk40,
-            -- FIXME: this should not be shared across both lpgbts
-            reset             => reset or ctrl.reset_etroc_rx(ielink) or disable or not enable_by_rate,
-            data_i            => data_i,
-            elinkwidth        => ctrl.elink_width,  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
+
+            -- clock and reset
+            clock => clk40,
+            reset => reset or disable or not enable_by_rate
+                           or ctrl.reset_etroc_rx(ielink),  -- FIXME: this should not be shared across both lpgbts
+
+            -- inputs
+            data_i => data_padded(24+8*(ielink+1)-1 downto 8*ielink),
+
+            -- configuration
+            elinkwidth_i      => ctrl.elink_width,  -- runtime configuration: 0:2, 1:4, 2:8, 3:16, 4:32
             bitslip_i         => bitslip,
             bitslip_auto_i    => ctrl.bitslip_auto_en,
-            zero_suppress     => zero_suppress,
-            raw_data_mode     => raw_data_mode,
-            fifo_wr_en_o      => wr_en,
-            fifo_data_o       => data,
+            zero_suppress_i   => zero_suppress,
+            raw_data_mode_i   => raw_data_mode,
+
+            -- fifo outputs
+            fifo_wr_en_o      => wr_en_to_fifo,
+            fifo_data_o       => data_to_fifo,
+
+            -- monitoring outputs
             frame_mon_o       => rx_frame_mon_arr(ilpgbt*28+ielink),
             state_mon_o       => rx_state_mon_arr(ilpgbt*28+ielink),
             bcid_o            => open,
@@ -725,34 +750,44 @@ begin
             err_o             => rx_err(ilpgbt*28+ielink),
             busy_o            => rx_busy(ilpgbt*28+ielink),
             idle_o            => rx_idle(ilpgbt*28+ielink),
-            locked_o          => locked
+            locked_o          => rx_locked(ilpgbt*28+ielink)
             );
 
-        rx_locked(ilpgbt*28+ielink) <= locked;
-        rd_en                       <= rx_fifo_rd_en_selector(ilpgbt*28+ielink);
-
+        --------------------------------------------------------------------------------
+        -- ETROC FIFO
+        --
         -- buffer data from THIS etroc before it goes into the main mux
+        --
+        --------------------------------------------------------------------------------
+
         etroc_fifo_inst : entity work.fifo_async
           generic map (
             DEPTH          => 512,
             WR_WIDTH       => 42,
             RD_WIDTH       => 42,
-            RELATED_CLOCKS => 1
-            )
+            RELATED_CLOCKS => 1)
           port map (
-            rst => reset or fifo_reset,  -- Must be synchronous to wr_clk. Must be applied only when wr_clk is stable and free-running.
+            -- Must be synchronous to wr_clk. Must be applied only when wr_clk
+            -- is stable and free-running.
+            rst => reset or fifo_reset,
 
             wr_clk => clk40,
             rd_clk => clk40,
 
-            wr_en => wr_en,
-            rd_en => rd_en,
+            wr_en => wr_en_to_fifo,
+            rd_en => rx_fifo_rd_en_selector(ilpgbt*28+ielink),
 
-            din               => start_of_packet & end_of_packet & data,
+            -- write in the data words along with some metadata
+            -- {sof, eof, data}
+            din               => start_of_packet & end_of_packet & data_to_fifo,
+
+            -- extract the data words, send to the FIFO multiplexer
             dout(39 downto 0) => rx_fifo_data_arr(ilpgbt*28+ielink),
             dout(40)          => end_of_packet_xfifo,
             dout(41)          => start_of_packet_xfifo,
 
+            -- FIFO status
+            -- TODO: should monitor for overflows
             valid => valid_xfifo,
             full  => full_xfifo,
             empty => empty_xfifo
@@ -785,6 +820,10 @@ begin
   mon.etroc_locked(27 downto 0)       <= rx_locked(27 downto 0);
   mon.etroc_locked_slave(27 downto 0) <= rx_locked(55 downto 28);
 
+  --------------------------------------------------------------------------------
+  -- Monitoring Multiplexer
+  --------------------------------------------------------------------------------
+
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -797,6 +836,10 @@ begin
   end process;
 
   rx_crc_match <= '1' when rx_crc = rx_crc_calc else '0';
+
+  --------------------------------------------------------------------------------
+  -- Allow writing a fixed pattern into the RX FIFO
+  --------------------------------------------------------------------------------
 
   process (clk40) is
   begin
@@ -815,42 +858,59 @@ begin
     end if;
   end process;
 
+  --------------------------------------------------------------------------------
+  -- ETROC Multiplexer
+  --------------------------------------------------------------------------------
+
   etroc_selector_inst : entity work.etroc_selector
     generic map (
       g_NUM_INPUTS => 28*2,
-      g_WIDTH      => 40
-      )
+      g_WIDTH      => 40)
     port map (
+
+      -- clock and reset
       clock   => clk40,
       reset_i => reset or fifo_reset,
 
-      global_full => global_fifo_full,
+      -- input enable for each channel
+      ch_en_i => rx_locked                                      -- read from locked channels
+      and (elink_en_mask & elink_en_mask)                       -- read from channels enabled at compile time
+      and not (ctrl.etroc_disable_slave & ctrl.etroc_disable),  -- don't read from runtime disabled channels
 
-      ch_en_i => rx_locked and (elink_en_mask & elink_en_mask)
-      and not (ctrl.etroc_disable_slave & ctrl.etroc_disable),
+      -- backpressure the main FIFO is full, stop draining
+      global_full_i => global_fifo_full,
 
-      data_i  => rx_fifo_data_arr(mux_sel),  -- in:  multiplexed input data
-      sof_i   => rx_start_of_packet,
-      eof_i   => rx_end_of_packet,
-      full_i  => rx_fifo_full_arr,           -- in:  all full flags
-      empty_i => rx_fifo_empty_arr,          -- in:  all empty flags
-      valid_i => rx_fifo_valid_arr,          -- in:  all valid flags
+      -- data inputs
+      data_i  => rx_fifo_data_arr(mux_sel),  -- multiplexed input data
+      sof_i   => rx_start_of_packet,         -- start/end of packet
+      eof_i   => rx_end_of_packet,           -- start/end of packet
 
-      data_sel => mux_sel,              -- out: multiplexer select 0-57
+      -- fifo status inputs
+      full_i  => rx_fifo_full_arr,      -- all full flags
+      empty_i => rx_fifo_empty_arr,     -- all empty flags
+      valid_i => rx_fifo_valid_arr,     -- all valid flags
 
-      rd_en_o    => rx_fifo_rd_en_selector,     -- out: fifo read enable
-      data_o     => rx_fifo_data_selector,      -- out: data, connect to daq fifo
-      metadata_o => rx_fifo_metadata_selector,  -- out: data, connect to daq fifo
-      wr_en_o    => rx_fifo_valid_selector      -- out: wr_en, connect to daq_fifo
+      -- fifo control outputs
+      data_sel_o => mux_sel,                    -- multiplexer select 0-57
+      rd_en_o    => rx_fifo_rd_en_selector,     -- fifo read enable
+      data_o     => rx_fifo_data_selector,      -- data, connect to daq fifo
+      metadata_o => rx_fifo_metadata_selector,  -- data, connect to daq fifo
+      wr_en_o    => rx_fifo_valid_selector      -- wr_en, connect to daq_fifo
       );
 
   mon.rx_fifo_full <= global_fifo_full;
 
+  --------------------------------------------------------------------------------
+  -- Global ETROC FIFO
+  --
+  -- Buffers the merged outputs from ALL etrocs
+  --
+  --------------------------------------------------------------------------------
+
   etroc_fifo_inst : entity work.etroc_fifo
     generic map (
       DEPTH          => ETROC_FIFO_DEPTH,
-      LOST_CNT_WIDTH => mon.rx_fifo_lost_word_cnt'length
-      )
+      LOST_CNT_WIDTH => mon.rx_fifo_lost_word_cnt'length)
     port map (
       clk40         => clk40,
       reset         => reset,
@@ -866,7 +926,14 @@ begin
       );
 
   --------------------------------------------------------------------------------
-  -- TX Fifo
+  --
+  -- TX FIFO
+  --
+  -- Software fillable FIFO that can write data into the downlink,
+  -- useful for loopback testing.
+  --
+  -- When the TXFIFO is idle, it will generate an ETROC idle pattern
+  --
   --------------------------------------------------------------------------------
 
   -- generate fillers 8 bits at a time
@@ -881,14 +948,11 @@ begin
       tlast => tx_filler_tlast
       );
 
-
   -- switch between the filler generator and the fifo
   tx_gen <= tx_fifo_out when tx_sel_fifo = '1' else tx_filler_gen;
 
-  ------------------------------------------
   -- synchronize the filler -> fifo switchover
   -- to the tlast of the filler generator
-  ------------------------------------------
 
   process (clk40) is
   begin

@@ -88,15 +88,15 @@ entity etroc_rx is
     -- 2 = 320 Mbps
     -- 3 = 640 Mbps
     -- 4 = 1280 Mbps
-    elinkwidth : in std_logic_vector(2 downto 0) := "010";
+    elinkwidth_i : in std_logic_vector(2 downto 0) := "010";
 
     -- set to 1 and this module will output filler words
     -- in addition to the header/payload/trailer
-    zero_suppress : in std_logic;
+    zero_suppress_i : in std_logic;
 
     -- set to 1 to just output semi-raw data.. this outputs decoded frames,
     -- indepdent of header/trailer/etc.. just sends out the 40 bit frames into the fifo
-    raw_data_mode : in std_logic;
+    raw_data_mode_i : in std_logic;
 
     -- assert 1 to force a bitslip
     -- this should be asserted for 1 clock cycle only
@@ -362,7 +362,7 @@ begin
       clk40            => clock,
       elinkdata        => data_inv,
       elinkaligned     => '1',
-      elinkwidth       => elinkwidth,
+      elinkwidth       => elinkwidth_i,
       msbfirst         => '1',
       reverseinputbits => '0',
       dataout          => next_frame_pre_reverse,
@@ -433,7 +433,7 @@ begin
           end if;
 
           -- FIFO output
-          if (frame_en = '1' and zero_suppress = '0') then
+          if (frame_en = '1' and zero_suppress_i = '0') then
             fifo_data_o  <= frame;
             fifo_wr_en_o <= '1';
           end if;
@@ -551,7 +551,7 @@ begin
       -- raw data mode? just output every frame
       --------------------------------------------------------------------------------
 
-      if (frame_en = '1' and raw_data_mode = '1') then
+      if (frame_en = '1' and raw_data_mode_i = '1') then
         fifo_data_o  <= frame;
         fifo_wr_en_o <= '1';
       end if;

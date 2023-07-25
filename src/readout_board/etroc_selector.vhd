@@ -34,12 +34,12 @@ entity etroc_selector is
     clock   : in std_logic;
     reset_i : in std_logic;
 
-    global_full : in std_logic;
+    global_full_i : in std_logic;
 
     -- data input
     data_i : in std_logic_vector (g_WIDTH-1 downto 0);
 
-    data_sel : out natural range 0 to g_NUM_INPUTS-1;
+    data_sel_o : out natural range 0 to g_NUM_INPUTS-1;
 
     -- input fifo controls
     sof_i   : in  std_logic_vector (g_NUM_INPUTS - 1 downto 0);
@@ -93,22 +93,22 @@ architecture behavioral of etroc_selector is
 
 begin
 
-  empty    <= empty_i(data_sel);
-  valid    <= valid_i(data_sel);
-  full     <= full_i(data_sel);
-  sof      <= sof_i(data_sel);
-  eof      <= eof_i(data_sel);
+  empty    <= empty_i(data_sel_o);
+  valid    <= valid_i(data_sel_o);
+  full     <= full_i(data_sel_o);
+  sof      <= sof_i(data_sel_o);
+  eof      <= eof_i(data_sel_o);
   any_full <= or_reduce(full_i);
 
-  process (data_sel, ch_en_i, empty_i) is
+  process (data_sel_o, ch_en_i, empty_i) is
   begin
 
-    next_channel <= next_sel(data_sel, ch_en_i, empty_i);
+    next_channel <= next_sel(data_sel_o, ch_en_i, empty_i);
 
-    -- if (data_sel = g_NUM_INPUTS-1) then
+    -- if (data_sel_o = g_NUM_INPUTS-1) then
     --   next_channel <= 0;
     -- else
-    --   next_channel <= data_sel + 1;
+    --   next_channel <= data_sel_o + 1;
     -- end if;
 
   end process;
@@ -126,22 +126,22 @@ begin
 
         when IDLE_state =>
 
-          if (empty = '0' and ch_en_i(data_sel) = '1') then
+          if (empty = '0' and ch_en_i(data_sel_o) = '1') then
             -- selected FIFO has data in its buffer;
             -- start reading
-            rd_en_o(data_sel) <= '1';
+            rd_en_o(data_sel_o) <= '1';
             state             <= READING_state;
           else
             -- nothing in this ETROC, look at the next one
-            data_sel <= next_channel;
+            data_sel_o <= next_channel;
           end if;
 
         when READING_state =>
 
           if (valid = '1') then
             metadata_o <= x"00" &
-                          "000" & global_full & any_full & full & eof & sof &
-                          "00" & std_logic_vector(to_unsigned(data_sel, 6));
+                          "000" & global_full_i & any_full & full & eof & sof &
+                          "00" & std_logic_vector(to_unsigned(data_sel_o, 6));
             data_o      <= data_i;
             wr_en_o     <= valid;
             timeout_cnt <= timeout_cnt + 1;
@@ -151,11 +151,11 @@ begin
             -- when we reach the end of frame,
             -- switch to the next chip
             state       <= IDLE_state;
-            data_sel    <= next_channel;
+            data_sel_o  <= next_channel;
             timeout_cnt <= 0;
           else
             -- keep reading & copy data to the output
-            rd_en_o(data_sel) <= '1';
+            rd_en_o(data_sel_o) <= '1';
           end if;
 
         when others =>
