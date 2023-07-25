@@ -26,6 +26,13 @@ package constants_pkg is
   constant TYPEB     : positive := 1 + TYPE_RANGE'high - TYPE_RANGE'low;
   constant EVENTCNTB : positive := 1 + L1COUNTER_RANGE'high - L1COUNTER_RANGE'low;
 
+  function zsh (a : std_logic_vector) return std_logic_vector;
+  function reverse_vector (a : std_logic_vector) return std_logic_vector;
+
+end package constants_pkg;
+
+package body constants_pkg is
+
   -- Zero shift:
   --
   -- Takes a std_logic_vector (x downto y) and converts it to a
@@ -51,8 +58,7 @@ package constants_pkg is
     end loop;
     return result;
   end;  -- function reverse_vector
-
-end package constants_pkg;
+end package body constants_pkg;
 
 --------------------------------------------------------------------------------
 -- ETROC Receiver
@@ -97,6 +103,13 @@ entity etroc_rx is
     -- set to 1 to just output semi-raw data.. this outputs decoded frames,
     -- indepdent of header/trailer/etc.. just sends out the 40 bit frames into the fifo
     raw_data_mode_i : in std_logic;
+
+    -- set to 1 to treat the data as trigger data
+    -- (simply ORing it together and outputting a trigger bit)
+    --
+    -- Since the mixed data/trigger format is not supported here
+    -- **asserting trigger mode disables data mode**
+    -- trigger_mode_i : in std_logic;
 
     -- assert 1 to force a bitslip
     -- this should be asserted for 1 clock cycle only
