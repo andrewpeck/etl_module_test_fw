@@ -39,8 +39,9 @@ entity readout_board is
 
     strobe : in std_logic;
 
-    bc0 : in std_logic;
-    l1a : in std_logic;
+    bc0  : in std_logic;
+    qinj : in std_logic;
+    l1a  : in std_logic;
 
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
@@ -283,9 +284,9 @@ begin
         reset       => reset,
         l1a_i       => l1a or ctrl.l1a_pulse,
         bc0         => bc0 or ctrl.bc0_pulse,
+        qinj        => qinj or ctrl.qinj_pulse,
         ecr         => ctrl.ecr_pulse,
         link_reset  => ctrl.link_reset_pulse,
-        qinj        => ctrl.qinj_pulse,
         l1a_qinj    => ctrl.l1a_qinj_pulse,
         l1a_inj_dly => ctrl.l1a_inj_dly,
         ws_stop     => ctrl.ws_stop_pulse,

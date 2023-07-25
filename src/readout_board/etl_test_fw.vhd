@@ -179,7 +179,7 @@ architecture behavioral of etl_test_fw is
   -- TTC
   --------------------------------------------------------------------------------
 
-  signal bc0, l1a        : std_logic;
+  signal bc0, l1a, qinj  : std_logic;
   signal ext_trigger     : std_logic;
   signal trigger_o       : std_logic_vector (NUM_RBS-1 downto 0);
   signal l1a_rate_cnt    : std_logic_vector (31 downto 0);
@@ -612,6 +612,7 @@ begin
       reset         => reset,
       l1a           => l1a,
       bc0           => bc0,
+      qinj          => qinj,
       force_trig    => system_ctrl.l1a_pulse,
       ext_trig      => ext_trigger,
       ext_trig_en   => system_ctrl.en_ext_trigger,
@@ -660,8 +661,9 @@ begin
         reset  => reset,
 
         -- ttc
-        bc0 => bc0,
-        l1a => l1a,
+        bc0  => bc0,
+        l1a  => l1a,
+        qinj => qinj,
 
         -- DAQ wishbone
         daq_wb_in  => daq_ipb_w_array(I downto I),
