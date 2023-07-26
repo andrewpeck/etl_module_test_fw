@@ -87,6 +87,15 @@ are either not tested or known to be problematic. Change log is
 inclusive of all changes from the previous recommended version; please
 only use the versions listed here unless instructed otherwise.
 
+### v3.0.6
+
+  - Features:
+      - Switchable FEC mode
+      - Add 40MHz clock output on user SMA
+  - Fixes:
+      - Connect global QINJ generator to ETROCs
+  - Cleanup + documentation of code
+
 ### v3.0.4
 
   - Multi-rb support
