@@ -266,20 +266,20 @@ begin
   -- Send out the 40MHz clock on an ODDR so that the crazy DAQ system can sample it
   --------------------------------------------------------------------------------
 
-  clk40_oddr_inst : ODDR
-    generic map (                       --
-      DDR_CLK_EDGE => "OPPOSITE_EDGE",  -- "OPPOSITE_EDGE" or "SAME_EDGE"
-      INIT         => '0',              -- Initial value of Q: 1'b0 or 1'b1
-      SRTYPE       => "SYNC"            -- Set/Reset type: "SYNC" or "ASYNC"
-      )
+  clk40_oddr_inst : ODDRE1
+   generic map (
+     IS_C_INVERTED  => '0',           -- Optional inversion for C
+     IS_D1_INVERTED => '0',           -- Unsupported, do not use
+     IS_D2_INVERTED => '0',           -- Unsupported, do not use
+     SIM_DEVICE     => "ULTRASCALE",  -- Set the device version for simulation functionality (ULTRASCALE, ULTRASCALE_PLUS, ULTRASCALE_PLUS_ES1, ULTRASCALE_PLUS_ES2)
+     SRVAL          => '0'            -- Initializes the ODDRE1 Flip-Flops to the specified value ('0', '1')
+     )
     port map (
-      C  => clk40,                      -- 1-bit clock input
-      Q  => clk40_oddr,                 -- 1-bit DDR output
-      CE => '1',                        -- 1-bit clock enable input
-      D1 => '1',                        -- 1-bit data input (positive edge)
-      D2 => '0',                        -- 1-bit data input (negative edge)
-      R  => reset,                      -- 1-bit reset
-      S  => '0'                         -- 1-bit set
+      Q  => clk40_oddr,                 -- 1-bit output: Data output to IOB
+      C  => clk40,                      -- 1-bit input: High-speed clock input
+      D1 => '1',                        -- 1-bit input: Parallel data input 1
+      D2 => '0',                        -- 1-bit input: Parallel data input 2
+      SR => reset                       -- 1-bit input: Active-High Async Reset
       );
 
   user_sma_n <= clk40_oddr;
