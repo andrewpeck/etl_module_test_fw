@@ -139,7 +139,7 @@ begin
       g_CLK_FREQUENCY => x"02638e98",
       g_COUNTER_WIDTH => 32)
     port map (
-      clk_i   => clk40,
+      clk_i   => clock,
       reset_i => reset,
       en_i    => l1a,
       rate_o  => l1a_rate_cnt);
