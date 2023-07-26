@@ -266,7 +266,7 @@ begin
   -- Send out the 40MHz clock on an ODDR so that the crazy DAQ system can sample it
   --------------------------------------------------------------------------------
 
-  clk40_oddr : ODDR
+  clk40_oddr_inst : ODDR
     generic map (                       --
       DDR_CLK_EDGE => "OPPOSITE_EDGE",  -- "OPPOSITE_EDGE" or "SAME_EDGE"
       INIT         => '0',              -- Initial value of Q: 1'b0 or 1'b1
