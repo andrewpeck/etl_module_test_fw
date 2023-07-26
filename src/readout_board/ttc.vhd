@@ -26,7 +26,9 @@ entity ttc is
     qinj_makes_l1a : in std_logic;
     l1a_delay      : in std_logic_vector (8 downto 0);
     qinj_deadtime  : in std_logic_vector (15 downto 0);
-    qinj_gen_rate  : in std_logic_vector (31 downto 0)
+    qinj_gen_rate  : in std_logic_vector (31 downto 0);
+
+    l1a_rate_cnt : out std_logic_vector (31 downto 0)
 
     );
 end ttc;
@@ -131,5 +133,15 @@ begin
       end if;
     end if;
   end process;
+
+  l1a_rate_counter_inst : entity work.rate_counter
+    generic map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => 32)
+    port map (
+      clk_i   => clk40,
+      reset_i => reset,
+      en_i    => l1a,
+      rate_o  => l1a_rate_cnt);
 
 end behavioral;

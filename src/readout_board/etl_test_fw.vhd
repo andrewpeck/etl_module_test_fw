@@ -622,17 +622,9 @@ begin
       force_qinj     => system_ctrl.qinj_pulse,
       qinj_makes_l1a => system_ctrl.qinj_makes_l1a,
       l1a_delay      => system_ctrl.l1a_delay,
-      qinj_gen_rate  => system_ctrl.qinj_rate);
+      qinj_gen_rate  => system_ctrl.qinj_rate,
 
-  l1a_rate_counter_inst : entity work.rate_counter
-    generic map (
-      g_CLK_FREQUENCY => x"02638e98",
-      g_COUNTER_WIDTH => 32)
-    port map (
-      clk_i   => clk40,
-      reset_i => reset,
-      en_i    => l1a,
-      rate_o  => l1a_rate_cnt);
+      l1a_rate_cnt => l1a_rate_cnt);
 
   system_mon.l1a_rate_cnt <= l1a_rate_cnt;
 
