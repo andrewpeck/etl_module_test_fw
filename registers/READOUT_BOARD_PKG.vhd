@@ -167,6 +167,7 @@ package READOUT_BOARD_CTRL is
     DATA_CNT                   :std_logic_vector(15 downto 0);  -- Count of packet data frames (muxed across elinks)
     FILLER_RATE                :std_logic_vector(23 downto 0);  -- Rate of packet filler frames (muxed across elinks)
     TRIGGER_RATES              :std_logic_vector( 4 downto 0);  -- Trigger rate of selected ETROC (muxed accross elinks)
+    EVENT_CNT                  :std_logic_vector(31 downto 0);  -- Read counts on event counter
   end record READOUT_BOARD_MON_t;
 
 
@@ -242,6 +243,7 @@ package READOUT_BOARD_CTRL is
     TRIG_BITSLIP_25            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC25
     TRIG_BITSLIP_26            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC26
     TRIG_BITSLIP_27            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC27
+    EVENT_CNT_RESET            :std_logic;                      -- Reset event counter
   end record READOUT_BOARD_CTRL_t;
 
 

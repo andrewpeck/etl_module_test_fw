@@ -115,4 +115,8 @@
   <node id="TRIG_BITSLIP_26" address="0x514" mask="0x00007c00" permission="rw" description="Bitslip for ETROC26"/>
   <node id="TRIG_BITSLIP_27" address="0x514" mask="0x000f8000" permission="rw" description="Bitslip for ETROC27"/>
 
+  <!-- EVENT COUNTER  -->
+  <node id="EVENT_CNT_RESET" address="0x516" mask="0x00000001" permission="w" description="Reset event counter"/>
+  <node id="EVENT_CNT" address="0x517" mask="0xffffffff" permission="r" description="Read counts on event counter"/>
+  
 </node>

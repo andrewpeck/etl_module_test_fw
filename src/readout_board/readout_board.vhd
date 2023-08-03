@@ -39,9 +39,9 @@ entity readout_board is
 
     strobe : in std_logic;
 
-    bc0  : in std_logic;
-    qinj : in std_logic;
-    l1a  : in std_logic;
+    bc0   : in std_logic;
+    qinj  : in std_logic;
+    l1a_i : in std_logic;
 
     mon      : out READOUT_BOARD_MON_t;
     ctrl     : in  READOUT_BOARD_CTRL_t;
@@ -67,6 +67,9 @@ architecture behavioral of readout_board is
   constant ELINK_EN_MASK : std_logic_vector (27 downto 0) := x"0555555";
 
   signal valid : std_logic;
+
+  signal l1a         : std_logic; 
+  signal event_cnt : std_logic_vector(31 downto 0);
 
   --------------------------------------------------------------------------------
   -- LPGBT Glue
@@ -297,7 +300,7 @@ begin
       port map (
         clock       => clk40,
         reset       => reset,
-        l1a_i       => l1a or ctrl.l1a_pulse,
+        l1a_i       => l1a,
         bc0         => bc0 or ctrl.bc0_pulse,
         qinj        => qinj or ctrl.qinj_pulse,
         ecr         => ctrl.ecr_pulse,
@@ -312,6 +315,24 @@ begin
 
   end generate;
 
+  l1a <= l1a_i or ctrl.l1a_pulse or self_trigger_delayed;
+
+  --------------------------------------------------------------------------------
+  -- Event Counter
+  --------------------------------------------------------------------------------
+
+  event_counter : entity work.counter
+  generic map (width => 32)
+  port map (
+    clk    => clk40,
+    reset  => reset or ctrl.event_cnt_reset,
+    enable => '1',
+    event  => l1a,
+    count  => event_cnt,
+    at_max => open
+    );
+
+  mon.event_cnt <= event_cnt;
 
   --------------------------------------------------------------------------------
   -- Packet Rate Counter

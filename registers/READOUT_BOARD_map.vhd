@@ -226,6 +226,8 @@ begin  -- architecture behavioral
           localRdData(19 downto 15)  <=  reg_data(1300)(19 downto 15);                --Bitslip for ETROC27
         when 1301 => --0x515
           localRdData( 4 downto  0)  <=  Mon.TRIGGER_RATES;                           --Trigger rate of selected ETROC (muxed accross elinks)
+        when 1303 => --0x517
+          localRdData(31 downto  0)  <=  Mon.EVENT_CNT;                               --Read counts on event counter
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -348,6 +350,7 @@ begin  -- architecture behavioral
       Ctrl.PACKET_CNT_RESET <= '0';
       Ctrl.ERR_CNT_RESET <= '0';
       Ctrl.DATA_CNT_RESET <= '0';
+      Ctrl.EVENT_CNT_RESET <= '0';
       
 
 
@@ -636,6 +639,7 @@ begin  -- architecture behavioral
       reg_data(1300)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_25;
       reg_data(1300)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_26;
       reg_data(1300)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_27;
+      reg_data(1302)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.EVENT_CNT_RESET;
 
       end if; -- reset
     end if; -- clk

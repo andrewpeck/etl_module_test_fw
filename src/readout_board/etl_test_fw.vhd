@@ -653,9 +653,9 @@ begin
         reset  => reset,
 
         -- ttc
-        bc0  => bc0,
-        l1a  => l1a,
-        qinj => qinj,
+        bc0   => bc0,
+        l1a_i => l1a,
+        qinj  => qinj,
 
         -- DAQ wishbone
         daq_wb_in  => daq_ipb_w_array(I downto I),
