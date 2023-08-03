@@ -37,6 +37,15 @@ synth:
 impl:
 	$(TIMECMD) Hog/LaunchWorkflow.sh etl_test_fw $(COLORIZE)
 
+create_extclk:
+	$(TIMECMD) Hog/CreateProject.sh etl_test_fw_extclk $(COLORIZE)
+
+synth_extclk:
+	$(TIMECMD) Hog/LaunchWorkflow.sh -synth_only etl_test_fw_extclk $(COLORIZE)
+
+impl_extclk:
+	$(TIMECMD) Hog/LaunchWorkflow.sh etl_test_fw_extclk $(COLORIZE)
+
 clean:
 	rm -rf Projects/
 
