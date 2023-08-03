@@ -25,8 +25,8 @@ architecture behavioral of READOUT_BOARD_wb_map is
   type slv32_array_t  is array (integer range <>) of std_logic_vector( 31 downto 0);
   signal localRdData : std_logic_vector (31 downto 0) := (others => '0');
   signal localWrData : std_logic_vector (31 downto 0) := (others => '0');
-  signal reg_data :  slv32_array_t(integer range 0 to 1287);
-  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1287) := (others => x"00000000");
+  signal reg_data :  slv32_array_t(integer range 0 to 1303);
+  constant DEFAULT_REG_DATA : slv32_array_t(integer range 0 to 1303) := (others => x"00000000");
 begin  -- architecture behavioral
 
   wb_rdata <= localRdData;
@@ -175,6 +175,57 @@ begin  -- architecture behavioral
           localRdData(31 downto 16)  <=  Mon.DATA_CNT;                                --Count of packet data frames (muxed across elinks)
         when 1287 => --0x507
           localRdData(23 downto  0)  <=  Mon.FILLER_RATE;                             --Rate of packet filler frames (muxed across elinks)
+        when 1288 => --0x508
+          localRdData(31 downto  0)  <=  reg_data(1288)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 31 downto 0.
+        when 1289 => --0x509
+          localRdData(31 downto  0)  <=  reg_data(1289)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 63 downto 32.
+        when 1290 => --0x50a
+          localRdData(31 downto  0)  <=  reg_data(1290)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 95 downto 64.
+        when 1291 => --0x50b
+          localRdData(31 downto  0)  <=  reg_data(1291)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 127 downto 96.
+        when 1292 => --0x50c
+          localRdData(31 downto  0)  <=  reg_data(1292)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 159 downto 128.
+        when 1293 => --0x50d
+          localRdData(31 downto  0)  <=  reg_data(1293)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 191 downto 160.
+        when 1294 => --0x50e
+          localRdData(31 downto  0)  <=  reg_data(1294)(31 downto  0);                --Bitmask to enable bits in the trigger link. Bits 223 downto 192.
+        when 1295 => --0x50f
+          localRdData(28)            <=  reg_data(1295)(28);                          --Set to 1 to enable ETROC self trigger.
+        when 1296 => --0x510
+          localRdData( 4 downto  0)  <=  reg_data(1296)( 4 downto  0);                --Bitslip for ETROC0
+          localRdData( 9 downto  5)  <=  reg_data(1296)( 9 downto  5);                --Bitslip for ETROC1
+          localRdData(14 downto 10)  <=  reg_data(1296)(14 downto 10);                --Bitslip for ETROC2
+          localRdData(19 downto 15)  <=  reg_data(1296)(19 downto 15);                --Bitslip for ETROC3
+          localRdData(24 downto 20)  <=  reg_data(1296)(24 downto 20);                --Bitslip for ETROC4
+          localRdData(29 downto 25)  <=  reg_data(1296)(29 downto 25);                --Bitslip for ETROC5
+        when 1297 => --0x511
+          localRdData( 4 downto  0)  <=  reg_data(1297)( 4 downto  0);                --Bitslip for ETROC6
+          localRdData( 9 downto  5)  <=  reg_data(1297)( 9 downto  5);                --Bitslip for ETROC7
+          localRdData(14 downto 10)  <=  reg_data(1297)(14 downto 10);                --Bitslip for ETROC8
+          localRdData(19 downto 15)  <=  reg_data(1297)(19 downto 15);                --Bitslip for ETROC9
+          localRdData(24 downto 20)  <=  reg_data(1297)(24 downto 20);                --Bitslip for ETROC10
+          localRdData(29 downto 25)  <=  reg_data(1297)(29 downto 25);                --Bitslip for ETROC11
+        when 1298 => --0x512
+          localRdData( 4 downto  0)  <=  reg_data(1298)( 4 downto  0);                --Bitslip for ETROC12
+          localRdData( 9 downto  5)  <=  reg_data(1298)( 9 downto  5);                --Bitslip for ETROC13
+          localRdData(14 downto 10)  <=  reg_data(1298)(14 downto 10);                --Bitslip for ETROC14
+          localRdData(19 downto 15)  <=  reg_data(1298)(19 downto 15);                --Bitslip for ETROC15
+          localRdData(24 downto 20)  <=  reg_data(1298)(24 downto 20);                --Bitslip for ETROC16
+          localRdData(29 downto 25)  <=  reg_data(1298)(29 downto 25);                --Bitslip for ETROC17
+        when 1299 => --0x513
+          localRdData( 4 downto  0)  <=  reg_data(1299)( 4 downto  0);                --Bitslip for ETROC18
+          localRdData( 9 downto  5)  <=  reg_data(1299)( 9 downto  5);                --Bitslip for ETROC19
+          localRdData(14 downto 10)  <=  reg_data(1299)(14 downto 10);                --Bitslip for ETROC20
+          localRdData(19 downto 15)  <=  reg_data(1299)(19 downto 15);                --Bitslip for ETROC21
+          localRdData(24 downto 20)  <=  reg_data(1299)(24 downto 20);                --Bitslip for ETROC22
+          localRdData(29 downto 25)  <=  reg_data(1299)(29 downto 25);                --Bitslip for ETROC23
+        when 1300 => --0x514
+          localRdData( 4 downto  0)  <=  reg_data(1300)( 4 downto  0);                --Bitslip for ETROC24
+          localRdData( 9 downto  5)  <=  reg_data(1300)( 9 downto  5);                --Bitslip for ETROC25
+          localRdData(14 downto 10)  <=  reg_data(1300)(14 downto 10);                --Bitslip for ETROC26
+          localRdData(19 downto 15)  <=  reg_data(1300)(19 downto 15);                --Bitslip for ETROC27
+        when 1301 => --0x515
+          localRdData( 4 downto  0)  <=  Mon.TRIGGER_RATES;                           --Trigger rate of selected ETROC (muxed accross elinks)
 
         when others =>
           localRdData <= x"DEADDEAD";
@@ -219,6 +270,42 @@ begin  -- architecture behavioral
   Ctrl.ETROC_DISABLE                           <=  reg_data(1059)(27 downto  0);     
   Ctrl.ETROC_DISABLE_SLAVE                     <=  reg_data(1060)(27 downto  0);     
   Ctrl.L1A_INJ_DLY                             <=  reg_data(1282)(15 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_0                      <=  reg_data(1288)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_1                      <=  reg_data(1289)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_2                      <=  reg_data(1290)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_3                      <=  reg_data(1291)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_4                      <=  reg_data(1292)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_5                      <=  reg_data(1293)(31 downto  0);     
+  Ctrl.TRIG_ENABLE_MASK_6                      <=  reg_data(1294)(31 downto  0);     
+  Ctrl.TRIG_ENABLE                             <=  reg_data(1295)(28);               
+  Ctrl.TRIG_BITSLIP_0                          <=  reg_data(1296)( 4 downto  0);     
+  Ctrl.TRIG_BITSLIP_1                          <=  reg_data(1296)( 9 downto  5);     
+  Ctrl.TRIG_BITSLIP_2                          <=  reg_data(1296)(14 downto 10);     
+  Ctrl.TRIG_BITSLIP_3                          <=  reg_data(1296)(19 downto 15);     
+  Ctrl.TRIG_BITSLIP_4                          <=  reg_data(1296)(24 downto 20);     
+  Ctrl.TRIG_BITSLIP_5                          <=  reg_data(1296)(29 downto 25);     
+  Ctrl.TRIG_BITSLIP_6                          <=  reg_data(1297)( 4 downto  0);     
+  Ctrl.TRIG_BITSLIP_7                          <=  reg_data(1297)( 9 downto  5);     
+  Ctrl.TRIG_BITSLIP_8                          <=  reg_data(1297)(14 downto 10);     
+  Ctrl.TRIG_BITSLIP_9                          <=  reg_data(1297)(19 downto 15);     
+  Ctrl.TRIG_BITSLIP_10                         <=  reg_data(1297)(24 downto 20);     
+  Ctrl.TRIG_BITSLIP_11                         <=  reg_data(1297)(29 downto 25);     
+  Ctrl.TRIG_BITSLIP_12                         <=  reg_data(1298)( 4 downto  0);     
+  Ctrl.TRIG_BITSLIP_13                         <=  reg_data(1298)( 9 downto  5);     
+  Ctrl.TRIG_BITSLIP_14                         <=  reg_data(1298)(14 downto 10);     
+  Ctrl.TRIG_BITSLIP_15                         <=  reg_data(1298)(19 downto 15);     
+  Ctrl.TRIG_BITSLIP_16                         <=  reg_data(1298)(24 downto 20);     
+  Ctrl.TRIG_BITSLIP_17                         <=  reg_data(1298)(29 downto 25);     
+  Ctrl.TRIG_BITSLIP_18                         <=  reg_data(1299)( 4 downto  0);     
+  Ctrl.TRIG_BITSLIP_19                         <=  reg_data(1299)( 9 downto  5);     
+  Ctrl.TRIG_BITSLIP_20                         <=  reg_data(1299)(14 downto 10);     
+  Ctrl.TRIG_BITSLIP_21                         <=  reg_data(1299)(19 downto 15);     
+  Ctrl.TRIG_BITSLIP_22                         <=  reg_data(1299)(24 downto 20);     
+  Ctrl.TRIG_BITSLIP_23                         <=  reg_data(1299)(29 downto 25);     
+  Ctrl.TRIG_BITSLIP_24                         <=  reg_data(1300)( 4 downto  0);     
+  Ctrl.TRIG_BITSLIP_25                         <=  reg_data(1300)( 9 downto  5);     
+  Ctrl.TRIG_BITSLIP_26                         <=  reg_data(1300)(14 downto 10);     
+  Ctrl.TRIG_BITSLIP_27                         <=  reg_data(1300)(19 downto 15);     
 
 
   -- writes to slave
@@ -387,6 +474,57 @@ begin  -- architecture behavioral
           Ctrl.PACKET_CNT_RESET                 <=  localWrData( 0);               
           Ctrl.ERR_CNT_RESET                    <=  localWrData( 1);               
           Ctrl.DATA_CNT_RESET                   <=  localWrData( 2);               
+        when 1288 => --0x508
+          reg_data(1288)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 31 downto 0.
+        when 1289 => --0x509
+          reg_data(1289)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 63 downto 32.
+        when 1290 => --0x50a
+          reg_data(1290)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 95 downto 64.
+        when 1291 => --0x50b
+          reg_data(1291)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 127 downto 96.
+        when 1292 => --0x50c
+          reg_data(1292)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 159 downto 128.
+        when 1293 => --0x50d
+          reg_data(1293)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 191 downto 160.
+        when 1294 => --0x50e
+          reg_data(1294)(31 downto  0)          <=  localWrData(31 downto  0);      --Bitmask to enable bits in the trigger link. Bits 223 downto 192.
+        when 1295 => --0x50f
+          reg_data(1295)(28)                    <=  localWrData(28);                --Set to 1 to enable ETROC self trigger.
+        when 1296 => --0x510
+          reg_data(1296)( 4 downto  0)          <=  localWrData( 4 downto  0);      --Bitslip for ETROC0
+          reg_data(1296)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC1
+          reg_data(1296)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC2
+          reg_data(1296)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC3
+          reg_data(1296)(24 downto 20)          <=  localWrData(24 downto 20);      --Bitslip for ETROC4
+          reg_data(1296)(29 downto 25)          <=  localWrData(29 downto 25);      --Bitslip for ETROC5
+        when 1297 => --0x511
+          reg_data(1297)( 4 downto  0)          <=  localWrData( 4 downto  0);      --Bitslip for ETROC6
+          reg_data(1297)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC7
+          reg_data(1297)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC8
+          reg_data(1297)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC9
+          reg_data(1297)(24 downto 20)          <=  localWrData(24 downto 20);      --Bitslip for ETROC10
+          reg_data(1297)(29 downto 25)          <=  localWrData(29 downto 25);      --Bitslip for ETROC11
+        when 1298 => --0x512
+          reg_data(1298)( 4 downto  0)          <=  localWrData( 4 downto  0);      --Bitslip for ETROC12
+          reg_data(1298)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC13
+          reg_data(1298)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC14
+          reg_data(1298)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC15
+          reg_data(1298)(24 downto 20)          <=  localWrData(24 downto 20);      --Bitslip for ETROC16
+          reg_data(1298)(29 downto 25)          <=  localWrData(29 downto 25);      --Bitslip for ETROC17
+        when 1299 => --0x513
+          reg_data(1299)( 4 downto  0)          <=  localWrData( 4 downto  0);      --Bitslip for ETROC18
+          reg_data(1299)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC19
+          reg_data(1299)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC20
+          reg_data(1299)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC21
+          reg_data(1299)(24 downto 20)          <=  localWrData(24 downto 20);      --Bitslip for ETROC22
+          reg_data(1299)(29 downto 25)          <=  localWrData(29 downto 25);      --Bitslip for ETROC23
+        when 1300 => --0x514
+          reg_data(1300)( 4 downto  0)          <=  localWrData( 4 downto  0);      --Bitslip for ETROC24
+          reg_data(1300)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC25
+          reg_data(1300)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC26
+          reg_data(1300)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC27
+        when 1302 => --0x516
+          Ctrl.EVENT_CNT_RESET                  <=  localWrData( 0);               
 
         when others => null;
 
@@ -462,6 +600,42 @@ begin  -- architecture behavioral
       reg_data(1286)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.PACKET_CNT_RESET;
       reg_data(1286)( 1)  <= DEFAULT_READOUT_BOARD_CTRL_t.ERR_CNT_RESET;
       reg_data(1286)( 2)  <= DEFAULT_READOUT_BOARD_CTRL_t.DATA_CNT_RESET;
+      reg_data(1288)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_0;
+      reg_data(1289)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_1;
+      reg_data(1290)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_2;
+      reg_data(1291)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_3;
+      reg_data(1292)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_4;
+      reg_data(1293)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_5;
+      reg_data(1294)(31 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE_MASK_6;
+      reg_data(1295)(28)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_ENABLE;
+      reg_data(1296)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_0;
+      reg_data(1296)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_1;
+      reg_data(1296)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_2;
+      reg_data(1296)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_3;
+      reg_data(1296)(24 downto 20)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_4;
+      reg_data(1296)(29 downto 25)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_5;
+      reg_data(1297)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_6;
+      reg_data(1297)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_7;
+      reg_data(1297)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_8;
+      reg_data(1297)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_9;
+      reg_data(1297)(24 downto 20)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_10;
+      reg_data(1297)(29 downto 25)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_11;
+      reg_data(1298)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_12;
+      reg_data(1298)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_13;
+      reg_data(1298)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_14;
+      reg_data(1298)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_15;
+      reg_data(1298)(24 downto 20)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_16;
+      reg_data(1298)(29 downto 25)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_17;
+      reg_data(1299)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_18;
+      reg_data(1299)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_19;
+      reg_data(1299)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_20;
+      reg_data(1299)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_21;
+      reg_data(1299)(24 downto 20)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_22;
+      reg_data(1299)(29 downto 25)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_23;
+      reg_data(1300)( 4 downto  0)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_24;
+      reg_data(1300)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_25;
+      reg_data(1300)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_26;
+      reg_data(1300)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_27;
 
       end if; -- reset
     end if; -- clk

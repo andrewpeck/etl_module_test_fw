@@ -163,6 +163,21 @@ architecture behavioral of readout_board is
 
   signal global_fifo_full : std_logic;
 
+  --------------------------------------------------------------------------------
+  -- Self Trigger
+  --------------------------------------------------------------------------------
+
+  signal self_trigger_en_mask : std_logic_vector(223 downto 0);
+  signal self_trigger_bitslip : integer_vector (27 downto 0);
+  signal self_trigger_rates   : integer_vector(27 downto 0);
+  signal self_trigger         : std_logic;
+  signal self_trigger_delayed : std_logic;
+
+
+  signal self_trigger_dly : std_logic_vector (511 downto 0) := (others => '0');
+
+  signal self_trigger_dly_sel : integer range 0 to self_trigger_dly'length-1;
+
 begin
 
   --------------------------------------------------------------------------------
@@ -297,6 +312,7 @@ begin
 
   end generate;
 
+
   --------------------------------------------------------------------------------
   -- Packet Rate Counter
   --------------------------------------------------------------------------------
@@ -367,6 +383,78 @@ begin
 
   end generate;
 
+  --------------------------------------------------------------------------------
+  -- Trigger RX
+  --------------------------------------------------------------------------------
+
+  self_trigger_bitslip(0)  <= to_integer(unsigned(ctrl.trig_bitslip_0));
+  self_trigger_bitslip(1)  <= to_integer(unsigned(ctrl.trig_bitslip_1));
+  self_trigger_bitslip(2)  <= to_integer(unsigned(ctrl.trig_bitslip_2));
+  self_trigger_bitslip(3)  <= to_integer(unsigned(ctrl.trig_bitslip_3));
+  self_trigger_bitslip(4)  <= to_integer(unsigned(ctrl.trig_bitslip_4));
+  self_trigger_bitslip(5)  <= to_integer(unsigned(ctrl.trig_bitslip_5));
+  self_trigger_bitslip(6)  <= to_integer(unsigned(ctrl.trig_bitslip_6));
+  self_trigger_bitslip(7)  <= to_integer(unsigned(ctrl.trig_bitslip_7));
+  self_trigger_bitslip(8)  <= to_integer(unsigned(ctrl.trig_bitslip_8));
+  self_trigger_bitslip(9)  <= to_integer(unsigned(ctrl.trig_bitslip_9));
+  self_trigger_bitslip(10) <= to_integer(unsigned(ctrl.trig_bitslip_10));
+  self_trigger_bitslip(11) <= to_integer(unsigned(ctrl.trig_bitslip_11));
+  self_trigger_bitslip(12) <= to_integer(unsigned(ctrl.trig_bitslip_12));
+  self_trigger_bitslip(13) <= to_integer(unsigned(ctrl.trig_bitslip_13));
+  self_trigger_bitslip(14) <= to_integer(unsigned(ctrl.trig_bitslip_14));
+  self_trigger_bitslip(15) <= to_integer(unsigned(ctrl.trig_bitslip_15));
+  self_trigger_bitslip(16) <= to_integer(unsigned(ctrl.trig_bitslip_16));
+  self_trigger_bitslip(17) <= to_integer(unsigned(ctrl.trig_bitslip_17));
+  self_trigger_bitslip(18) <= to_integer(unsigned(ctrl.trig_bitslip_18));
+  self_trigger_bitslip(19) <= to_integer(unsigned(ctrl.trig_bitslip_19));
+  self_trigger_bitslip(20) <= to_integer(unsigned(ctrl.trig_bitslip_20));
+  self_trigger_bitslip(21) <= to_integer(unsigned(ctrl.trig_bitslip_21));
+  self_trigger_bitslip(22) <= to_integer(unsigned(ctrl.trig_bitslip_22));
+  self_trigger_bitslip(23) <= to_integer(unsigned(ctrl.trig_bitslip_23));
+  self_trigger_bitslip(24) <= to_integer(unsigned(ctrl.trig_bitslip_24));
+  self_trigger_bitslip(25) <= to_integer(unsigned(ctrl.trig_bitslip_25));
+  self_trigger_bitslip(26) <= to_integer(unsigned(ctrl.trig_bitslip_26));
+  self_trigger_bitslip(27) <= to_integer(unsigned(ctrl.trig_bitslip_27));
+
+  self_trigger_en_mask(31 downto 0)    <= ctrl.trig_enable_mask_0;
+  self_trigger_en_mask(63 downto 32)   <= ctrl.trig_enable_mask_1;
+  self_trigger_en_mask(95 downto 64)   <= ctrl.trig_enable_mask_2;
+  self_trigger_en_mask(127 downto 96)  <= ctrl.trig_enable_mask_3;
+  self_trigger_en_mask(159 downto 128) <= ctrl.trig_enable_mask_4;
+  self_trigger_en_mask(191 downto 160) <= ctrl.trig_enable_mask_5;
+  self_trigger_en_mask(223 downto 192) <= ctrl.trig_enable_mask_6;
+
+  trigger_rx_inst : entity work.trigger_rx
+    port map (
+      clock     => clk40,
+      reset     => reset,
+      data_i    => uplink_data(1).data,
+      enable_i  => self_trigger_en_mask,
+      slip_i    => self_trigger_bitslip,
+      rate_i    => to_integer(unsigned(ctrl.elink_width))-2,
+      trigger_o => self_trigger,
+      cnts_o    => self_trigger_rates
+      );
+
+  process (clk40) is
+  begin
+    if (rising_edge(clk40)) then
+
+      self_trigger_dly(0) <= self_trigger and ctrl.trig_enable;
+
+      for I in 1 to self_trigger_dly'length-1 loop
+        self_trigger_dly(I) <= self_trigger_dly(I-1);
+      end loop;
+
+      self_trigger_delayed <= self_trigger_dly(self_trigger_dly_sel);
+
+    end if;
+  end process;
+
+  --------------------------------------------------------------------------------
+  -- Link Multiplexer
+  --------------------------------------------------------------------------------
+
   process (clk40) is
   begin
     if (rising_edge(clk40)) then
@@ -374,6 +462,7 @@ begin
       mon.error_cnt      <= err_cnt(link_sel);
       mon.filler_rate    <= filler_rate(link_sel);
       mon.data_cnt       <= data_cnt(link_sel);
+      mon.trigger_rates  <= std_logic_vector(to_unsigned(self_trigger_rates(link_sel), mon.trigger_rates'length));
     end if;
   end process;
 
@@ -901,6 +990,8 @@ begin
   -- Global ETROC FIFO
   --
   -- Buffers the merged outputs from ALL etrocs
+  --
+  -- TODO: should be implemented in DDR3?
   --
   --------------------------------------------------------------------------------
 

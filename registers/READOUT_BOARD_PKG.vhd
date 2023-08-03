@@ -166,6 +166,7 @@ package READOUT_BOARD_CTRL is
     ERROR_CNT                  :std_logic_vector(15 downto 0);  -- Count of packet errors (muxed across elinks)
     DATA_CNT                   :std_logic_vector(15 downto 0);  -- Count of packet data frames (muxed across elinks)
     FILLER_RATE                :std_logic_vector(23 downto 0);  -- Rate of packet filler frames (muxed across elinks)
+    TRIGGER_RATES              :std_logic_vector( 4 downto 0);  -- Trigger rate of selected ETROC (muxed accross elinks)
   end record READOUT_BOARD_MON_t;
 
 
@@ -205,6 +206,42 @@ package READOUT_BOARD_CTRL is
     PACKET_CNT_RESET           :std_logic;                      -- Write 1 to reset packet counters
     ERR_CNT_RESET              :std_logic;                      -- Write 1 to reset error counters
     DATA_CNT_RESET             :std_logic;                      -- Write 1 to reset data counters
+    TRIG_ENABLE_MASK_0         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 31 downto 0.
+    TRIG_ENABLE_MASK_1         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 63 downto 32.
+    TRIG_ENABLE_MASK_2         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 95 downto 64.
+    TRIG_ENABLE_MASK_3         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 127 downto 96.
+    TRIG_ENABLE_MASK_4         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 159 downto 128.
+    TRIG_ENABLE_MASK_5         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 191 downto 160.
+    TRIG_ENABLE_MASK_6         :std_logic_vector(31 downto 0);  -- Bitmask to enable bits in the trigger link. Bits 223 downto 192.
+    TRIG_ENABLE                :std_logic;                      -- Set to 1 to enable ETROC self trigger.
+    TRIG_BITSLIP_0             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC0
+    TRIG_BITSLIP_1             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC1
+    TRIG_BITSLIP_2             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC2
+    TRIG_BITSLIP_3             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC3
+    TRIG_BITSLIP_4             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC4
+    TRIG_BITSLIP_5             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC5
+    TRIG_BITSLIP_6             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC6
+    TRIG_BITSLIP_7             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC7
+    TRIG_BITSLIP_8             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC8
+    TRIG_BITSLIP_9             :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC9
+    TRIG_BITSLIP_10            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC10
+    TRIG_BITSLIP_11            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC11
+    TRIG_BITSLIP_12            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC12
+    TRIG_BITSLIP_13            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC13
+    TRIG_BITSLIP_14            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC14
+    TRIG_BITSLIP_15            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC15
+    TRIG_BITSLIP_16            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC16
+    TRIG_BITSLIP_17            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC17
+    TRIG_BITSLIP_18            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC18
+    TRIG_BITSLIP_19            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC19
+    TRIG_BITSLIP_20            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC20
+    TRIG_BITSLIP_21            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC21
+    TRIG_BITSLIP_22            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC22
+    TRIG_BITSLIP_23            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC23
+    TRIG_BITSLIP_24            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC24
+    TRIG_BITSLIP_25            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC25
+    TRIG_BITSLIP_26            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC26
+    TRIG_BITSLIP_27            :std_logic_vector( 4 downto 0);  -- Bitslip for ETROC27
   end record READOUT_BOARD_CTRL_t;
 
 
@@ -243,7 +280,44 @@ package READOUT_BOARD_CTRL is
                                                                    L1A_INJ_DLY => (others => '0'),
                                                                    PACKET_CNT_RESET => '0',
                                                                    ERR_CNT_RESET => '0',
-                                                                   DATA_CNT_RESET => '0'
+                                                                   DATA_CNT_RESET => '0',
+                                                                   TRIG_ENABLE_MASK_0 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_1 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_2 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_3 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_4 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_5 => (others => '0'),
+                                                                   TRIG_ENABLE_MASK_6 => (others => '0'),
+                                                                   TRIG_ENABLE => '0',
+                                                                   TRIG_BITSLIP_0 => (others => '0'),
+                                                                   TRIG_BITSLIP_1 => (others => '0'),
+                                                                   TRIG_BITSLIP_2 => (others => '0'),
+                                                                   TRIG_BITSLIP_3 => (others => '0'),
+                                                                   TRIG_BITSLIP_4 => (others => '0'),
+                                                                   TRIG_BITSLIP_5 => (others => '0'),
+                                                                   TRIG_BITSLIP_6 => (others => '0'),
+                                                                   TRIG_BITSLIP_7 => (others => '0'),
+                                                                   TRIG_BITSLIP_8 => (others => '0'),
+                                                                   TRIG_BITSLIP_9 => (others => '0'),
+                                                                   TRIG_BITSLIP_10 => (others => '0'),
+                                                                   TRIG_BITSLIP_11 => (others => '0'),
+                                                                   TRIG_BITSLIP_12 => (others => '0'),
+                                                                   TRIG_BITSLIP_13 => (others => '0'),
+                                                                   TRIG_BITSLIP_14 => (others => '0'),
+                                                                   TRIG_BITSLIP_15 => (others => '0'),
+                                                                   TRIG_BITSLIP_16 => (others => '0'),
+                                                                   TRIG_BITSLIP_17 => (others => '0'),
+                                                                   TRIG_BITSLIP_18 => (others => '0'),
+                                                                   TRIG_BITSLIP_19 => (others => '0'),
+                                                                   TRIG_BITSLIP_20 => (others => '0'),
+                                                                   TRIG_BITSLIP_21 => (others => '0'),
+                                                                   TRIG_BITSLIP_22 => (others => '0'),
+                                                                   TRIG_BITSLIP_23 => (others => '0'),
+                                                                   TRIG_BITSLIP_24 => (others => '0'),
+                                                                   TRIG_BITSLIP_25 => (others => '0'),
+                                                                   TRIG_BITSLIP_26 => (others => '0'),
+                                                                   TRIG_BITSLIP_27 => (others => '0'),
+                                                                   EVENT_CNT_RESET => '0'
                                                                   );
 
 

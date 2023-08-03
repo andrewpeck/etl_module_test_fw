@@ -71,3 +71,6 @@ regmap : $(MAP_OBJS)
 
 clean_regmap:
 	@rm -rf $(MAP_OBJS) $(PKG_OBJS)
+
+docs: 
+	pandoc README.org -o README.md -t gfm
