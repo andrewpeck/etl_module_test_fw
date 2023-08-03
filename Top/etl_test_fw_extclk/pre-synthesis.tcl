@@ -1,0 +1,1 @@
+../etl_test_fw/pre-synthesis.tcl

@@ -3,4 +3,5 @@ include:
       file: '/hog.yml'
       ref: '34cf4c5'
     - local: '/Top/etl_test_fw/gitlab-ci.yml'
+    - local: '/Top/etl_test_fw_extclk/gitlab-ci.yml'
     - local: '/.user-jobs.yml'
