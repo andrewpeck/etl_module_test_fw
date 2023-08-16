@@ -47,7 +47,7 @@ begin
     begin
       if (rising_edge(clock_320)) then
         trigger_pos_r1 <= trigger_pos;
-        trigger_neg_r1 <= trigger_pos;
+        trigger_neg_r1 <= trigger_neg;
       end if;
     end process;
 
