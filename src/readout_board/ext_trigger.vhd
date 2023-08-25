@@ -14,6 +14,9 @@ end ext_trigger;
 
 architecture behavioral of ext_trigger is
   signal ext_trigger : std_logic := '0';
+
+  attribute mark_debug : string;
+  attribute mark_debug of ext_trigger : signal is "true";
 begin
 
   ext_trigger_o <= ext_trigger;
@@ -25,8 +28,18 @@ begin
     signal trigger_neg_r1  : std_logic := '0';
     signal trigger_or      : std_logic;
     signal ext_trigger_320 : std_logic;
-    signal trigger_cnt     : integer range 0 to 7 := 0;
+    signal trigger_cnt     : integer range 0 to 8 := 0;
     signal armed           : boolean;
+
+    attribute mark_debug of trigger_pos : signal is "true";
+    attribute mark_debug of trigger_neg : signal is "true";
+    attribute mark_debug of trigger_pos_r1 : signal is "true";
+    attribute mark_debug of trigger_neg_r1 : signal is "true";
+    attribute mark_debug of trigger_or : signal is "true";
+    attribute mark_debug of ext_trigger_320 : signal is "true";
+    attribute mark_debug of trigger_cnt : signal is "true";
+    attribute mark_debug of armed : signal is "true";
+
   begin
 
     process (clock_320) is
@@ -61,7 +74,7 @@ begin
 
         if (armed and trigger_or = '1') then
           armed           <= false;
-          trigger_cnt     <= 7;
+          trigger_cnt     <= 8;
         elsif (trigger_cnt > 0) then
           armed           <= false;
           trigger_cnt     <= trigger_cnt - 1;
