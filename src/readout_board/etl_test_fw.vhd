@@ -250,6 +250,7 @@ begin
 
   --------------------------------------------------------------------------------
   -- External Trigger
+  -- ext_trigger_o outputs with 40Mhz Clock
   --------------------------------------------------------------------------------
 
   ext_trigger_inst : entity work.ext_trigger
