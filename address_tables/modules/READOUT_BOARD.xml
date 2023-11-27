@@ -83,8 +83,8 @@
   <node id="TRIG_ENABLE_MASK_5" address="0x50d" mask="0xffffffff" permission="rw" description="Bitmask to enable bits in the trigger link. Bits 191 downto 160."/>
   <node id="TRIG_ENABLE_MASK_6" address="0x50e" mask="0xffffffff" permission="rw" description="Bitmask to enable bits in the trigger link. Bits 223 downto 192."/>
 
-  <node id="TRIGGER_RATES"    address="0x515" mask="0x0000001f" permission="r" description="Trigger rate of selected ETROC (muxed accross elinks)"/>
-  <node id="TRIG_ENABLE"  address="0x50f" mask="0x10000000" permission="rw" description="Set to 1 to enable ETROC self trigger."/>
+  <node id="TRIGGER_RATES" address="0x515" mask="0x0000001f" permission="r" description="Trigger rate cnt of selected ETROC (muxed accross elinks)"/>
+  <node id="TRIG_ENABLE"   address="0x50f" mask="0x10000000" permission="rw" description="Set to 1 to enable ETROC self trigger."/>
 
   <node id="TRIG_BITSLIP_0" address="0x510" mask="0x0000001f" permission="rw" description="Bitslip for ETROC0"/>
   <node id="TRIG_BITSLIP_1" address="0x510" mask="0x000003e0" permission="rw" description="Bitslip for ETROC1"/>
@@ -114,6 +114,8 @@
   <node id="TRIG_BITSLIP_25" address="0x514" mask="0x000003e0" permission="rw" description="Bitslip for ETROC25"/>
   <node id="TRIG_BITSLIP_26" address="0x514" mask="0x00007c00" permission="rw" description="Bitslip for ETROC26"/>
   <node id="TRIG_BITSLIP_27" address="0x514" mask="0x000f8000" permission="rw" description="Bitslip for ETROC27"/>
+
+  <node id="TRIG_DLY_SEL" address="0x514" mask="0x01f00000" permission="rw" description="Select Delay in terms of clock cycles"/>
 
   <!-- EVENT COUNTER  -->
   <node id="EVENT_CNT_RESET" address="0x516" mask="0x00000001" permission="w" description="Reset event counter"/>

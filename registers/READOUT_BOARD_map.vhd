@@ -224,8 +224,9 @@ begin  -- architecture behavioral
           localRdData( 9 downto  5)  <=  reg_data(1300)( 9 downto  5);                --Bitslip for ETROC25
           localRdData(14 downto 10)  <=  reg_data(1300)(14 downto 10);                --Bitslip for ETROC26
           localRdData(19 downto 15)  <=  reg_data(1300)(19 downto 15);                --Bitslip for ETROC27
+          localRdData(24 downto 20)  <=  reg_data(1300)(24 downto 20);                --Select Delay in terms of clock cycles
         when 1301 => --0x515
-          localRdData( 4 downto  0)  <=  Mon.TRIGGER_RATES;                           --Trigger rate of selected ETROC (muxed accross elinks)
+          localRdData( 4 downto  0)  <=  Mon.TRIGGER_RATES;                           --Trigger rate cnt of selected ETROC (muxed accross elinks)
         when 1303 => --0x517
           localRdData(31 downto  0)  <=  Mon.EVENT_CNT;                               --Read counts on event counter
 
@@ -308,6 +309,7 @@ begin  -- architecture behavioral
   Ctrl.TRIG_BITSLIP_25                         <=  reg_data(1300)( 9 downto  5);     
   Ctrl.TRIG_BITSLIP_26                         <=  reg_data(1300)(14 downto 10);     
   Ctrl.TRIG_BITSLIP_27                         <=  reg_data(1300)(19 downto 15);     
+  Ctrl.TRIG_DLY_SEL                            <=  reg_data(1300)(24 downto 20);     
 
 
   -- writes to slave
@@ -526,6 +528,7 @@ begin  -- architecture behavioral
           reg_data(1300)( 9 downto  5)          <=  localWrData( 9 downto  5);      --Bitslip for ETROC25
           reg_data(1300)(14 downto 10)          <=  localWrData(14 downto 10);      --Bitslip for ETROC26
           reg_data(1300)(19 downto 15)          <=  localWrData(19 downto 15);      --Bitslip for ETROC27
+          reg_data(1300)(24 downto 20)          <=  localWrData(24 downto 20);      --Select Delay in terms of clock cycles
         when 1302 => --0x516
           Ctrl.EVENT_CNT_RESET                  <=  localWrData( 0);               
 
@@ -639,6 +642,7 @@ begin  -- architecture behavioral
       reg_data(1300)( 9 downto  5)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_25;
       reg_data(1300)(14 downto 10)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_26;
       reg_data(1300)(19 downto 15)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_BITSLIP_27;
+      reg_data(1300)(24 downto 20)  <= DEFAULT_READOUT_BOARD_CTRL_t.TRIG_DLY_SEL;
       reg_data(1302)( 0)  <= DEFAULT_READOUT_BOARD_CTRL_t.EVENT_CNT_RESET;
 
       end if; -- reset

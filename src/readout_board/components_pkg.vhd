@@ -97,6 +97,17 @@ package components is
       );
   end component;
 
+
+  component ila_self_trigger
+    port (
+    clk     : in std_logic;
+    probe0  : in std_logic;
+    probe1  : in std_logic;
+    probe2  : in std_logic;
+    probe3  : in std_logic_vector
+    );
+  end component;
+
   component device_dna
     port (
       clock : in  std_logic;

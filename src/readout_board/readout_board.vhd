@@ -181,6 +181,10 @@ architecture behavioral of readout_board is
 
   signal self_trigger_dly_sel : integer range 0 to self_trigger_dly'length-1;
 
+  ATTRIBUTE MARK_DEBUG : STRING;
+  ATTRIBUTE MARK_DEBUG OF self_trigger : SIGNAL IS "true";
+  ATTRIBUTE MARK_DEBUG OF self_trigger_delayed : SIGNAL IS "true";
+  ATTRIBUTE MARK_DEBUG OF l1a : SIGNAL IS "true";
 begin
 
   --------------------------------------------------------------------------------
@@ -445,11 +449,13 @@ begin
   self_trigger_en_mask(191 downto 160) <= ctrl.trig_enable_mask_5;
   self_trigger_en_mask(223 downto 192) <= ctrl.trig_enable_mask_6;
 
+  self_trigger_dly_sel <= to_integer(unsigned(ctrl.trig_dly_sel));
+
   trigger_rx_inst : entity work.trigger_rx
     port map (
       clock     => clk40,
       reset     => reset,
-      data_i    => uplink_data(1).data,
+      uplink_data_i    => uplink_data(0).data,
       enable_i  => self_trigger_en_mask,
       slip_i    => self_trigger_bitslip,
       rate_i    => to_integer(unsigned(ctrl.elink_width))-2,
@@ -1139,9 +1145,39 @@ begin
   --------------------------------------------------------------------------------
   -- DEBUG ILAS
   --------------------------------------------------------------------------------
+  self_trigger_ila_gen : if (C_DEBUG) generate
+
+    signal ila_self_trigger_o       : std_logic;
+    signal ila_self_trigger_delayed : std_logic;
+    signal ila_l1a                  : std_logic;
+    signal ila_data_in : std_logic_vector (223 downto 0);
+    
+  begin 
+
+    process (clk40) is
+    begin
+      if (rising_edge(clk40)) then
+
+        ila_self_trigger_o       <= self_trigger;
+        ila_self_trigger_delayed <= self_trigger_delayed;
+        ila_l1a                  <= l1a;
+        ila_data_in              <= uplink_data(0).data;
+
+      end if;
+    end process;
+
+    ila_self_trigger_inst : ila_self_trigger
+      port map (
+        clk     => clk40,
+        probe0  => ila_self_trigger_o,
+        probe1  => ila_self_trigger_delayed,
+        probe2  => ila_l1a,
+        probe3  => ila_data_in
+      );
+  end generate;
 
   debug : if (C_DEBUG) generate
-
+    
     signal ila_uplink_data       : std_logic_vector (223 downto 0);
     signal ila_uplink_elink_data : std_logic_vector (7 downto 0);
     signal ila_uplink_valid      : std_logic;

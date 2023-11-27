@@ -5,38 +5,47 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 entity trigger_rx is
-  generic(
+  generic
+  (
     NUM_ETROCS : integer := 28;
     CNT_BITS   : integer := 26;
     WIDTH      : integer := 224
-    );
-  port(
-    clock    : in std_logic;
-    reset    : in std_logic;
-    data_i   : in std_logic_vector (WIDTH-1 downto 0);
-    enable_i : in std_logic_vector (WIDTH-1 downto 0);
+  );
+  port
+  (
+    clock         : in std_logic;
+    reset         : in std_logic;
+    uplink_data_i : in std_logic_vector (WIDTH - 1 downto 0);
+    enable_i      : in std_logic_vector (WIDTH - 1 downto 0);
 
-    slip_i : in integer_vector (NUM_ETROCS-1 downto 0);
-    rate_i : in integer range 0 to 2;   -- 0==320, 1==640, 2==1280
+    slip_i : in integer_vector (NUM_ETROCS - 1 downto 0);
+    rate_i : in integer range 0 to 2; -- 0==320, 1==640, 2==1280
 
     trigger_o : out std_logic;
 
-    cnts_o : out integer_vector (NUM_ETROCS-1 downto 0)
+    cnts_o : out integer_vector (NUM_ETROCS - 1 downto 0)
 
-    );
+  );
 end trigger_rx;
 
 architecture rtl of trigger_rx is
 
-  type data_slip_array_t is array (integer range 2 downto 0) of std_logic_vector(WIDTH-1 downto 0);
+  type data_slip_array_t is array (integer range 2 downto 0) of std_logic_vector(WIDTH - 1 downto 0);
   signal data_slip_320_640_1280 : data_slip_array_t;
 
-  signal data_slip   : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
-  signal data_masked : std_logic_vector (WIDTH-1 downto 0) := (others => '0');
+  signal data_slip   : std_logic_vector (WIDTH - 1 downto 0) := (others => '0');
+  signal data_masked : std_logic_vector (WIDTH - 1 downto 0) := (others => '0');
 
-  signal or_8, or_8_r, or_8_rr : std_logic_vector (NUM_ETROCS-1 downto 0)   := (others => '0');
-  signal or_16, or_16_r        : std_logic_vector (NUM_ETROCS/2-1 downto 0) := (others => '0');
-  signal or_32                 : std_logic_vector (NUM_ETROCS/4-1 downto 0) := (others => '0');
+  signal or_8, or_8_r, or_8_rr : std_logic_vector (NUM_ETROCS - 1 downto 0)   := (others => '0');
+  signal or_16, or_16_r        : std_logic_vector (NUM_ETROCS/2 - 1 downto 0) := (others => '0');
+  signal or_32                 : std_logic_vector (NUM_ETROCS/4 - 1 downto 0) := (others => '0');
+
+  attribute MARK_DEBUG                : string;
+  attribute MARK_DEBUG of or_8        : signal is "true";
+  attribute MARK_DEBUG of or_16       : signal is "true";
+  attribute MARK_DEBUG of or_32       : signal is "true";
+  attribute MARK_DEBUG of data_slip   : signal is "true";
+  attribute MARK_DEBUG of data_masked : signal is "true";
 
 begin
 
@@ -45,23 +54,25 @@ begin
   --------------------------------------------------------------------------------
 
   slip_irate_gen : for IRATE in 0 to 2 generate
-    constant NUM_ETROCS : integer := 2**(IRATE+3);
+    constant NUM : integer := 2 ** (IRATE + 3);
   begin
 
-    slip_ietroc_gen : for IETROC in 0 to 224/NUM_ETROCS-1 generate
+    slip_ietroc_gen : for IETROC in 0 to 224/NUM - 1 generate
     begin
 
       bitslip_inst : entity work.bitslip
-        generic map (
-          g_DATA_WIDTH           => NUM_ETROCS,
-          g_SLIP_CNT_WIDTH       => 5,
-          g_TRANSMIT_LOW_TO_HIGH => true)  -- TODO: check this
-        port map (
+        generic
+        map (
+        g_DATA_WIDTH           => NUM,
+        g_SLIP_CNT_WIDTH       => 5,
+        g_TRANSMIT_LOW_TO_HIGH => true) -- TODO: check this
+        port map
+        (
           clk_i      => clock,
           slip_cnt_i => slip_i(IETROC),
-          data_i     => data_slip_320_640_1280(IRATE)((IETROC+1)*NUM_ETROCS-1 downto IETROC*NUM_ETROCS),
-          data_o     => data_slip_320_640_1280(IRATE)((IETROC+1)*NUM_ETROCS-1 downto IETROC*NUM_ETROCS)
-          );
+          data_i     => uplink_data_i((IETROC+1) * NUM - 1 downto IETROC*NUM),
+          data_o     => data_slip_320_640_1280(IRATE)((IETROC + 1) * NUM - 1 downto IETROC * NUM)
+        );
 
     end generate;
   end generate;
@@ -94,15 +105,15 @@ begin
     if (rising_edge(clock)) then
 
       for I in or_8'range loop
-        or_8(I) <= or_reduce(data_masked((I+1)*8-1 downto I*8));
+        or_8(I) <= or_reduce(data_masked((I + 1) * 8 - 1 downto I * 8));
       end loop;
 
       for I in or_16'range loop
-        or_16(I) <= or_reduce(or_8((I+1)*2-1 downto I*2));
+        or_16(I) <= or_reduce(or_8((I + 1) * 2 - 1 downto I * 2));
       end loop;
 
       for I in or_32'range loop
-        or_32(I) <= or_reduce(or_16((I+1)*2-1 downto I*2));
+        or_32(I) <= or_reduce(or_16((I + 1) * 2 - 1 downto I * 2));
       end loop;
 
       -- delay the 8 and 16 bit reductions to align in time with the 32 bit reduction
@@ -117,14 +128,14 @@ begin
   -- Counters
   --------------------------------------------------------------------------------
 
-  cnt_gen : for I in 0 to NUM_ETROCS-1 generate
+  cnt_gen : for I in 0 to NUM_ETROCS - 1 generate
     -- rate=0 320  Mbps 0,1,2,3,4...27
     -- rate=1 640  Mbps 0,2,4,6,8,10,12,....
     -- rate=2 1280 Mbps 0,4,8,12,16,20,24
 
-    signal enable   : std_logic                              := '0';
-    signal cnt_flag : std_logic                              := '0';
-    signal cnt      : std_logic_vector (CNT_BITS-1 downto 0) := (others => '0');
+    signal enable   : std_logic                                := '0';
+    signal cnt_flag : std_logic                                := '0';
+    signal cnt      : std_logic_vector (CNT_BITS - 1 downto 0) := (others => '0');
 
   begin
 
@@ -166,14 +177,16 @@ begin
     end process;
 
     trig_rate_counter_inst : entity work.rate_counter
-      generic map (
-        g_CLK_FREQUENCY => x"02638e98",
-        g_COUNTER_WIDTH => CNT_BITS)
-      port map (
-        clk_i   => clock,
-        reset_i => reset or not enable,
-        en_i    => cnt_flag,
-        rate_o  => cnt);
+      generic
+      map (
+      g_CLK_FREQUENCY => x"02638e98",
+      g_COUNTER_WIDTH => CNT_BITS)
+      port
+      map (
+      clk_i   => clock,
+      reset_i => reset or not enable,
+      en_i    => cnt_flag,
+      rate_o  => cnt);
 
     cnts_o(I) <= to_integer(unsigned(cnt));
 
